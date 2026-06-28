@@ -529,6 +529,165 @@ curl -i https://soc5outboundops.app/up
 
 ## 18. Deploy updates
 
+### Automatic deployment from GitHub
+
+The repository includes `.github/workflows/deploy-production.yml` and
+`deploy/deploy-production.sh`. A push to `main` can deploy automatically through
+GitHub OIDC and AWS Systems Manager Run Command. This design does not store the
+EC2 PEM or long-lived AWS access keys in GitHub and does not require opening SSH
+to GitHub-hosted runners.
+
+#### Enable Systems Manager on EC2
+
+In AWS IAM:
+
+1. Open **IAM > Roles > Create role**.
+2. Trusted entity: **AWS service**; use case: **EC2**.
+3. Attach `AmazonSSMManagedInstanceCore`.
+4. Name the role `soc5-outbound-ec2-ssm` and create it.
+5. Open **EC2 > Instances**, select `soc5-outbound-prod`, then choose
+   **Actions > Security > Modify IAM role**.
+6. Select `soc5-outbound-ec2-ssm` and save.
+
+On EC2, verify the agent. Ubuntu images can expose it as either a Snap service or
+a conventional systemd service:
+
+```bash
+sudo systemctl status snap.amazon-ssm-agent.amazon-ssm-agent.service --no-pager \
+  || sudo systemctl status amazon-ssm-agent --no-pager
+```
+
+In **AWS Systems Manager > Fleet Manager > Managed nodes**, wait until the EC2
+instance appears as online.
+
+#### Add GitHub as an AWS OIDC provider
+
+In AWS IAM:
+
+1. Open **IAM > Identity providers > Add provider**.
+2. Provider type: **OpenID Connect**.
+3. Provider URL: `https://token.actions.githubusercontent.com`.
+4. Audience: `sts.amazonaws.com`.
+5. Add the provider.
+
+Skip creation only when that exact provider already exists in the account.
+
+#### Create the GitHub deployment role
+
+Create an IAM policy named `soc5-outbound-github-deploy`. Replace
+`ACCOUNT_ID` and `INSTANCE_ID` with the real values:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "ssm:SendCommand",
+      "Resource": [
+        "arn:aws:ec2:ap-southeast-1:ACCOUNT_ID:instance/INSTANCE_ID",
+        "arn:aws:ssm:ap-southeast-1::document/AWS-RunShellScript"
+      ]
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ssm:GetCommandInvocation",
+        "ssm:ListCommandInvocations"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+Then create role `soc5-outbound-github-deploy` with **Web identity** as the
+trusted entity, the GitHub OIDC provider, audience `sts.amazonaws.com`, and the
+policy above. Its trust policy must restrict access to this repository and main
+branch:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+          "token.actions.githubusercontent.com:sub": "repo:fernandezromarkbspsy-cmyk/soc5-outboundops-project:environment:production"
+        }
+      }
+    }
+  ]
+}
+```
+
+Because the workflow uses the GitHub `production` environment, GitHub places the
+environment name—not the branch name—in the OIDC subject. Do not use a wildcard
+repository or environment in this trust policy. The environment's deployment
+branch rule below independently restricts deployment to `main`.
+
+#### Configure the GitHub production environment
+
+In GitHub, open **Repository > Settings > Environments**:
+
+1. Create environment `production`.
+2. Restrict deployment branches to `main`.
+3. Add an approval reviewer if the repository plan supports it and every
+   production deployment should require manual approval.
+4. Add environment secrets:
+   - `AWS_DEPLOY_ROLE_ARN`: ARN of `soc5-outbound-github-deploy`
+   - `AWS_EC2_INSTANCE_ID`: instance ID such as `i-0123456789abcdef0`
+
+Neither value is a private key, but environment secrets keep deployment
+configuration scoped to production. Do not add the EC2 PEM or AWS access keys.
+
+#### Prepare the EC2 deployment script
+
+After pushing these automation files once, update the EC2 checkout manually:
+
+```bash
+cd /opt/soc5-outbound
+git pull --ff-only
+git status
+```
+
+`git status` must be clean. The deployment intentionally refuses to overwrite
+tracked files edited directly on EC2. Move all permanent server hotfixes into
+the repository, commit them locally, and push them before enabling automation.
+
+Test Systems Manager from **Systems Manager > Run Command** using the
+`AWS-RunShellScript` document and this command:
+
+```bash
+sudo -u ubuntu bash /opt/soc5-outbound/deploy/deploy-production.sh
+```
+
+After that succeeds, open **GitHub > Actions > Deploy production > Run
+workflow** for the first automated test. Subsequent pushes to `main` trigger the
+same workflow automatically. The workflow serializes deployments, waits for SSM
+completion, prints deployment output, and fails when the API does not become
+healthy.
+
+#### Normal automated release
+
+1. Make changes locally on a feature branch.
+2. Run backend tests and the frontend production build.
+3. Open and review a pull request.
+4. Merge the pull request into `main`.
+5. GitHub Actions assumes the restricted AWS role with a short-lived OIDC token.
+6. Systems Manager runs the deployment script as `ubuntu` on EC2.
+7. The script fast-forwards Git, validates Compose, builds images, starts the
+   containers, and verifies `/up`.
+
+Keep the manual procedure below as the recovery path when GitHub Actions or
+Systems Manager is unavailable.
+
 Before each deployment, take note of the current commit so rollback is possible.
 
 ```bash
