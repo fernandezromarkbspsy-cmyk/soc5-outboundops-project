@@ -119,19 +119,12 @@ All EC2 resources in this guide must be created in the same region.
 
 AWS does not retain a recoverable copy of the private key.
 
-On Windows, the browser normally saves the PEM file under `Downloads`. Keep it
-outside the Git repository. Set `$Pem` to its actual full path, verify it exists,
-and then restrict access:
+On Windows, restrict access to the PEM file before connecting:
 
 ```powershell
-$Pem = "$env:USERPROFILE\Downloads\soc5-outbound-prod.pem"
-Test-Path -LiteralPath $Pem
-icacls $Pem /inheritance:r
-icacls $Pem /grant:r "$($env:USERNAME):(R)"
+icacls .\soc5-outbound-prod.pem /inheritance:r
+icacls .\soc5-outbound-prod.pem /grant:r "$($env:USERNAME):(R)"
 ```
-
-`Test-Path` must return `True`. A relative path such as
-`.\soc5-outbound-prod.pem` looks only in the current PowerShell directory.
 
 ## 6. Create the EC2 security group
 
@@ -213,8 +206,7 @@ deleted.
 From PowerShell in the folder containing the key:
 
 ```powershell
-$Pem = "$env:USERPROFILE\Downloads\soc5-outbound-prod.pem"
-ssh -i $Pem ubuntu@YOUR_EC2_PUBLIC_IP
+ssh -i .\soc5-outbound-prod.pem ubuntu@YOUR_EC2_PUBLIC_IP
 ```
 
 On the first connection, verify the fingerprint shown in the EC2 connection
@@ -254,155 +246,23 @@ docker compose version
 
 ## 10. Transfer the repository
 
-Use a repository-specific, read-only GitHub deploy key. Generate this key on the
-EC2 instance, not on Windows, and do not reuse the EC2 login PEM file.
+Preferred method for a private repository:
 
-### 10.1 Generate the deploy key on EC2
+1. Create a read-only deploy key for the repository.
+2. Store the private deploy key only under the EC2 user's `~/.ssh` directory.
+3. Add the public key to the repository host.
+4. Clone into `/opt/soc5-outbound`.
 
-At the Ubuntu prompt (`ubuntu@ip-...:~$`), run:
-
-```bash
-install -d -m 700 ~/.ssh
-ssh-keygen -t ed25519 \
-  -C "soc5-outbound production deploy key" \
-  -f ~/.ssh/soc5_outbound_deploy \
-  -N ""
-chmod 600 ~/.ssh/soc5_outbound_deploy
-chmod 644 ~/.ssh/soc5_outbound_deploy.pub
-```
-
-This creates:
-
-- `~/.ssh/soc5_outbound_deploy` — private key; it stays only on EC2.
-- `~/.ssh/soc5_outbound_deploy.pub` — public key; add this to GitHub.
-
-Display the public key:
-
-```bash
-cat ~/.ssh/soc5_outbound_deploy.pub
-```
-
-Copy the complete single line beginning with `ssh-ed25519`. Never display, copy,
-or paste the file without the `.pub` extension.
-
-### 10.2 Add the public key to the private GitHub repository
-
-In GitHub:
-
-1. Open the private repository that contains this project.
-2. Select **Settings** under the repository name. If it is hidden, open the
-   repository's overflow menu and select **Settings**.
-3. In the left sidebar, select **Security > Deploy keys**.
-4. Select **Add deploy key**.
-5. Title: `soc5-outbound-prod EC2`.
-6. Key: paste the complete `ssh-ed25519 ...` public-key line.
-7. Leave **Allow write access** unchecked. The server only needs to clone and
-   pull; it must not push production changes back to GitHub.
-8. Select **Add key** and complete GitHub password or MFA confirmation if asked.
-
-A GitHub deploy key belongs to one repository. GitHub does not allow the same
-deploy key to be reused across multiple repositories.
-
-### 10.3 Verify GitHub's SSH host key
-
-On EC2, retrieve GitHub's advertised Ed25519 host key into a temporary file:
-
-```bash
-ssh-keyscan -t ed25519 github.com 2>/dev/null > /tmp/github_ed25519_host_key
-ssh-keygen -lf /tmp/github_ed25519_host_key
-```
-
-The fingerprint must match GitHub's currently published Ed25519 fingerprint:
-
-```text
-SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU
-```
-
-If it does not match, stop. Do not add the key or continue connecting. Check the
-official GitHub SSH fingerprint documentation and investigate DNS or network
-interception.
-
-After it matches:
-
-```bash
-cat /tmp/github_ed25519_host_key >> ~/.ssh/known_hosts
-chmod 600 ~/.ssh/known_hosts
-rm /tmp/github_ed25519_host_key
-```
-
-### 10.4 Configure SSH to use only the deploy key
-
-Create a dedicated SSH host alias:
-
-```bash
-nano ~/.ssh/config
-```
-
-Enter:
-
-```sshconfig
-Host github-soc5-outbound
-    HostName github.com
-    User git
-    IdentityFile ~/.ssh/soc5_outbound_deploy
-    IdentitiesOnly yes
-```
-
-Save in Nano with `Ctrl+O`, press `Enter`, and exit with `Ctrl+X`. Then run:
-
-```bash
-chmod 600 ~/.ssh/config
-ssh -T git@github-soc5-outbound
-```
-
-A successful GitHub response states that authentication succeeded and shell
-access is not provided. The command can return exit code 1 even when deploy-key
-authentication succeeded; evaluate the message, not only the exit code.
-
-If it returns `Permission denied (publickey)`, confirm that:
-
-- The `.pub` key was added to the correct repository.
-- The private key path in `~/.ssh/config` is correct.
-- The private key permission is `600`.
-- The GitHub deploy key shows as enabled.
-
-### 10.5 Clone the repository
-
-In GitHub, open the repository's **Code** menu, choose **Local > SSH**, and note
-the path in the form `OWNER/REPOSITORY.git`. Do not use an HTTPS URL for this
-deploy key.
-
-On EC2, replace `OWNER` and `REPOSITORY` below with the actual GitHub values:
+Example after repository access is configured:
 
 ```bash
 sudo mkdir -p /opt/soc5-outbound
 sudo chown ubuntu:ubuntu /opt/soc5-outbound
-git clone git@github-soc5-outbound:OWNER/REPOSITORY.git /opt/soc5-outbound
+git clone YOUR_REPOSITORY_URL /opt/soc5-outbound
 cd /opt/soc5-outbound
-git remote -v
-git status
 ```
 
-Expected results:
-
-- `git remote -v` uses the `github-soc5-outbound` SSH alias.
-- `git status` reports the checked-out branch with no local changes.
-
-If `/opt/soc5-outbound` already contains files, do not delete them blindly.
-Inspect the directory and clone into a new empty directory instead.
-
-### 10.6 Protect and rotate the deploy key
-
-- Never commit `~/.ssh/soc5_outbound_deploy` or copy it to the repository.
-- Keep **Allow write access** disabled.
-- Remove the deploy key from GitHub immediately if EC2 is compromised or
-  terminated.
-- Generate a new key pair and replace the GitHub deploy key during rotation.
-- A deployment key has no automatic expiration; include rotation in the
-  operational calendar.
-
-For a public repository, an HTTPS clone does not require a deploy key. Never copy
-application `.env` files into Git.
+For a public repository, clone its HTTPS URL. Do not copy `.env` files into Git.
 
 ## 11. Create production environment files
 
@@ -416,10 +276,6 @@ cd /opt/soc5-outbound
 docker compose build api
 docker compose run --rm api php artisan key:generate --show
 ```
-
-The API image uses PHP 8.4. The committed Composer lock file contains packages
-that require PHP 8.4.1 or newer; changing the runtime image back to PHP 8.3 causes
-`composer/platform_check.php` to stop the build.
 
 Create `backend/.env` with permissions restricted to the owner:
 
@@ -505,18 +361,6 @@ Expected:
 - `/up` returns a successful Laravel health response.
 - Both containers show healthy/running status.
 
-If the API process logs `Server running` but Docker marks it unhealthy, inspect
-the probe rather than restarting repeatedly:
-
-```bash
-docker inspect soc5-outbound-api-1 \
-  --format '{{range .State.Health.Log}}{{println .Output}}{{end}}'
-docker exec soc5-outbound-api-1 curl --fail --show-error http://127.0.0.1:8000/up
-```
-
-The API image explicitly installs `curl`; Compose uses it for the `/up` health
-probe. Rebuild the API image whenever this health-check dependency changes.
-
 The current Compose API command uses Laravel's built-in server. It is acceptable
 only as a constrained, low-traffic MVP starting point. Before broader production
 use, replace it with a production PHP runtime such as PHP-FPM behind NGINX or
@@ -567,9 +411,8 @@ server {
 }
 
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name www.soc5outboundops.app;
 
     ssl_certificate /etc/nginx/cloudflare-origin/soc5outboundops.app.pem;
@@ -578,9 +421,8 @@ server {
 }
 
 server {
-    listen 443 ssl;
-    listen [::]:443 ssl;
-    http2 on;
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
     server_name soc5outboundops.app;
 
     ssl_certificate /etc/nginx/cloudflare-origin/soc5outboundops.app.pem;
@@ -606,7 +448,6 @@ Enable and validate it:
 sudo ln -s /etc/nginx/sites-available/soc5outboundops.app /etc/nginx/sites-enabled/soc5outboundops.app
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
-sudo systemctl enable --now nginx
 sudo systemctl reload nginx
 ```
 
