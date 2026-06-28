@@ -5,7 +5,7 @@ COPY composer.lock ./
 RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction
 
 FROM php:8.4-fpm-alpine
-RUN apk add --no-cache libpq-dev oniguruma-dev \
+RUN apk add --no-cache curl libpq-dev oniguruma-dev \
  && docker-php-ext-install mbstring opcache pdo_pgsql \
  && apk del oniguruma-dev
 WORKDIR /var/www/html

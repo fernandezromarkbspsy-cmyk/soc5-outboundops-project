@@ -505,6 +505,18 @@ Expected:
 - `/up` returns a successful Laravel health response.
 - Both containers show healthy/running status.
 
+If the API process logs `Server running` but Docker marks it unhealthy, inspect
+the probe rather than restarting repeatedly:
+
+```bash
+docker inspect soc5-outbound-api-1 \
+  --format '{{range .State.Health.Log}}{{println .Output}}{{end}}'
+docker exec soc5-outbound-api-1 curl --fail --show-error http://127.0.0.1:8000/up
+```
+
+The API image explicitly installs `curl`; Compose uses it for the `/up` health
+probe. Rebuild the API image whenever this health-check dependency changes.
+
 The current Compose API command uses Laravel's built-in server. It is acceptable
 only as a constrained, low-traffic MVP starting point. Before broader production
 use, replace it with a production PHP runtime such as PHP-FPM behind NGINX or
