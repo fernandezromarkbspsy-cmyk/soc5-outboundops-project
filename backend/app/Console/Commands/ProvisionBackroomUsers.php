@@ -16,6 +16,7 @@ final class ProvisionBackroomUsers extends Command
     {
         if (! $this->option('all') && ! $this->option('ops-id')) {
             $this->error('Specify --ops-id=ops12345 or --all.');
+
             return self::INVALID;
         }
 
@@ -23,6 +24,7 @@ final class ProvisionBackroomUsers extends Command
         $key = (string) config('services.supabase.service_key');
         if ($url === '' || $key === '') {
             $this->error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured.');
+
             return self::FAILURE;
         }
 
@@ -38,6 +40,7 @@ final class ProvisionBackroomUsers extends Command
         $users = $query->get(['id', 'name', 'ops_id', 'auth_user_id']);
         if ($users->isEmpty()) {
             $this->error('No matching active staged Backroom users were found.');
+
             return self::FAILURE;
         }
 
@@ -63,6 +66,7 @@ final class ProvisionBackroomUsers extends Command
                 if (! $response->successful() || ! $response->json('id')) {
                     $this->error($opsId.': '.($response->json('msg') ?? $response->json('message') ?? 'Supabase user creation failed'));
                     $failed++;
+
                     continue;
                 }
 
@@ -95,6 +99,7 @@ final class ProvisionBackroomUsers extends Command
         }
 
         $this->line("Created: {$created}; repaired: {$repaired}; failed: {$failed}");
+
         return $failed === 0 ? self::SUCCESS : self::FAILURE;
     }
 }

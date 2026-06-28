@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Middleware\AuthenticateSupabase;
 use App\Console\Commands\ProvisionBackroomUsers;
+use App\Http\Middleware\AuthenticateSupabase;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
