@@ -8,7 +8,7 @@ For the AWS Free Tier production deployment walkthrough, use
 
 ## 1. Requirements
 
-- PHP 8.2 or newer
+- PHP 8.4.1 or newer (required by the committed Composer lock file)
 - Composer 2
 - Node.js 22 and npm 10
 - A Supabase project

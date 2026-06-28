@@ -417,6 +417,10 @@ docker compose build api
 docker compose run --rm api php artisan key:generate --show
 ```
 
+The API image uses PHP 8.4. The committed Composer lock file contains packages
+that require PHP 8.4.1 or newer; changing the runtime image back to PHP 8.3 causes
+`composer/platform_check.php` to stop the build.
+
 Create `backend/.env` with permissions restricted to the owner:
 
 ```bash

@@ -7,7 +7,7 @@ an auditable event history.
 
 ## Technology
 
-- Laravel 12 modular-monolith API
+- Laravel 12 modular-monolith API on PHP 8.4
 - React 19, TypeScript, and Vite
 - TanStack Query for server state
 - Zustand for client UI state
