@@ -7,7 +7,8 @@ named page is not directly visible, expand **Authentication > Configuration**.
 
 The application supports two authentication paths:
 
-- **FTE:** an allowlisted `@spxexpress.com` email receives a six-digit OTP.
+- **FTE:** an allowlisted `@spxexpress.com` email uses Google or receives a
+  six-digit email OTP.
 - **Backroom:** an FTE-created account signs in with an OPS ID and password. The
   initial password must be replaced immediately after the first login.
 
@@ -44,8 +45,9 @@ Open **SQL Editor > New query**. Run each file separately and in this order:
 1. `supabase/migrations/001_initial_schema.sql`
 2. `supabase/migrations/002_cluster_import_compatibility.sql`
 3. `supabase/migrations/003_auth_flows.sql`
-4. `docs/outbound/users-seed.sql`
-5. `docs/outbound/clusters-seed.sql`
+4. `supabase/migrations/004_google_fte_auth.sql`
+5. `docs/outbound/users-seed.sql`
+6. `docs/outbound/clusters-seed.sql`
 
 Migration 003 creates the FTE provisioning trigger. The user seed must run after
 that migration so eligible FTE emails exist in the private allowlist before
@@ -106,6 +108,61 @@ The current UI verifies a typed OTP and does not depend on an email redirect.
 Correct URL configuration is still required for future recovery emails, invite
 links, or magic-link fallback behavior. Use exact production URLs instead of a
 broad wildcard.
+
+## 5A. Configure Google login for FTE users
+
+For the complete current Google Console walkthrough, exact project values,
+production checklist, and troubleshooting, follow
+[`docs/google-login-setup.md`](google-login-setup.md). The summary below is kept
+for quick reference.
+
+Google login still uses the `user_imports` allowlist. Selecting an
+`@spxexpress.com` Google account is not sufficient by itself: migration 004
+rejects new Google identities unless the email belongs to an active `fte_ops`
+or `fte_mm` row. Laravel performs the same effective check on every API request
+by requiring an active profile. Backroom users continue to use OPS ID and
+password; the Google button is shown only on the FTE tab.
+
+### Google Auth Platform
+
+1. Open [Google Auth Platform](https://console.cloud.google.com/auth/overview)
+   and select or create the project that will own the OAuth application.
+2. Under **Branding**, configure the application name, support email, authorized
+   domains, and contact email.
+3. Under **Audience**, choose the audience permitted by your Google Workspace
+   policy. Prefer **Internal** when the Cloud project belongs to the same
+   Workspace organization as `spxexpress.com`; otherwise use **External** and
+   complete the required testing/publishing process.
+4. Under **Data Access**, retain only the scopes Supabase requires: `openid`,
+   email, and profile.
+5. Under **Clients**, create an **OAuth client ID** with application type
+   **Web application**.
+6. Add the application origins, without a trailing path:
+   - `http://localhost:5173`
+   - `https://soc5outboundops.app`
+7. In Supabase, open **Authentication > Sign In / Providers > Google** and copy
+   the callback URL shown there. Add that exact value under Google's
+   **Authorized redirect URIs**. For hosted Supabase it normally has this form:
+
+   ```text
+   https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback
+   ```
+
+8. Create the client and securely copy its Client ID and Client Secret.
+
+### Supabase Dashboard
+
+1. Open **Authentication > Sign In / Providers > Google**.
+2. Enable Google, paste the Web client ID and client secret, and save.
+3. Confirm **Authentication > URL Configuration** contains the local and
+   production URLs from section 5. The frontend sends its current origin as
+   `redirectTo`, and Supabase accepts only configured redirect URLs.
+4. Do not add the Google client secret to either application `.env` file. It is
+   stored only in the Supabase provider configuration.
+
+The frontend passes Google's `hd=spxexpress.com` parameter to make the account
+chooser favor the company domain. This is a user-interface hint, not an access
+control. The database allowlist and backend profile check enforce access.
 
 ## 6. Configure Cloudflare Email Service SMTP
 
@@ -293,7 +350,7 @@ SUPABASE_SERVICE_ROLE_KEY=sb_secret_REPLACE_ME
 Legacy projects can use the legacy `anon` and `service_role` values in the same
 variables. Restart Vite and Laravel after changing environment files.
 
-## 10. Test an FTE OTP login
+## 10. Test FTE login
 
 First verify the chosen email is eligible:
 
@@ -314,10 +371,14 @@ Then test:
 1. Start Laravel and Vite.
 2. Open `http://localhost:5173`.
 3. Select **FTE**.
-4. Enter the exact staged email.
-5. Select **Send verification code** once.
-6. Enter the six-digit code from the email.
-7. Confirm the dashboard loads.
+4. Choose **Continue with Google**, select the matching company account, and
+   confirm the dashboard loads.
+5. Sign out, request an email verification code for the same address, and
+   confirm the OTP path also loads the dashboard.
+
+Test the authorization boundary as well: select a Google account that is not an
+active `fte_ops` or `fte_mm` entry. Supabase must reject identity creation and
+`/api/auth/me` must never return a profile for that account.
 
 After the first request, verify account linking:
 

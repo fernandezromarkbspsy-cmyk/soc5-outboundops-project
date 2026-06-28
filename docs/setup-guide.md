@@ -33,12 +33,16 @@ For the complete current Dashboard walkthrough, including Email OTP, SMTP,
 templates, rate limits, verification queries, and troubleshooting, use
 [`docs/supabase-auth-setup.md`](supabase-auth-setup.md).
 
+For the current Google Auth Platform setup, including the exact callback URI
+for this project, follow [`docs/google-login-setup.md`](google-login-setup.md).
+
 In the Supabase dashboard, open the SQL Editor and execute:
 
 ```text
 supabase/migrations/001_initial_schema.sql
 supabase/migrations/002_cluster_import_compatibility.sql
 supabase/migrations/003_auth_flows.sql
+supabase/migrations/004_google_fte_auth.sql
 ```
 
 This creates profiles, clusters, requests, events, notifications, indexes, RLS
