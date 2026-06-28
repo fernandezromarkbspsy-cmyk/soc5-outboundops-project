@@ -206,7 +206,7 @@ deleted.
 From PowerShell in the folder containing the key:
 
 ```powershell
-ssh -i .\soc5-outbound-prod.pem ubuntu@YOUR_EC2_PUBLIC_IP
+ssh -i .\soc5-outbound-prod.pem ubuntu@18.140.215.224
 ```
 
 On the first connection, verify the fingerprint shown in the EC2 connection
