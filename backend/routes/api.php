@@ -3,8 +3,8 @@
 use App\Features\Requests\RequestController;
 use App\Features\Users\UserController;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
     Route::get('/auth/me', fn (Request $r) => response()->json($r->attributes->get('actor')));
@@ -12,6 +12,7 @@ Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
         $actor = $request->attributes->get('actor');
         abort_unless($actor->role === 'ops_pic', 403, 'Only Backroom accounts use this flow.');
         DB::table('profiles')->where('id', $actor->id)->update(['must_change_password' => false, 'password_changed_at' => now(), 'updated_at' => now()]);
+
         return response()->json(['ok' => true]);
     });
     Route::post('/users', [UserController::class, 'store']);
