@@ -567,8 +567,9 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
     server_name www.soc5outboundops.app;
 
     ssl_certificate /etc/nginx/cloudflare-origin/soc5outboundops.app.pem;
@@ -577,8 +578,9 @@ server {
 }
 
 server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
     server_name soc5outboundops.app;
 
     ssl_certificate /etc/nginx/cloudflare-origin/soc5outboundops.app.pem;
@@ -604,6 +606,7 @@ Enable and validate it:
 sudo ln -s /etc/nginx/sites-available/soc5outboundops.app /etc/nginx/sites-enabled/soc5outboundops.app
 sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
+sudo systemctl enable --now nginx
 sudo systemctl reload nginx
 ```
 
