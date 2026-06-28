@@ -30,7 +30,7 @@ You need:
 - permission to create OAuth clients in a Google Cloud project;
 - Supabase project Owner or Administrator access;
 - control of the production domain if Google asks for domain verification;
-- migrations `001` through `004` and `docs/outbound/users-seed.sql` applied;
+- migrations `001` through `005` and `docs/outbound/users-seed.sql` applied;
 - at least one active FTE allowlist row for testing.
 
 Never commit the Google client secret. It belongs only in the hosted Supabase
@@ -213,6 +213,7 @@ supabase/migrations/002_cluster_import_compatibility.sql
 supabase/migrations/003_auth_flows.sql
 supabase/migrations/004_google_fte_auth.sql
 docs/outbound/users-seed.sql
+supabase/migrations/005_repair_existing_fte_profiles.sql
 ```
 
 Verify the intended test user:

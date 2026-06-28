@@ -47,7 +47,8 @@ Open **SQL Editor > New query**. Run each file separately and in this order:
 3. `supabase/migrations/003_auth_flows.sql`
 4. `supabase/migrations/004_google_fte_auth.sql`
 5. `docs/outbound/users-seed.sql`
-6. `docs/outbound/clusters-seed.sql`
+6. `supabase/migrations/005_repair_existing_fte_profiles.sql`
+7. `docs/outbound/clusters-seed.sql`
 
 Migration 003 creates the FTE provisioning trigger. The user seed must run after
 that migration so eligible FTE emails exist in the private allowlist before
