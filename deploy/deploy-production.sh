@@ -7,10 +7,12 @@ readonly BRANCH="main"
 readonly HEALTH_URL="http://127.0.0.1:8080/up"
 
 exec 9>/tmp/soc5-outbound-deploy.lock
-if ! flock -n 9; then
-  echo "Another production deployment is already running." >&2
+echo "Waiting for the production deployment lock..."
+if ! flock -w 600 9; then
+  echo "Timed out after 10 minutes waiting for another production deployment." >&2
   exit 1
 fi
+echo "Production deployment lock acquired."
 
 cd "$APP_DIR"
 
@@ -53,4 +55,3 @@ curl --fail --silent --show-error "$HEALTH_URL" >/dev/null
 echo "Deployment completed successfully."
 docker compose ps
 git log -1 --oneline
-
