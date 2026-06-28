@@ -22,6 +22,18 @@ if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
   exit 1
 fi
 
+if [[ ! -f .env ]]; then
+  echo "Deployment refused: $APP_DIR/.env is missing." >&2
+  exit 1
+fi
+
+for variable in SUPABASE_URL SUPABASE_PUBLISHABLE_KEY; do
+  if ! grep -Eq "^${variable}=.+" .env; then
+    echo "Deployment refused: $variable is missing or empty in $APP_DIR/.env." >&2
+    exit 1
+  fi
+done
+
 echo "Fetching origin/$BRANCH..."
 git fetch --prune origin "$BRANCH"
 git merge --ff-only "origin/$BRANCH"
@@ -50,7 +62,20 @@ for attempt in {1..24}; do
   sleep 5
 done
 
-curl --fail --silent --show-error "$HEALTH_URL" >/dev/null
+echo "Waiting for the public health endpoint..."
+for attempt in {1..24}; do
+  if curl --fail --silent --show-error --max-time 5 "$HEALTH_URL" >/dev/null; then
+    echo "Public health endpoint is ready."
+    break
+  fi
+  if [[ "$attempt" == "24" ]]; then
+    echo "Public health endpoint did not become ready." >&2
+    docker compose ps
+    docker compose logs --tail=100 web
+    exit 1
+  fi
+  sleep 5
+done
 
 echo "Deployment completed successfully."
 docker compose ps
