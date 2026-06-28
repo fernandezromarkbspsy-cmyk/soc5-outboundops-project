@@ -1,0 +1,3 @@
+import type { TruckRequest } from '../types';
+import { StatusBadge } from './StatusBadge';
+export function RequestTable({rows}:{rows:TruckRequest[]}) {return <div className="table-wrap"><table><thead><tr><th>Created</th><th>Cluster</th><th>Dock</th><th>Load</th><th>Truck</th><th>Plate</th><th>Status</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}><td>{new Date(r.created_at).toLocaleString()}</td><td>{r.cluster}<small>{r.region}</small></td><td>{r.dock_no}</td><td>{r.backlogs.toLocaleString()}</td><td>{r.truck_size} · {r.truck_type}</td><td>{r.plate_number??'—'}</td><td><StatusBadge status={r.status}/></td></tr>)}</tbody></table></div>}
