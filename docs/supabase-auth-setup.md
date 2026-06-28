@@ -107,7 +107,110 @@ Correct URL configuration is still required for future recovery emails, invite
 links, or magic-link fallback behavior. Use exact production URLs instead of a
 broad wildcard.
 
-## 6. Change the Magic Link template into an OTP template
+## 6. Configure Cloudflare Email Service SMTP
+
+Supabase's built-in mailer is only suitable for initial testing. Configure
+Cloudflare Email Service before editing the Magic Link template; the Supabase
+Dashboard may keep custom email-template controls unavailable until custom SMTP
+is enabled.
+
+Cloudflare Email Sending and authenticated SMTP are currently beta features.
+Sending to arbitrary FTE addresses requires the **Workers Paid** plan. The plan
+includes 3,000 outbound emails per Cloudflare account per month; review current
+pricing and quotas before production rollout. Sending only to destination
+addresses verified in the Cloudflare account can be tested without enabling
+arbitrary-recipient sending.
+
+### 6.1 Enable Email Sending and onboard the domain
+
+The following navigation matches the Cloudflare Dashboard as of June 2026:
+
+1. Sign in to Cloudflare and select the account that owns
+   `soc5outboundops.app`.
+2. Open **Compute > Email Service > Email Sending**.
+3. If arbitrary-recipient sending is unavailable, upgrade the account to
+   **Workers Paid** and return to **Email Sending**.
+4. Select **Onboard Domain**.
+5. Choose `soc5outboundops.app` and review the DNS records Cloudflare proposes.
+6. Confirm the onboarding. Because Cloudflare is authoritative for this zone,
+   Email Service can create the required records automatically.
+7. Open **Compute > Email Service > Email Sending > Settings**.
+8. Confirm that the sending DNS section lists valid records for:
+   - bounce handling at `cf-bounce.soc5outboundops.app`
+   - SPF at `cf-bounce.soc5outboundops.app`
+   - DKIM at `cf-bounce._domainkey.soc5outboundops.app`
+   - DMARC at `_dmarc.soc5outboundops.app`
+
+A DNS record shown as **Locked** or **Unlocked** is valid; the label indicates
+whether Email Service manages the record. Do not proxy mail-related DNS records.
+Do not manually create guessed SPF or DKIM values when Cloudflare has already
+created them.
+
+This guide uses `no-reply@soc5outboundops.app`. A subdomain sender such as
+`no-reply@auth.soc5outboundops.app` must itself be available for onboarding in
+Email Sending before Supabase can use it.
+
+### 6.2 Create the SMTP API token
+
+Use an account-owned token when possible because it is not tied to an employee's
+Cloudflare user account. Creating one requires Cloudflare Super Administrator
+access.
+
+1. Open **Manage Account > Account API Tokens**.
+2. Select **Create Token**.
+3. Name it `Supabase Auth SMTP`.
+4. Add the account permission **Email Sending: Edit**.
+5. Restrict the token to the account that owns `soc5outboundops.app`.
+6. Optionally set an expiration date and record a rotation reminder.
+7. Select **Continue to summary**, verify the scope, and select
+   **Create Token**.
+8. Copy the token immediately. Cloudflare shows the secret only once.
+
+If account-owned tokens are unavailable, create a user token under **My Profile
+> API Tokens > Create Token > Custom token** with the same **Email Sending:
+Edit** permission and account restriction.
+
+Treat this token as the SMTP password. Do not use the Global API Key, place the
+token in this repository, add it to Laravel or Vite environment files, or retain
+it in screenshots. Supabase stores it in the project's Auth SMTP configuration.
+
+### 6.3 Enter the Cloudflare SMTP settings in Supabase
+
+1. Open the Supabase project.
+2. Go to **Authentication > SMTP Settings**. In some Dashboard revisions this
+   is under **Authentication > Settings**.
+3. Enable **Custom SMTP**.
+4. Enter these exact values:
+
+| Supabase field | Value |
+|---|---|
+| Sender email | `no-reply@soc5outboundops.app` |
+| Sender name | `SOC 5 Outbound` |
+| Host or Host URL | `smtp.mx.cloudflare.net` |
+| Port | `465` |
+| Username | `api_token` |
+| Password | the Cloudflare API token created above |
+
+The host field contains only `smtp.mx.cloudflare.net`: do not add `https://`,
+`smtps://`, a path, or the application domain. Cloudflare requires implicit TLS
+(SMTPS) from connection start on port 465. It does not support SMTP submission
+with STARTTLS on port 587, plaintext SMTP, or outbound relay on port 25.
+
+5. Save the SMTP settings.
+6. Use Supabase's test-email action if it is present. Otherwise complete the OTP
+   test in section 10 after saving the template.
+7. Confirm delivery to an approved SPX mailbox and inspect both Supabase Auth
+   logs and **Cloudflare > Compute > Email Service > Email Sending** metrics and
+   logs.
+
+Do not continue until Supabase accepts the settings. A connection or TLS error
+usually means port 465 is not being treated as implicit TLS. An authentication
+error usually means the username is not exactly `api_token`, the token lacks
+**Email Sending: Edit**, or the token belongs to another Cloudflare account. A
+`Sender denied` response means the domain in the Sender email was not onboarded
+for Email Sending under the token's account.
+
+## 7. Change the Magic Link template into an OTP template
 
 Supabase uses the same API and template slot for magic links and email OTPs. The
 template variable determines which experience the user receives:
@@ -141,30 +244,6 @@ template variable determines which experience the user receives:
 The application calls `verifyOtp` with the email, token, and `type: 'email'`.
 Changing the code length in the application is not supported; Supabase generates
 the six-digit token.
-
-## 7. Configure production SMTP
-
-Supabase's built-in SMTP service is for initial testing. It only delivers to
-pre-authorized addresses associated with the project's organization and is not
-appropriate for real FTE rollout.
-
-1. Create credentials with an SMTP provider such as AWS SES, Postmark, Resend,
-   SendGrid, Brevo, or an approved company mail relay.
-2. Verify the sending domain with that provider.
-3. Configure SPF, DKIM, and DMARC records for the sending domain.
-4. In Supabase, open **Authentication > SMTP Settings**. Depending on the
-   dashboard revision, this may appear under **Authentication > Settings**.
-5. Enable **Custom SMTP** and enter:
-   - Sender email, for example `no-reply@auth.soc5outboundops.app`
-   - Sender name, for example `SOC 5 Outbound`
-   - SMTP host
-   - SMTP port (`587` with STARTTLS is common; use the provider's value)
-   - SMTP username
-   - SMTP password
-6. Save and send a test email if the dashboard offers that action.
-
-Use a dedicated authentication subdomain and From address. Do not reuse a
-marketing sender because its reputation and complaint rate affect OTP delivery.
 
 ## 8. Configure OTP expiry and rate limits
 
@@ -358,7 +437,9 @@ production, configure custom SMTP before raising project-wide send limits.
 - [ ] Magic Link template sends `{{ .Token }}`.
 - [ ] Production Site URL uses HTTPS.
 - [ ] Redirect allowlist contains only required URLs.
+- [ ] Cloudflare Email Sending is enabled and the sending domain is onboarded.
 - [ ] Custom SMTP is enabled and tested with an SPX mailbox.
+- [ ] The SMTP token has only the required **Email Sending: Edit** permission.
 - [ ] SPF, DKIM, and DMARC pass.
 - [ ] OTP expiry and rate limits match expected operational volume.
 - [ ] Secret/service-role key exists only on the backend.
@@ -385,7 +466,7 @@ Reserve these hostnames:
 | Optional `www` alias | `www.soc5outboundops.app` | Recommended |
 | Laravel API | `api.soc5outboundops.app` | Yes for separate hosting |
 | Supabase custom domain | `auth.soc5outboundops.app` | No; paid add-on |
-| Authentication sender | `no-reply@auth.soc5outboundops.app` | When SMTP is configured |
+| Authentication sender | `no-reply@soc5outboundops.app` | When SMTP is configured |
 
 Do not create guessed A or CNAME targets. The frontend and backend hosting
 providers supply their required targets. Add those records in Cloudflare after
@@ -402,7 +483,7 @@ Recommended behavior:
 - Continue using `https://PROJECT_REF.supabase.co` as `VITE_SUPABASE_URL` unless
   the optional Supabase custom domain is activated.
 
-## Official Supabase references
+## Official references
 
 - [Passwordless email login and OTP](https://supabase.com/docs/guides/auth/auth-email-passwordless)
 - [Email templates](https://supabase.com/docs/guides/auth/auth-email-templates)
@@ -410,3 +491,8 @@ Recommended behavior:
 - [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls)
 - [Auth rate limits](https://supabase.com/docs/guides/auth/rate-limits)
 - [Auth users](https://supabase.com/docs/guides/auth/users)
+- [Cloudflare Email Sending setup](https://developers.cloudflare.com/email-service/get-started/send-emails/)
+- [Cloudflare SMTP reference](https://developers.cloudflare.com/email-service/api/send-emails/smtp/)
+- [Cloudflare Email Service domain configuration](https://developers.cloudflare.com/email-service/configuration/domains/)
+- [Cloudflare Email Service pricing](https://developers.cloudflare.com/email-service/platform/pricing/)
+- [Create a Cloudflare API token](https://developers.cloudflare.com/fundamentals/api/get-started/create-token/)
