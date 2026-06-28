@@ -6,6 +6,18 @@
 *.key
 *.p12
 *.pfx
+*.crt
+*.cer
+*.csr
+*.jks
+*.keystore
+*.mobileprovision
+id_rsa*
+id_ed25519*
+known_hosts
+.ssh/
+.aws/
+deploy/certs/
 
 # JavaScript / Vite
 node_modules/
@@ -16,6 +28,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
+.npm/
+.pnpm-store/
 
 # PHP / Laravel
 vendor/
@@ -32,10 +46,20 @@ backend/storage/logs/*
 .phpunit.cache/
 .phpunit.result.cache
 coverage/
+clover.xml
+junit.xml
 
 # Supabase local development
 supabase/.branches/
 supabase/.temp/
+
+# Infrastructure and local deployment overrides
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+docker-compose.override.yml
 
 # Editors and operating systems
 .idea/
@@ -50,4 +74,8 @@ Desktop.ini
 *.log
 *.tmp
 *.bak
+*.orig
 *.cache
+*.pid
+*.seed
+*.retry
