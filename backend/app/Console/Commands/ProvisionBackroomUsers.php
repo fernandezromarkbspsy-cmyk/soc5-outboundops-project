@@ -22,8 +22,9 @@ final class ProvisionBackroomUsers extends Command
 
         $url = rtrim((string) config('services.supabase.url'), '/');
         $key = (string) config('services.supabase.service_key');
-        if ($url === '' || $key === '') {
-            $this->error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be configured.');
+        $initialPassword = (string) config('services.backroom.initial_password');
+        if ($url === '' || $key === '' || $initialPassword === '') {
+            $this->error('SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and BACKROOM_INITIAL_PASSWORD must be configured.');
 
             return self::FAILURE;
         }
@@ -58,7 +59,7 @@ final class ProvisionBackroomUsers extends Command
                     'Authorization' => 'Bearer '.$key,
                 ])->timeout(15)->post($url.'/auth/v1/admin/users', [
                     'email' => $opsId.'@backroom.soc5.internal',
-                    'password' => 'soc5-outbound2026',
+                    'password' => $initialPassword,
                     'email_confirm' => true,
                     'user_metadata' => ['ops_id' => $opsId, 'account_type' => 'backroom'],
                 ]);

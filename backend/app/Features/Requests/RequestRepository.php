@@ -4,6 +4,7 @@ namespace App\Features\Requests;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Collection;
 
 final class RequestRepository
 {
@@ -20,6 +21,16 @@ final class RequestRepository
         }
 
         return $query->paginate(min((int) ($filters['per_page'] ?? 20), 100));
+    }
+
+    public function metrics(object $actor): Collection
+    {
+        $query = DB::table('requests')->select('status', DB::raw('count(*) as total'))->groupBy('status');
+        if ($actor->role === 'ops_pic') {
+            $query->where('created_by', $actor->id);
+        }
+
+        return $query->pluck('total', 'status');
     }
 
     public function lock(string $id): object

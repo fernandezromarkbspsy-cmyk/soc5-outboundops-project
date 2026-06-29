@@ -51,7 +51,7 @@ final class AuthenticateSupabase
 
         try {
             $profile = DB::table('profiles')->where('id', $response->json('id'))
-                ->where('is_active', true)->first(['id', 'name', 'role', 'email', 'ops_id', 'must_change_password', 'password_changed_at']);
+                ->where('is_active', true)->first(['id', 'name', 'role', 'email', 'ops_id', 'must_change_password', 'password_changed_at', 'created_at']);
         } catch (QueryException $exception) {
             Log::error('Unable to load the authenticated Supabase profile.', [
                 'auth_user_id' => $response->json('id'),
@@ -63,6 +63,15 @@ final class AuthenticateSupabase
         }
         abort_unless($profile, 403, 'Account is disabled or not provisioned.');
         $request->attributes->set('actor', $profile);
+        $request->attributes->set('supabase_user_updated_at', $response->json('updated_at'));
+
+        if ($profile->must_change_password) {
+            $allowed = [
+                'GET:api/auth/me',
+                'POST:api/auth/password-changed',
+            ];
+            abort_unless(in_array($request->method().':'.$request->path(), $allowed, true), 403, 'Password change required.');
+        }
 
         return $next($request);
     }
