@@ -31,7 +31,6 @@ export function DockingConfirmation({ user }: { user: User }) {
     : <button className="table-action assign" onClick={() => setSelected(request)}><ShipWheel size={15} />Dock truck</button>;
 
   return <div className="workspace-view">
-    <header className="page-header"><div><p className="eyebrow">DOCKING</p><h1>Docking Confirmation</h1><p>Record driver and trip details, dock trucks, and complete requests.</p></div></header>
     {action.error && <p className="notice error">{action.error.message}</p>}
     <section className="panel data-panel"><div className="panel-head"><div><h2>Docking queue</h2><p>Assigned trucks requiring dock action or final confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading docking queue...</div> : <RequestTable rows={rows} actions={actions} emptyMessage="No trucks are waiting for docking." />}</section>
     {selected && <DockDialog request={selected} busy={action.isPending} onClose={() => setSelected(null)} onSubmit={payload => action.mutate({ request: selected, action: 'mark-docked', payload })} />}

@@ -41,7 +41,6 @@ export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnaps
   }
 
   return <div className="workspace-view">
-    <header className="page-header"><div><p className="eyebrow">MIDMILE</p><h1>Truck Request</h1><p>Confirm approved requests with a plate number or return them with remarks.</p></div></header>
     {(notice || transition.error) && <p className={`notice${transition.error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{transition.error?.message || notice}</p>}
 
     <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending confirmation</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>Approved requests awaiting FTE Midmile confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading confirmation queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No approved requests are awaiting confirmation." actions={actions} />}</section>
