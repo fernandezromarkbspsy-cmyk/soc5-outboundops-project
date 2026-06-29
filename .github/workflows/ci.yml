@@ -27,6 +27,8 @@ jobs:
       SUPABASE_PUBLISHABLE_KEY: ci-placeholder-publishable-key
     steps:
       - uses: actions/checkout@v4
+      - name: Create backend env file for Compose validation
+        run: cp backend/.env.example backend/.env
       - name: Validate Compose configuration
         run: docker compose config --quiet
       - name: Build backend image
