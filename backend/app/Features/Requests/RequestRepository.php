@@ -14,7 +14,7 @@ final class RequestRepository
     public function paginate(object $actor, array $filters): LengthAwarePaginator
     {
         $query = DB::table('requests')->select(self::COLUMNS);
-        if ($actor->role === 'ops_pic') {
+        if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
             $query->where('created_by', $actor->id);
         }
         if ($status = $filters['status'] ?? null) {
@@ -56,7 +56,7 @@ final class RequestRepository
             : $now->setTime(18, 0);
         $shiftEnd = $shiftStart->addHours(13);
         $shiftQuery = DB::table('requests')->whereBetween('request_timestamp', [$shiftStart->utc(), $shiftEnd->utc()]);
-        if ($actor->role === 'ops_pic') {
+        if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
             $shiftQuery->where('created_by', $actor->id);
         }
         $timestamps = $shiftQuery->pluck('request_timestamp');
@@ -80,7 +80,7 @@ final class RequestRepository
 
     private function scope($query, object $actor, array $filters): void
     {
-        if ($actor->role === 'ops_pic') {
+        if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
             $query->where('created_by', $actor->id);
         }
         if ($dateFrom = $filters['date_from'] ?? null) {

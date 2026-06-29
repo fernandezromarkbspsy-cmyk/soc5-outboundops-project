@@ -1,4 +1,5 @@
 import { supabase } from './supabase';
+import { useUiStore } from '../stores/ui';
 
 const base = import.meta.env.VITE_API_URL ?? '/api';
 
@@ -13,7 +14,8 @@ export async function api<T = unknown>(path: string, init: RequestInit = {}): Pr
   const { data: { session } } = await supabase.auth.getSession();
   let response: Response;
   try {
-    response = await fetch(`${base}${path}`, { ...init, headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}), ...init.headers } });
+    const viewRole = useUiStore.getState().viewRole;
+    response = await fetch(`${base}${path}`, { ...init, headers: { 'Content-Type': 'application/json', Accept: 'application/json', ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}), ...(viewRole ? { 'X-View-Role': viewRole } : {}), ...init.headers } });
   } catch {
     throw new ApiError('Network error. Check your connection and try again.', 0);
   }

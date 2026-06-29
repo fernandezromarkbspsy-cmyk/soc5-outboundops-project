@@ -349,10 +349,17 @@ th { color: $muted; font-size: .75rem; text-transform: uppercase; }
 .topbar-search { width: min(260px, 22vw); }
 .topbar-search input { width: 100%; }
 .topbar-search kbd { padding: .2rem .35rem; border: 1px solid $line; border-radius: 4px; background: #f8fafc; color: #98a2b3; font: 600 .58rem/1 sans-serif; white-space: nowrap; }
-.topbar-user { display: flex; align-items: center; gap: .45rem; padding-left: .65rem; border-left: 1px solid $line; color: #475467; }
+.profile-switcher { position: relative; }
+.topbar-user { display: flex; min-height: 40px; align-items: center; gap: .45rem; padding: .25rem .35rem .25rem .65rem; border-left: 1px solid $line; border-radius: 0; background: transparent; color: #475467; text-align: left; }
+.topbar-user:hover { background: #f8fafc; }
 .topbar-user > div { display: grid; max-width: 130px; }
 .topbar-user strong { overflow: hidden; font-size: .74rem; text-overflow: ellipsis; white-space: nowrap; }
 .topbar-user small { color: $muted; font-size: .6rem; text-transform: capitalize; }
+.profile-menu { position: absolute; top: calc(100% + .55rem); right: 0; z-index: 35; width: 250px; overflow: hidden; border: 1px solid $line; border-radius: 10px; background: #fff; box-shadow: 0 14px 38px rgba(16,24,40,.18); }
+.profile-menu header { display: flex; align-items: center; gap: .6rem; padding: .8rem .9rem; border-bottom: 1px solid $line; color: #047857; }
+.profile-menu header div { display: grid; }.profile-menu header strong { color: $ink; font-size: .78rem; }.profile-menu header small { color: $muted; font-size: .64rem; }
+.profile-menu > button { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: .68rem .9rem; border-radius: 0; background: #fff; color: #344054; font-size: .75rem; text-align: left; }
+.profile-menu > button:hover { background: #ecfdf3; color: #047857; }.profile-menu > p { margin: 0; padding: 1rem; color: $muted; font-size: .75rem; }
 
 @media (max-width: 1120px) { .topbar-user div { display: none; }.topbar-dates input { width: 112px; }.topbar-search { width: 210px; }.topbar-search kbd { display: none; } }
 @media (max-width: 760px) { .app-topbar { min-height: 68px; margin: 0 -1rem 1.25rem; padding: 0 1rem 0 4.15rem; }.topbar-dates, .topbar-user { display: none; }.topbar-page h1 { font-size: 1.18rem; }.topbar-breadcrumbs { font-size: .58rem; }.topbar-tools { min-width: 0; flex: 1; }.topbar-search { width: auto; min-width: 100px; flex: 1; }.notification-button { flex: 0 0 38px; } }
