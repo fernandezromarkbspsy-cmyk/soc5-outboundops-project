@@ -90,7 +90,12 @@ echo "Building application images..."
 docker compose build
 
 echo "Starting application..."
-docker compose up -d --remove-orphans
+if ! docker compose up -d --remove-orphans; then
+  echo "Application containers failed to start." >&2
+  docker compose ps
+  docker compose logs --tail=100 api
+  exit 1
+fi
 
 echo "Waiting for API health..."
 for attempt in {1..24}; do
@@ -106,6 +111,14 @@ for attempt in {1..24}; do
   fi
   sleep 5
 done
+
+echo "Checking API authentication configuration..."
+if ! docker compose exec -T api \
+  curl --fail --silent --show-error --max-time 5 http://127.0.0.1:8000/api/auth/status >/dev/null; then
+  echo "API authentication readiness check failed." >&2
+  docker compose logs --tail=100 api
+  exit 1
+fi
 
 echo "Waiting for the public health endpoint..."
 for attempt in {1..24}; do
