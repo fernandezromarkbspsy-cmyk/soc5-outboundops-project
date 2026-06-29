@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useState } from 'react';
-import { isAuthApiError } from '@supabase/supabase-js';
+import { isAuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 type UserType = 'fte' | 'backroom';
@@ -16,11 +16,20 @@ const authErrorMessages: Record<string, string> = {
 };
 
 function describeAuthError(cause: unknown, fallback: string): string {
-  if (isAuthApiError(cause)) {
+  if (isAuthError(cause)) {
     if (cause.code && authErrorMessages[cause.code]) return authErrorMessages[cause.code];
     const message = cause.message.trim();
     if (message && message !== '{}') return message;
-    if (cause.status >= 500) return 'Email authentication failed. Check the Supabase Auth logs and custom SMTP configuration.';
+    if (cause.status && cause.status >= 500) return 'Email authentication failed. Check the Supabase Auth logs and custom SMTP configuration.';
+    if ('originalError' in cause) return describeAuthError(cause.originalError, fallback);
+  }
+  if (cause && typeof cause === 'object') {
+    const value = cause as Record<string, unknown>;
+    const code = typeof value.code === 'string' ? value.code : '';
+    if (code && authErrorMessages[code]) return authErrorMessages[code];
+    for (const key of ['message', 'msg', 'error_description', 'error']) {
+      if (typeof value[key] === 'string' && value[key].trim() && value[key].trim() !== '{}') return value[key];
+    }
   }
   if (cause instanceof Error && cause.message.trim() && cause.message.trim() !== '{}') return cause.message;
   return fallback;
@@ -106,7 +115,12 @@ export function Login() {
         if (signInError) throw signInError;
       }
     } catch (cause) {
-      setError(describeAuthError(cause, 'Unable to sign in.'));
+      const fallback = type === 'fte'
+        ? codeSent
+          ? 'Unable to verify the code. Request a new code and check the Supabase Auth logs.'
+          : 'Unable to send a verification email. Check the Supabase Auth logs and custom SMTP configuration.'
+        : 'Unable to sign in.';
+      setError(describeAuthError(cause, fallback));
     } finally {
       setBusy(false);
     }
