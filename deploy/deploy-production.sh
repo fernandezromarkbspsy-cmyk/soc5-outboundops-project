@@ -79,9 +79,14 @@ if ! grep -Eq '^SUPABASE_(PUBLISHABLE_KEY|ANON_KEY)=.+' backend/.env; then
   exit 1
 fi
 
+# Secrets remain mode 600; source files pulled below need normal read access so
+# the non-root application user can read them after Docker copies the context.
+umask 022
+
 echo "Fetching origin/$BRANCH..."
 git fetch --prune origin "$BRANCH"
 git merge --ff-only "origin/$BRANCH"
+git ls-files -z | xargs -0 chmod a+r
 
 echo "Validating Compose configuration..."
 docker compose config --quiet

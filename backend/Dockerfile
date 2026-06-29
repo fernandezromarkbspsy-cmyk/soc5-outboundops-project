@@ -19,7 +19,9 @@ WORKDIR /var/www/html
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
 RUN php artisan package:discover --ansi
-RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+RUN chmod -R a+rX app bootstrap config public routes \
+ && chmod a+r artisan composer.json composer.lock \
+ && mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
  && chown -R www-data:www-data storage bootstrap/cache
 USER www-data
 CMD ["php-fpm"]
