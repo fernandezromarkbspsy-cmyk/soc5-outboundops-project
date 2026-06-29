@@ -1,13 +1,13 @@
-import { Bell, CalendarDays, LayoutDashboard, Route, Search, Truck, UserCircle } from 'lucide-react';
+import { Bell, CalendarDays, ChevronRight, Search, UserCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useUiStore } from '../stores/ui';
 import type { AppView, TruckRequest, User } from '../types';
 
 type Props = { user:User; view:AppView; count:number; alerts:TruckRequest[]; onSearch:()=>void; onOpenAlert:(request:TruckRequest)=>void };
 const page = {
-  overview: { name: 'Dashboard', detail: 'Operations overview', icon: LayoutDashboard },
-  'lh-request': { name: 'LH Request', detail: 'Outbound operations', icon: Route },
-  'truck-request': { name: 'Truck Request', detail: 'Midmile operations', icon: Truck },
+  overview: { name: 'Dashboard', section: 'Overview' },
+  'lh-request': { name: 'LH Request', section: 'Outbound' },
+  'truck-request': { name: 'Truck Request', section: 'Midmile' },
 };
 
 export function AppHeader({ user, view, count, alerts, onSearch, onOpenAlert }: Props) {
@@ -19,7 +19,6 @@ export function AppHeader({ user, view, count, alerts, onSearch, onOpenAlert }: 
   const setDateRange = useUiStore(state => state.setDateRange);
   const resetDateRange = useUiStore(state => state.resetDateRange);
   const searchRef = useRef<HTMLInputElement>(null);
-  const PageIcon = page[view].icon;
 
   useEffect(() => {
     const focusSearch = (event: KeyboardEvent) => { if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') { event.preventDefault(); searchRef.current?.focus(); } };
@@ -28,7 +27,7 @@ export function AppHeader({ user, view, count, alerts, onSearch, onOpenAlert }: 
   }, []);
 
   return <header className="app-topbar">
-    <div className="topbar-page"><span><PageIcon size={19}/></span><div><h1>{page[view].name}</h1><small>{page[view].detail}</small></div></div>
+    <div className="topbar-page"><div><nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav><h1>{page[view].name}</h1></div></div>
     <div className="topbar-tools">
       {view === 'overview' && <div className="topbar-dates"><CalendarDays size={17}/><input aria-label="Start date" type="date" value={from} max={to} onChange={e=>setDateRange(e.target.value,to)}/><span>–</span><input aria-label="End date" type="date" value={to} min={from} onChange={e=>setDateRange(from,e.target.value)}/><button type="button" onClick={resetDateRange}>Today</button></div>}
       <form className="topbar-search" onSubmit={event=>{event.preventDefault();if(search.trim())onSearch();}}><Search size={17}/><input ref={searchRef} aria-label="Search requests" placeholder="Search requests…" value={search} onChange={e=>setSearch(e.target.value)}/><kbd>Ctrl F</kbd></form>
