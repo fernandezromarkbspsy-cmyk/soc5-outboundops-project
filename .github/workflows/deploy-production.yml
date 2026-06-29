@@ -35,7 +35,7 @@ jobs:
           set -Eeuo pipefail
 
           parameters=$(jq -n \
-            --arg command "sudo -u ubuntu bash /opt/soc5-outbound/deploy/deploy-production.sh" \
+            --arg command "if ! command -v aws >/dev/null 2>&1; then apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; fi; sudo -u ubuntu bash /opt/soc5-outbound/deploy/deploy-production.sh" \
             '{commands: [$command], executionTimeout: ["2400"]}')
 
           command_id=$(aws ssm send-command \
