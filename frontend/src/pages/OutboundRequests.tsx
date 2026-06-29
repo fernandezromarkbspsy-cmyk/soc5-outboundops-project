@@ -7,6 +7,7 @@ import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import { api } from '../lib/api';
 import { defaultRequestFilters, exportRequestsCsv, requestQueryString } from '../lib/requests';
+import { useUiStore } from '../stores/ui';
 import type { Page, RequestSort, TruckRequest, User } from '../types';
 
 type EditableAction = { kind: 'edit' | 'reject'; request: TruckRequest };
@@ -14,7 +15,9 @@ type RequestPayload = { cluster: FormDataEntryValue | null; region: FormDataEntr
 
 export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const queryClient = useQueryClient();
-  const [filters, setFilters] = useState(defaultRequestFilters);
+  const globalSearch = useUiStore(state => state.search);
+  const setGlobalSearch = useUiStore(state => state.setSearch);
+  const [filters, setFilters] = useState(() => ({ ...defaultRequestFilters, search: globalSearch }));
   const deferredSearch = useDeferredValue(filters.search);
   const [activeAction, setActiveAction] = useState<EditableAction | null>(null);
   const [notice, setNotice] = useState('');
@@ -30,6 +33,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     setNotice(message);
     await queryClient.invalidateQueries({ queryKey: ['requests'] });
     await queryClient.invalidateQueries({ queryKey: ['request-metrics'] });
+    await queryClient.invalidateQueries({ queryKey: ['request-analytics'] });
   }
 
   const createRequest = useMutation({
@@ -79,7 +83,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
     <section className="request-list-section">
       <div className="section-heading"><div><h2>{user.role === 'fte_ops' ? 'All requests' : 'Requests'}</h2><p>Search, filter, sort, and export the request history.</p></div></div>
-      <RequestFilters filters={filters} exporting={exporting} onChange={setFilters} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
+      <RequestFilters filters={filters} exporting={exporting} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
       <section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
     </section>
 

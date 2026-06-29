@@ -28,7 +28,11 @@ final class RequestController
 
     public function metrics(Request $request): JsonResponse
     {
-        $byStatus = $this->repository->metrics($request->attributes->get('actor'));
+        $filters = $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ]);
+        $byStatus = $this->repository->metrics($request->attributes->get('actor'), $filters);
         $awaiting = collect(['PENDING', 'APPROVED', 'ASSIGNED', 'DOCKED'])->sum(fn (string $status): int => (int) ($byStatus[$status] ?? 0));
 
         return response()->json([
@@ -36,6 +40,16 @@ final class RequestController
             'awaiting_action' => $awaiting,
             'by_status' => $byStatus,
         ]);
+    }
+
+    public function analytics(Request $request): JsonResponse
+    {
+        $filters = $request->validate([
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
+        ]);
+
+        return response()->json($this->repository->analytics($request->attributes->get('actor'), $filters));
     }
 
     public function store(Request $request): JsonResponse

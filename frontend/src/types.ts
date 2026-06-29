@@ -5,6 +5,7 @@ export interface TruckRequest {id:string;request_timestamp?:string;cluster:strin
 export interface Page<T> {data:T[];current_page:number;last_page:number;per_page:number;from?:number|null;to?:number|null;total:number}
 
 export interface RequestMetrics {total:number;awaiting_action:number;by_status:Partial<Record<Status, number>>}
+export interface RequestAnalytics {truck_sizes:Partial<Record<'4W'|'6W'|'10W'|'6WF',number>>;hourly:Array<{label:string;count:number}>;shift_start:string}
 
 export type AppView = 'overview'|'lh-request'|'truck-request';
 export type RequestSort = 'created_at'|'request_timestamp'|'cluster'|'dock_no'|'backlogs'|'plate_number'|'status';

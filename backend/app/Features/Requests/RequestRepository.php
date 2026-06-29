@@ -5,6 +5,7 @@ namespace App\Features\Requests;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Carbon\CarbonImmutable;
 
 final class RequestRepository
 {
@@ -36,14 +37,48 @@ final class RequestRepository
         return $query->paginate(min((int) ($filters['per_page'] ?? 20), 100));
     }
 
-    public function metrics(object $actor): Collection
+    public function metrics(object $actor, array $filters = []): Collection
     {
         $query = DB::table('requests')->select('status', DB::raw('count(*) as total'))->groupBy('status');
-        if ($actor->role === 'ops_pic') {
-            $query->where('created_by', $actor->id);
-        }
+        $this->scope($query, $actor, $filters);
 
         return $query->pluck('total', 'status');
+    }
+
+    public function analytics(object $actor, array $filters = []): array
+    {
+        $sizes = DB::table('requests')->select('truck_size', DB::raw('count(*) as total'))->groupBy('truck_size');
+        $this->scope($sizes, $actor, $filters);
+
+        $now = CarbonImmutable::now('Asia/Manila');
+        $shiftStart = $now->hour < 6
+            ? $now->subDay()->setTime(18, 0)
+            : $now->setTime(18, 0);
+        $shiftEnd = $shiftStart->addHours(13);
+        $shiftQuery = DB::table('requests')->whereBetween('request_timestamp', [$shiftStart->utc(), $shiftEnd->utc()]);
+        if ($actor->role === 'ops_pic') $shiftQuery->where('created_by', $actor->id);
+        $timestamps = $shiftQuery->pluck('request_timestamp');
+        $counts = array_fill(0, 13, 0);
+        foreach ($timestamps as $timestamp) {
+            $index = $shiftStart->diffInHours(CarbonImmutable::parse($timestamp)->setTimezone('Asia/Manila'), false);
+            if ($index >= 0 && $index <= 12) $counts[$index]++;
+        }
+
+        return [
+            'truck_sizes' => $sizes->pluck('total', 'truck_size'),
+            'hourly' => collect($counts)->map(fn (int $count, int $hour) => [
+                'label' => $shiftStart->addHours($hour)->format('gA'),
+                'count' => $count,
+            ])->values(),
+            'shift_start' => $shiftStart->toIso8601String(),
+        ];
+    }
+
+    private function scope($query, object $actor, array $filters): void
+    {
+        if ($actor->role === 'ops_pic') $query->where('created_by', $actor->id);
+        if ($dateFrom = $filters['date_from'] ?? null) $query->whereDate('request_timestamp', '>=', $dateFrom);
+        if ($dateTo = $filters['date_to'] ?? null) $query->whereDate('request_timestamp', '<=', $dateTo);
     }
 
     public function lock(string $id): object

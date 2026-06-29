@@ -291,3 +291,46 @@ th { color: $muted; font-size: .75rem; text-transform: uppercase; }
   .export-button { flex: 1; justify-content: center; }
   .pagination { align-items: flex-start; flex-direction: column; }
 }
+
+// Operational dashboard
+.dashboard-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.25rem; margin-bottom: 1.35rem; }
+.dashboard-heading h1 { font-size: 1.8rem; }
+.dashboard-heading p:last-child { margin: .35rem 0 0; color: $muted; font-size: .82rem; }
+.dashboard-controls { display: flex; align-items: center; gap: .55rem; }
+.dashboard-controls label, .dashboard-controls form { display: flex; min-height: 40px; align-items: center; gap: .45rem; padding: 0 .65rem; border: 1px solid $line; border-radius: 8px; background: #fff; color: $muted; }
+.dashboard-controls input { min-width: 0; border: 0; outline: 0; color: $ink; background: transparent; }
+.dashboard-controls form input { width: 165px; }
+.dashboard-controls .text-button { padding: .5rem; color: $green; }
+.metric-card { display: flex; min-height: 112px; align-items: center; gap: .9rem; padding: 1rem; border: 1px solid $line; background: #fff; color: $ink; text-align: left; transition: transform 150ms ease, box-shadow 150ms ease; }
+.metric-card:hover { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(16,24,40,.08); }
+.metric-card > span:last-child { display: grid; }
+.metric-card small { color: $muted; }
+.metric-card strong { font-size: 1.65rem; }
+.metric-card.primary { border-color: #047857; background: #047857; color: #fff; }
+.metric-card.primary small { color: #d1fae5; }
+.metric-card.primary .metric-icon { background: rgba(255,255,255,.16); color: #fff; }
+.analytics-grid { display: grid; grid-template-columns: minmax(0,2fr) minmax(280px,1fr); gap: 1rem; margin-bottom: 1.4rem; }
+.chart-panel { min-height: 320px; }
+.chart-summary { display: grid; text-align: right; }
+.chart-summary strong { font-size: 1.35rem; color: #047857; }
+.chart-summary span { color: $muted; font-size: .68rem; }
+.line-chart { padding: .25rem 1rem 1rem; overflow: hidden; }
+.line-chart svg { display: block; width: 100%; min-width: 540px; }
+.line-chart line { stroke: #e4e7ec; stroke-dasharray: 5 5; }
+.line-chart polyline { fill: none; stroke: #059669; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+.line-chart circle { fill: #fff; stroke: #059669; stroke-width: 3; }
+.line-chart text { fill: #667085; font-size: 9px; text-anchor: middle; }
+.donut-layout { display: grid; justify-items: center; gap: 1.25rem; padding: .35rem 1.25rem 1.4rem; }
+.donut { display: grid; width: 150px; height: 150px; place-items: center; border-radius: 50%; }
+.donut > span { display: grid; width: 92px; height: 92px; place-content: center; border-radius: 50%; background: #fff; text-align: center; }
+.donut strong { font-size: 1.45rem; }.donut small { color: $muted; }
+.donut-legend { display: grid; width: 100%; grid-template-columns: 1fr 1fr; gap: .65rem 1rem; }
+.donut-legend div { display: grid; grid-template-columns: 9px 1fr auto; align-items: center; gap: .4rem; font-size: .74rem; }
+.donut-legend i { width: 9px; height: 9px; border-radius: 3px; }.donut-legend small { color: $muted; font-weight: 400; }
+.dashboard-table { scroll-margin-top: 1rem; transition: opacity 150ms ease; }.dashboard-table.loading { opacity: .65; }
+.dashboard-table .table-wrap { max-height: 720px; }.dashboard-table thead { position: sticky; top: 0; z-index: 2; background: #fff; }
+.request-detail-dialog { width: min(1100px, 100%); }.request-detail-dialog .table-wrap { max-height: 60vh; }
+.request-detail-dialog .dialog-head p { margin: .25rem 0 0; color: $muted; font-size: .75rem; }
+
+@media (max-width: 1050px) { .dashboard-heading { align-items: stretch; flex-direction: column; }.dashboard-controls { flex-wrap: wrap; }.analytics-grid { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .dashboard-controls label { display: none; }.dashboard-controls form { flex: 1; }.dashboard-controls form input { width: 100%; }.chart-panel { min-width: 0; }.line-chart { overflow-x: auto; } }

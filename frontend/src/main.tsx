@@ -6,7 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { supabaseConfigError } from './lib/supabase';
 import './styles/main.scss';
 
-const client = new QueryClient({ defaultOptions: { queries: { staleTime: 15_000, retry: 1 } } });
+const client = new QueryClient({ defaultOptions: { queries: { staleTime: 10_000, refetchInterval: 15_000, retry: 1 }, mutations: { retry: 0 } } });
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 
 if (supabaseConfigError) {
