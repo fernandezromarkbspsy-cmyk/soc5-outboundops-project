@@ -8,7 +8,8 @@ $surface: #f4f4f3;
 $green: #067647;
 
 * { box-sizing: border-box; }
-body { margin: 0; color: $ink; background: $surface; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 14px; line-height: 1.5; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+html { min-width: 1180px; font-size: 15px; }
+body { min-width: 1180px; margin: 0; color: $ink; background: $surface; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: .95rem; line-height: 1.5; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
 button, input, select, textarea { font: inherit; }
 button { border: 0; border-radius: 7px; padding: .68rem .95rem; background: #2f6f6a; color: #fff; font-size: .9rem; font-weight: 700; line-height: 1.2; cursor: pointer; }
 button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid rgba(249, 115, 22, .28); outline-offset: 2px; }
@@ -194,7 +195,7 @@ td { font-size: .9rem; line-height: 1.35; }
 .notification-list button.unread { box-shadow: inset 3px 0 #2f6f6a; background: #f1f8f6; }
 .notification-list button span { font-size: .78rem; }
 .notification-list button small { color: $muted; font-size: .68rem; }
-.workspace-view { width: min(100%, 1500px); margin: 0 auto; animation: fields-enter 180ms ease-out both; }
+.workspace-view { width: 100%; max-width: none; margin: 0; animation: fields-enter 180ms ease-out both; }
 .page-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-bottom: 1rem; }
 .page-actions button { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: .45rem; }
 .page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1.5rem; margin-bottom: 1.6rem; }
@@ -292,6 +293,7 @@ td { font-size: .9rem; line-height: 1.35; }
 }
 
 @media (max-width: 760px) {
+  html, body { min-width: 0; font-size: 14px; }
   .app-shell { grid-template-columns: 1fr; }
   .app-sidebar { position: fixed; left: 0; width: min(82vw, 280px); transform: translateX(-105%); transition: transform 200ms ease; }
   .app-sidebar.is-open { transform: translateX(0); }
@@ -357,7 +359,7 @@ td { font-size: .9rem; line-height: 1.35; }
 .dashboard-controls input { min-width: 0; border: 0; outline: 0; color: $ink; background: transparent; }
 .dashboard-controls form input { width: 165px; }
 .dashboard-controls .text-button { padding: .5rem; color: $green; }
-.dashboard-view { max-width: 1280px; }
+.dashboard-view { max-width: none; }
 .dashboard-view .panel { border: 0; border-radius: 4px; background: #fff; box-shadow: none; }
 .dashboard-view .panel-head { padding: 1.25rem 1.45rem .5rem; }
 .dashboard-view .panel-head.compact { align-items: flex-start; }
