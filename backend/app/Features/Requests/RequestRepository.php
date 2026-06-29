@@ -2,10 +2,10 @@
 
 namespace App\Features\Requests;
 
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Carbon\CarbonImmutable;
 
 final class RequestRepository
 {
@@ -56,12 +56,16 @@ final class RequestRepository
             : $now->setTime(18, 0);
         $shiftEnd = $shiftStart->addHours(13);
         $shiftQuery = DB::table('requests')->whereBetween('request_timestamp', [$shiftStart->utc(), $shiftEnd->utc()]);
-        if ($actor->role === 'ops_pic') $shiftQuery->where('created_by', $actor->id);
+        if ($actor->role === 'ops_pic') {
+            $shiftQuery->where('created_by', $actor->id);
+        }
         $timestamps = $shiftQuery->pluck('request_timestamp');
         $counts = array_fill(0, 13, 0);
         foreach ($timestamps as $timestamp) {
             $index = $shiftStart->diffInHours(CarbonImmutable::parse($timestamp)->setTimezone('Asia/Manila'), false);
-            if ($index >= 0 && $index <= 12) $counts[$index]++;
+            if ($index >= 0 && $index <= 12) {
+                $counts[$index]++;
+            }
         }
 
         return [
@@ -76,9 +80,15 @@ final class RequestRepository
 
     private function scope($query, object $actor, array $filters): void
     {
-        if ($actor->role === 'ops_pic') $query->where('created_by', $actor->id);
-        if ($dateFrom = $filters['date_from'] ?? null) $query->whereDate('request_timestamp', '>=', $dateFrom);
-        if ($dateTo = $filters['date_to'] ?? null) $query->whereDate('request_timestamp', '<=', $dateTo);
+        if ($actor->role === 'ops_pic') {
+            $query->where('created_by', $actor->id);
+        }
+        if ($dateFrom = $filters['date_from'] ?? null) {
+            $query->whereDate('request_timestamp', '>=', $dateFrom);
+        }
+        if ($dateTo = $filters['date_to'] ?? null) {
+            $query->whereDate('request_timestamp', '<=', $dateTo);
+        }
     }
 
     public function lock(string $id): object
