@@ -1,3 +1,4 @@
 import { create } from 'zustand';
-interface UiState {sidebarOpen:boolean;soundEnabled:boolean;search:string;setSearch:(search:string)=>void;toggleSidebar:()=>void;toggleSound:()=>void}
-export const useUiStore=create<UiState>((set)=>({sidebarOpen:false,soundEnabled:false,search:'',setSearch:(search)=>set({search}),toggleSidebar:()=>set(s=>({sidebarOpen:!s.sidebarOpen})),toggleSound:()=>set(s=>({soundEnabled:!s.soundEnabled}))}));
+const today = () => { const value = new Date(); return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`; };
+interface UiState {sidebarOpen:boolean;soundEnabled:boolean;search:string;dateFrom:string;dateTo:string;setSearch:(search:string)=>void;setDateRange:(dateFrom:string,dateTo:string)=>void;resetDateRange:()=>void;toggleSidebar:()=>void;toggleSound:()=>void}
+export const useUiStore=create<UiState>((set)=>({sidebarOpen:false,soundEnabled:false,search:'',dateFrom:today(),dateTo:today(),setSearch:(search)=>set({search}),setDateRange:(dateFrom,dateTo)=>set({dateFrom,dateTo}),resetDateRange:()=>set({dateFrom:today(),dateTo:today()}),toggleSidebar:()=>set(s=>({sidebarOpen:!s.sidebarOpen})),toggleSound:()=>set(s=>({soundEnabled:!s.soundEnabled}))}));

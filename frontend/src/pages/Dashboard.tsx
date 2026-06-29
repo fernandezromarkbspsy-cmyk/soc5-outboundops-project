@@ -32,7 +32,7 @@ export function Dashboard({ user }: { user: User }) {
   return <div className="app-shell">
     <AppSidebar user={user} activeView={view} open={menuOpen} onOpenChange={setMenuOpen} onNavigate={navigate} onSignOut={() => void supabase.auth.signOut()} pendingCount={queue.count} />
     <main className="app-content">
-      <AppHeader user={user} count={queue.count} alerts={queue.alerts} onOpenAlert={request => { queue.acknowledge(request.id); navigate(user.role === 'fte_mm' ? 'truck-request' : 'lh-request'); }} />
+      <AppHeader user={user} view={view} count={queue.count} alerts={queue.alerts} onSearch={() => navigate(user.role === 'fte_mm' ? 'truck-request' : 'lh-request')} onOpenAlert={request => { queue.acknowledge(request.id); navigate(user.role === 'fte_mm' ? 'truck-request' : 'lh-request'); }} />
       {view === 'overview' && <Overview user={user} onNavigate={navigate} />}
       {view === 'lh-request' && <OutboundRequests user={user} queue={queue} />}
       {view === 'truck-request' && <MidmileRequests user={user} queue={queue} />}

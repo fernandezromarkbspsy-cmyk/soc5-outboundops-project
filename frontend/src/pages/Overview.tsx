@@ -1,32 +1,23 @@
 import { useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { CalendarDays, Clock3, Route, Search, Truck, X } from 'lucide-react';
+import { Clock3, Route, Truck, X } from 'lucide-react';
 import { Pagination } from '../components/Pagination';
 import { RequestTable } from '../components/RequestTable';
 import { api } from '../lib/api';
 import { useUiStore } from '../stores/ui';
 import type { AppView, Page, RequestAnalytics, RequestMetrics, Status, TruckRequest, User } from '../types';
 
-const localDate = () => {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-};
-
-export function Overview({ user, onNavigate }: { user: User; onNavigate: (view: AppView) => void }) {
-  const today = localDate();
-  const [from, setFrom] = useState(today);
-  const [to, setTo] = useState(today);
+export function Overview(_props: { user: User; onNavigate: (view: AppView) => void }) {
+  const from = useUiStore(state => state.dateFrom);
+  const to = useUiStore(state => state.dateTo);
   const [page, setPage] = useState(1);
   const [detailStatus, setDetailStatus] = useState<Status | 'ALL' | null>(null);
-  const search = useUiStore(state => state.search);
-  const setSearch = useUiStore(state => state.setSearch);
   const tableRef = useRef<HTMLElement>(null);
   const range = `date_from=${from}&date_to=${to}`;
   const requests = useQuery({ queryKey: ['requests', 'dashboard', page], queryFn: () => api<Page<TruckRequest>>(`/requests?per_page=50&page=${page}`), placeholderData: previous => previous, refetchInterval: 15_000 });
   const metrics = useQuery({ queryKey: ['request-metrics', from, to], queryFn: () => api<RequestMetrics>(`/requests/metrics?${range}`), refetchInterval: 15_000 });
   const analytics = useQuery({ queryKey: ['request-analytics', from, to], queryFn: () => api<RequestAnalytics>(`/requests/analytics?${range}`), refetchInterval: 15_000 });
   const details = useQuery({ queryKey: ['request-details', detailStatus, from, to], queryFn: () => api<Page<TruckRequest>>(`/requests?per_page=100&${range}${detailStatus !== 'ALL' ? `&status=${detailStatus}` : ''}`), enabled: detailStatus !== null });
-  const targetView = user.role === 'fte_mm' ? 'truck-request' : 'lh-request';
   const cards: Array<{label:string; status:Status|'ALL'; value:number; icon:typeof Route}> = [
     { label: 'Total Request', status: 'ALL', value: metrics.data?.total ?? 0, icon: Route },
     { label: 'Pending Request', status: 'PENDING', value: metrics.data?.by_status.PENDING ?? 0, icon: Clock3 },
@@ -44,11 +35,9 @@ export function Overview({ user, onNavigate }: { user: User; onNavigate: (view: 
     return sizes.map((size, index) => { const value = analytics.data?.truck_sizes[size] ?? 0; const start = offset; offset += sizeTotal ? value / sizeTotal * 100 : 0; return `#${['047857','10b981','6ee7b7','d1fae5'][index]} ${start}% ${offset}%`; }).join(',');
   }, [analytics.data, sizeTotal]);
 
-  function submitSearch(event: React.FormEvent) { event.preventDefault(); if (search.trim()) onNavigate(targetView); }
   function changePage(next: number) { setPage(next); window.setTimeout(() => tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0); }
 
   return <div className="workspace-view dashboard-view">
-    <header className="dashboard-heading"><div><p className="eyebrow">OPERATIONS OVERVIEW</p><h1>Dashboard</h1><p>Linehaul truck requests and current operational activity.</p></div><div className="dashboard-controls"><label><CalendarDays size={16}/><span className="sr-only">Start date</span><input type="date" value={from} max={to} onChange={e => setFrom(e.target.value)}/><span>to</span><input type="date" value={to} min={from} onChange={e => setTo(e.target.value)}/></label><button type="button" className="text-button" onClick={() => { setFrom(today); setTo(today); }}>Today</button><form onSubmit={submitSearch}><Search size={16}/><input aria-label="Search LH requests" placeholder="Search LH requests" value={search} onChange={e => setSearch(e.target.value)}/></form></div></header>
     {(requests.error || metrics.error || analytics.error) && <p className="error notice">Dashboard data could not be loaded.</p>}
     <section className="overview-metrics" aria-label="Request metrics">{cards.map(({label,status,value,icon:Icon}, index) => <button key={status} type="button" className={`metric-card${index === 0 ? ' primary' : ''}`} onClick={() => setDetailStatus(status)}><span className="metric-icon"><Icon size={19}/></span><span><small>{label}</small><strong>{metrics.isPending ? '—' : value.toLocaleString()}</strong></span></button>)}</section>
     <section className="analytics-grid">
