@@ -20,10 +20,9 @@ const roleNames = {
   dock_officer: 'Dock Officer',
 } as const;
 
-type MenuGroup = 'dashboard' | 'outbound' | 'midmile';
+type MenuGroup = 'outbound' | 'midmile';
 
 function groupForView(view: AppView): MenuGroup | null {
-  if (view === 'overview') return 'dashboard';
   if (view === 'lh-request') return 'outbound';
   if (view === 'truck-request') return 'midmile';
   return null;
@@ -35,7 +34,7 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
   const showDocking = user.role === 'doc_officer' || user.role === 'dock_officer';
   const showKpi = user.role === 'fte_ops';
   const showUsers = user.role === 'fte_ops' || user.role === 'fte_mm';
-  const [expanded, setExpanded] = useState<MenuGroup | null>(() => groupForView(activeView) ?? 'dashboard');
+  const [expanded, setExpanded] = useState<MenuGroup | null>(() => groupForView(activeView));
 
   useEffect(() => {
     setExpanded(groupForView(activeView));
@@ -54,11 +53,11 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
     <button className="mobile-nav-toggle" type="button" title="Open navigation" aria-label="Open navigation" onClick={() => onOpenChange(true)}><Menu size={20} /></button>
     <div className={`sidebar-scrim${open ? ' is-open' : ''}`} onClick={() => onOpenChange(false)} />
     <aside className={`app-sidebar${open ? ' is-open' : ''}`}>
-      <div className="sidebar-brand"><span>S5</span><div><strong>SOC 5</strong><small>Outbound</small></div></div>
+      <div className="sidebar-brand"><strong>SOC 5</strong><small>Outbound</small></div>
       <button className="sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => onOpenChange(false)}><X size={19} /></button>
 
       <nav aria-label="Primary navigation">
-        <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded === 'dashboard'} onClick={() => toggleGroup('dashboard')}><span>Dashboard</span><ChevronDown size={15} /></button>{expanded === 'dashboard' && <button className={`nav-subitem${activeView === 'overview' ? ' active' : ''}`} onClick={() => navigate('overview')}><LayoutDashboard size={17} /><span>Overview</span></button>}</div>
+        <div className="nav-group"><button className={`nav-link${activeView === 'overview' ? ' active' : ''}`} type="button" onClick={() => navigate('overview')}><LayoutDashboard size={18} /><span>Dashboard</span></button></div>
         {showOutbound && <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded === 'outbound'} onClick={() => toggleGroup('outbound')}><span>Outbound</span><ChevronDown size={15} /></button>{expanded === 'outbound' && <button className={`nav-subitem${activeView === 'lh-request' ? ' active' : ''}`} onClick={() => navigate('lh-request')}><Route size={17} /><span>LH Request</span>{user.role === 'fte_ops' && pendingCount > 0 && <span className="nav-badge">{pendingCount > 99 ? '99+' : pendingCount}</span>}</button>}</div>}
         {showMidmile && <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded === 'midmile'} onClick={() => toggleGroup('midmile')}><span>Midmile</span><ChevronDown size={15} /></button>{expanded === 'midmile' && <button className={`nav-subitem${activeView === 'truck-request' ? ' active' : ''}`} onClick={() => navigate('truck-request')}><Truck size={17} /><span>Truck Request</span>{pendingCount > 0 && <span className="nav-badge">{pendingCount > 99 ? '99+' : pendingCount}</span>}</button>}</div>}
         {showDocking && <div className="nav-group"><button className={`nav-link${activeView === 'docking' ? ' active' : ''}`} onClick={() => navigate('docking')}><ShipWheel size={18}/><span>Docking Confirmation</span>{pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}</button></div>}
