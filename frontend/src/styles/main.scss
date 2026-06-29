@@ -337,7 +337,8 @@ th { color: $muted; font-size: .75rem; text-transform: uppercase; }
 
 // Sticky application toolbar
 .app-topbar { position: sticky; top: 0; z-index: 20; min-height: 76px; justify-content: space-between; margin: 0 calc(-1 * clamp(1.25rem, 3.2vw, 3.5rem)) 1.5rem; padding: 0 clamp(1.25rem, 3.2vw, 3.5rem); border-bottom: 1px solid $line; background: rgba(255,255,255,.96); box-shadow: 0 1px 8px rgba(16,24,40,.04); backdrop-filter: blur(12px); }
-.app-topbar .topbar-page { display: flex; align-items: center; gap: .7rem; text-align: left; }
+.app-topbar > .topbar-page:first-child { display: flex; flex: 0 0 auto; align-items: center; justify-content: flex-start; gap: .7rem; min-width: 180px; text-align: left; }
+.app-topbar > .topbar-page:first-child > div { display: grid; text-align: left; }
 .topbar-page > span { display: grid; width: 38px; height: 38px; place-items: center; border-radius: 10px; background: #ecfdf3; color: #047857; }
 .topbar-page > div { display: grid; }
 .topbar-page h1 { margin: 0; font-size: 1.1rem; line-height: 1.2; }
