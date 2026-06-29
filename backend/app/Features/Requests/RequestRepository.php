@@ -3,8 +3,8 @@
 namespace App\Features\Requests;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 final class RequestRepository
 {
