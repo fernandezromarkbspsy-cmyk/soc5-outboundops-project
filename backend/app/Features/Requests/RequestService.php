@@ -23,12 +23,27 @@ final class RequestService
         });
     }
 
+    public function updateDetails(string $id, object $actor, array $data): object
+    {
+        abort_unless($actor->role === 'fte_ops', 403, 'Only FTE Ops can edit requests.');
+
+        return DB::transaction(function () use ($id, $actor, $data) {
+            $request = $this->requests->lock($id);
+            abort_unless(in_array($request->status, ['PENDING', 'REJECTED_BY_MM'], true), 409, "Cannot edit a {$request->status} request.");
+            $updated = $this->requests->update($id, $data);
+            $this->event($id, $actor->id, 'REQUEST_EDITED', $request->status, $request->status, $data);
+
+            return $updated;
+        });
+    }
+
     public function transition(string $id, object $actor, string $action, array $input): object
     {
         return DB::transaction(function () use ($id, $actor, $action, $input) {
             $request = $this->requests->lock($id);
             [$from, $to, $role, $event] = match ($action) {
                 'approve' => [['PENDING', 'REJECTED_BY_MM'], 'APPROVED', 'fte_ops', 'REQUEST_APPROVED'],
+                'reject-ops' => [['PENDING', 'REJECTED_BY_MM'], 'CANCELLED', 'fte_ops', 'REQUEST_REJECTED_BY_OPS'],
                 'cancel' => [['PENDING', 'REJECTED_BY_MM'], 'CANCELLED', null, 'REQUEST_CANCELLED'],
                 'reject-mm' => [['APPROVED'], 'REJECTED_BY_MM', 'fte_mm', 'REQUEST_REJECTED_BY_MM'],
                 'assign-truck' => [['APPROVED'], 'ASSIGNED', 'fte_mm', 'TRUCK_ASSIGNED'],

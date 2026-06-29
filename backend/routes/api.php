@@ -34,6 +34,7 @@ Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
     Route::get('/requests/metrics', [RequestController::class, 'metrics']);
     Route::get('/requests', [RequestController::class, 'index']);
     Route::post('/requests', [RequestController::class, 'store']);
+    Route::put('/requests/{id}', [RequestController::class, 'update']);
     Route::post('/requests/{id}/{action}', [RequestController::class, 'action'])
-        ->whereIn('action', ['approve', 'cancel', 'reject-mm', 'assign-truck', 'mark-docked', 'confirm']);
+        ->whereIn('action', ['approve', 'reject-ops', 'cancel', 'reject-mm', 'assign-truck', 'mark-docked', 'confirm']);
 });

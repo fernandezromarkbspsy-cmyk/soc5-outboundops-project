@@ -1,5 +1,41 @@
-import { useQuery } from '@tanstack/react-query';
-import { api } from '../lib/api';
-import type { Page, RequestMetrics, TruckRequest, User } from '../types';
-import { RequestTable } from '../components/RequestTable';
-export function Dashboard(){const user=useQuery({queryKey:['me'],queryFn:()=>api<User>('/auth/me')});const requests=useQuery({queryKey:['requests'],queryFn:()=>api<Page<TruckRequest>>('/requests?per_page=20')});const metrics=useQuery({queryKey:['request-metrics'],queryFn:()=>api<RequestMetrics>('/requests/metrics')});if(user.isPending||requests.isPending||metrics.isPending)return <p className="state">Loading operations…</p>;if(user.error||requests.error||metrics.error)return <p className="state error">{(user.error??requests.error??metrics.error)?.message}</p>;const rows=requests.data?.data??[];return <div className="shell"><aside><strong>SOC 5</strong><nav><a className="active">Dashboard</a><a>Requests</a><a>Notifications</a></nav></aside><main><header><div><p className="eyebrow">OPERATIONS OVERVIEW</p><h1>Truck requests</h1></div><div className="user">{user.data?.name}<small>{user.data?.role.replaceAll('_',' ')}</small></div></header><section className="metrics"><article><span>Total requests</span><strong>{metrics.data?.total??0}</strong></article><article><span>Awaiting action</span><strong>{metrics.data?.awaiting_action??0}</strong></article></section><section className="panel"><div className="panel-head"><div><h2>Latest activity</h2><p>Role-filtered request queue</p></div><button>New request</button></div>{rows.length?<RequestTable rows={rows}/>:<p className="state">No requests yet.</p>}</section></main></div>}
+import { useEffect, useState } from 'react';
+import { AppHeader } from '../components/AppHeader';
+import { AppSidebar } from '../components/AppSidebar';
+import { useQueueNotifications } from '../hooks/useQueueNotifications';
+import { supabase } from '../lib/supabase';
+import type { AppView, User } from '../types';
+import { Overview } from './Overview';
+import { OutboundRequests } from './OutboundRequests';
+import { MidmileRequests } from './MidmileRequests';
+
+export function Dashboard({ user }: { user: User }) {
+  const allowed = (candidate: AppView) => candidate === 'overview' || (candidate === 'lh-request' && (user.role === 'ops_pic' || user.role === 'fte_ops')) || (candidate === 'truck-request' && user.role === 'fte_mm');
+  const fromPath = (): AppView => window.location.pathname === '/outbound/lh-request' ? 'lh-request' : window.location.pathname === '/midmile/truck-request' ? 'truck-request' : 'overview';
+  const [view, setView] = useState<AppView>(() => allowed(fromPath()) ? fromPath() : 'overview');
+  const [menuOpen, setMenuOpen] = useState(false);
+  const queue = useQueueNotifications(user);
+
+  function navigate(next: AppView, replace = false) {
+    if (!allowed(next)) next = 'overview';
+    const path = next === 'overview' ? '/dashboard' : next === 'lh-request' ? '/outbound/lh-request' : '/midmile/truck-request';
+    window.history[replace ? 'replaceState' : 'pushState']({}, '', path);
+    setView(next);
+  }
+
+  useEffect(() => {
+    navigate(view, true);
+    const onPopState = () => setView(allowed(fromPath()) ? fromPath() : 'overview');
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  return <div className="app-shell">
+    <AppSidebar user={user} activeView={view} open={menuOpen} onOpenChange={setMenuOpen} onNavigate={navigate} onSignOut={() => void supabase.auth.signOut()} pendingCount={queue.count} />
+    <main className="app-content">
+      <AppHeader user={user} count={queue.count} alerts={queue.alerts} onOpenAlert={request => { queue.acknowledge(request.id); navigate(user.role === 'fte_mm' ? 'truck-request' : 'lh-request'); }} />
+      {view === 'overview' && <Overview user={user} onNavigate={navigate} />}
+      {view === 'lh-request' && <OutboundRequests user={user} queue={queue} />}
+      {view === 'truck-request' && <MidmileRequests user={user} queue={queue} />}
+    </main>
+  </div>;
+}

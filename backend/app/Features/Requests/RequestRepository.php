@@ -12,13 +12,26 @@ final class RequestRepository
 
     public function paginate(object $actor, array $filters): LengthAwarePaginator
     {
-        $query = DB::table('requests')->select(self::COLUMNS)->orderByDesc('created_at');
+        $query = DB::table('requests')->select(self::COLUMNS);
         if ($actor->role === 'ops_pic') {
             $query->where('created_by', $actor->id);
         }
         if ($status = $filters['status'] ?? null) {
             $query->where('status', $status);
         }
+        if ($search = trim((string) ($filters['search'] ?? ''))) {
+            $query->whereRaw("lower(coalesce(plate_number, '')) like ?", ['%'.strtolower($search).'%']);
+        }
+        if ($dateFrom = $filters['date_from'] ?? null) {
+            $query->whereDate('request_timestamp', '>=', $dateFrom);
+        }
+        if ($dateTo = $filters['date_to'] ?? null) {
+            $query->whereDate('request_timestamp', '<=', $dateTo);
+        }
+
+        $sort = $filters['sort'] ?? 'created_at';
+        $direction = $filters['direction'] ?? 'desc';
+        $query->orderBy($sort, $direction)->orderByDesc('id');
 
         return $query->paginate(min((int) ($filters['per_page'] ?? 20), 100));
     }

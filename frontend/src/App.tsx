@@ -5,6 +5,7 @@ import { api, ApiError } from './lib/api';
 import { Dashboard } from './pages/Dashboard';
 import { Login, LoginBackdrop } from './pages/Login';
 import { ChangePassword } from './pages/ChangePassword';
+import type { User } from './types';
 
 type AuthState = 'loading' | 'signed-out' | 'ready' | 'change-password' | 'unauthorized';
 type AuthFailure = { title: string; message: string; detail: string };
@@ -45,6 +46,7 @@ function describeFailure(cause: unknown): AuthFailure {
 export default function App() {
   const [state, setState] = useState<AuthState>('loading');
   const [failure, setFailure] = useState<AuthFailure>(defaultFailure);
+  const [profile, setProfile] = useState<User | null>(null);
   const lastToken = useRef<string | null>(null);
   const requestSequence = useRef(0);
 
@@ -52,6 +54,8 @@ export default function App() {
     if (!session) {
       lastToken.current = null;
       requestSequence.current += 1;
+      setProfile(null);
+      window.history.replaceState({}, '', '/');
       setState('signed-out');
       return;
     }
@@ -61,9 +65,13 @@ export default function App() {
     const requestId = ++requestSequence.current;
 
     try {
-      const profile = await api<{ must_change_password: boolean }>('/auth/me');
+      const resolvedProfile = await api<User>('/auth/me');
       if (requestId !== requestSequence.current) return;
-      setState(profile.must_change_password ? 'change-password' : 'ready');
+      setProfile(resolvedProfile);
+      if (window.location.pathname === '/' || window.location.pathname === '/login') {
+        window.history.replaceState({}, '', '/dashboard');
+      }
+      setState(resolvedProfile.must_change_password ? 'change-password' : 'ready');
     } catch (cause) {
       if (requestId !== requestSequence.current) return;
       // Keep the session so temporary API failures can be retried in place.
@@ -97,5 +105,5 @@ export default function App() {
   if (state === 'signed-out') return <Login />;
   if (state === 'unauthorized') return <main className="state"><h1>{failure.title}</h1><p className="error">{failure.message}</p><p>{failure.detail}</p><button onClick={() => void retrySession()}>Try again</button> <button onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
   if (state === 'change-password') return <ChangePassword onComplete={() => setState('ready')} />;
-  return <Dashboard />;
+  return profile ? <Dashboard user={profile} /> : <LoginBackdrop />;
 }

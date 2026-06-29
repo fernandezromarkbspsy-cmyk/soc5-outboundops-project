@@ -39,11 +39,11 @@ export function LoginBackdrop() {
   return (
     <div className="shell auth-preview" aria-hidden="true">
       <aside>
-        <div className="preview-brand"><span>S5</span><strong>SOC 5</strong></div>
+        <div className="preview-brand"><span>S5</span><div><strong>SOC 5</strong><small>Outbound</small></div></div>
         <nav>
-          <a className="active"><span className="nav-mark" />Dashboard</a>
-          <a><span className="nav-mark" />Requests</a>
-          <a><span className="nav-mark" />Notifications</a>
+          <p>Dashboard</p><a className="active"><span className="nav-mark" />Overview</a>
+          <p>Outbound</p><a><span className="nav-mark" />LH Request</a>
+          <p>Midmile</p><a><span className="nav-mark" />Truck Request</a>
         </nav>
         <div className="preview-facility"><span>FACILITY</span><strong>Outbound operations</strong></div>
       </aside>
@@ -54,8 +54,9 @@ export function LoginBackdrop() {
         </header>
         <section className="metrics preview-metrics">
           <article><span>Total requests</span><strong>--</strong><small>Current queue</small></article>
-          <article><span>Awaiting action</span><strong>--</strong><small>Pending review</small></article>
+          <article><span>Pending</span><strong>--</strong><small>Pending review</small></article>
           <article><span>For docking</span><strong>--</strong><small>Active movement</small></article>
+          <article><span>Docked</span><strong>--</strong><small>At the dock</small></article>
         </section>
         <section className="panel preview-panel">
           <div className="panel-head"><div><h2>Latest activity</h2><p>Role-filtered request queue</p></div><button type="button" tabIndex={-1}>New request</button></div>
