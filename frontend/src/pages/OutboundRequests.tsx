@@ -84,7 +84,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     {user.role === 'fte_ops' && <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending approval</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>New requests requiring FTE Ops review</p></div>{queue.rows.length>1&&<button disabled={bulkApprove.isPending} onClick={()=>bulkApprove.mutate(queue.rows.map(row=>row.id))}><Check size={16}/>{bulkApprove.isPending?'Approving…':`Approve all (${queue.rows.length})`}</button>}</div>{queue.isPending ? <div className="loading-block">Loading approval queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No requests are awaiting approval." actions={actions} />}</section>}
 
     <section className="request-list-section">
-      <div className="section-heading"><div><h2>{user.role === 'fte_ops' ? 'All requests' : 'Requests'}</h2><p>Search, filter, sort, and export the request history.</p></div>{user.role === 'ops_pic' && <button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button>}</div>
+      {user.role === 'ops_pic' && <div className="page-actions"><button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button></div>}
       <RequestFilters filters={filters} exporting={exporting} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
       <section className="panel data-panel">{creating && <InlineCreateRow busy={createRequest.isPending} onCancel={() => setCreating(false)} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
     </section>
@@ -115,7 +115,7 @@ function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
 
   function pick(cluster: ClusterLookup) {
     setSelected(cluster);
-    setClusterText(cluster.hub_name || cluster.cluster_name);
+    setClusterText(cluster.cluster_name);
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -124,7 +124,7 @@ function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
   }
 
   return <form className="inline-create-row" onSubmit={submit}>
-    <label className="cluster-lookup-field">Cluster<input name="cluster" required autoFocus maxLength={120} value={clusterText} onChange={event => { setClusterText(event.target.value); setSelected(null); }} placeholder="Type 3 chars" />{lookup.data && !selected && <div className="cluster-suggestions">{lookup.data.data.length ? lookup.data.data.map(cluster => <button key={cluster.id} type="button" onClick={() => pick(cluster)}><strong>{cluster.hub_name}</strong><span>{cluster.cluster_name} / {cluster.region}</span></button>) : <p>No cluster found.</p>}</div>}</label>
+    <label className="cluster-lookup-field">Cluster<input name="cluster" required autoFocus maxLength={120} value={clusterText} onChange={event => { setClusterText(event.target.value); setSelected(null); }} placeholder="Type 3 chars" />{lookup.data && !selected && <div className="cluster-suggestions">{lookup.data.data.length ? lookup.data.data.map(cluster => <button key={cluster.id} type="button" onClick={() => pick(cluster)}><strong>{cluster.cluster_name}</strong><span>{cluster.hub_name} / {cluster.region}</span></button>) : <p>No cluster found.</p>}</div>}</label>
     <label>Region<input name="region" required readOnly value={selected?.region ?? ''} /></label>
     <label>Dock No<input name="dock_no" required maxLength={50} defaultValue={selected?.dock_number ?? ''} key={selected?.id ?? 'dock'} /></label>
     <label>Backlogs<input name="backlogs" type="number" required readOnly min={0} value={selected?.backlogs ?? 0} /></label>

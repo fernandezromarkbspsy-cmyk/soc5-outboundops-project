@@ -52,7 +52,7 @@ Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
             ->where(function ($query): void {
                 $query->where('active', true)->orWhereNull('active');
             })
-            ->orderBy('hub_name')
+            ->orderBy('cluster_name')
             ->limit(12)
             ->get()]);
     });
