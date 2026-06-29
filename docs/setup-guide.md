@@ -124,9 +124,12 @@ DB_USERNAME=your-pooler-username
 DB_PASSWORD=your-database-password
 
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-publishable-key
+SUPABASE_PUBLISHABLE_KEY=your-publishable-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 ```
+
+`SUPABASE_ANON_KEY` remains supported as a fallback for projects that still use
+the legacy JWT-based anon key.
 
 `SUPABASE_SERVICE_ROLE_KEY` is a secret. Keep `backend/.env` untracked.
 

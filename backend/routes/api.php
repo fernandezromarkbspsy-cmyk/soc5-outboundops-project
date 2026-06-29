@@ -7,6 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/auth/status', function () {
+    abort_unless(
+        filled(config('services.supabase.url')) && filled(config('services.supabase.anon_key')),
+        503,
+        'Authentication service is not configured.'
+    );
+
+    return response()->json(['configured' => true]);
+});
+
 Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
     Route::get('/auth/me', fn (Request $r) => response()->json($r->attributes->get('actor')));
     Route::post('/auth/password-changed', function (Request $request) {

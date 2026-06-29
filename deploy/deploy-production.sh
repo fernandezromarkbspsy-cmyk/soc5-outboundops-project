@@ -67,12 +67,17 @@ for variable in SUPABASE_URL SUPABASE_PUBLISHABLE_KEY; do
   fi
 done
 
-for variable in SUPABASE_URL SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY; do
+for variable in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
   if ! grep -Eq "^${variable}=.+" backend/.env; then
     echo "Deployment refused: $variable is missing or empty in $APP_DIR/backend/.env." >&2
     exit 1
   fi
 done
+
+if ! grep -Eq '^SUPABASE_(PUBLISHABLE_KEY|ANON_KEY)=.+' backend/.env; then
+  echo "Deployment refused: SUPABASE_PUBLISHABLE_KEY or SUPABASE_ANON_KEY must be set in $APP_DIR/backend/.env." >&2
+  exit 1
+fi
 
 echo "Fetching origin/$BRANCH..."
 git fetch --prune origin "$BRANCH"

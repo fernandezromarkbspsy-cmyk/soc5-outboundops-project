@@ -3,7 +3,7 @@
 return [
     'supabase' => [
         'url' => env('SUPABASE_URL'),
-        'anon_key' => env('SUPABASE_ANON_KEY'),
+        'anon_key' => env('SUPABASE_PUBLISHABLE_KEY') ?: env('SUPABASE_ANON_KEY'),
         'service_key' => env('SUPABASE_SERVICE_ROLE_KEY'),
     ],
     'backroom' => [
