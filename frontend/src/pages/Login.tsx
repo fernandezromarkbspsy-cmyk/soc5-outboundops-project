@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { isAuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
@@ -35,6 +35,41 @@ function describeAuthError(cause: unknown, fallback: string): string {
   return fallback;
 }
 
+export function LoginBackdrop() {
+  return (
+    <div className="shell auth-preview" aria-hidden="true">
+      <aside>
+        <div className="preview-brand"><span>S5</span><strong>SOC 5</strong></div>
+        <nav>
+          <a className="active"><span className="nav-mark" />Dashboard</a>
+          <a><span className="nav-mark" />Requests</a>
+          <a><span className="nav-mark" />Notifications</a>
+        </nav>
+        <div className="preview-facility"><span>FACILITY</span><strong>Outbound operations</strong></div>
+      </aside>
+      <main>
+        <header>
+          <div><p className="eyebrow">OPERATIONS OVERVIEW</p><h1>Truck requests</h1></div>
+          <div className="preview-user"><span /><div><strong>Operations</strong><small>Authorized access</small></div></div>
+        </header>
+        <section className="metrics preview-metrics">
+          <article><span>Total requests</span><strong>--</strong><small>Current queue</small></article>
+          <article><span>Awaiting action</span><strong>--</strong><small>Pending review</small></article>
+          <article><span>For docking</span><strong>--</strong><small>Active movement</small></article>
+        </section>
+        <section className="panel preview-panel">
+          <div className="panel-head"><div><h2>Latest activity</h2><p>Role-filtered request queue</p></div><button type="button" tabIndex={-1}>New request</button></div>
+          <div className="table-wrap">
+            <table><thead><tr><th>Created</th><th>Cluster</th><th>Dock</th><th>Load</th><th>Truck</th><th>Status</th></tr></thead>
+              <tbody>{[0, 1, 2, 3].map(row => <tr key={row}><td><span className="skeleton short" /></td><td><span className="skeleton wide" /></td><td><span className="skeleton tiny" /></td><td><span className="skeleton short" /></td><td><span className="skeleton wide" /></td><td><span className="skeleton status-line" /></td></tr>)}</tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  );
+}
+
 export function Login() {
   const [type, setType] = useState<UserType>('fte');
   const [email, setEmail] = useState('');
@@ -45,11 +80,21 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [modalVisible, setModalVisible] = useState(false);
+  const dialogRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setModalVisible(true);
+      window.requestAnimationFrame(() => dialogRef.current?.focus());
+    }, 5);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (resendAfter <= 0) return;
-    const timer = window.setInterval(() => setResendAfter(value => Math.max(0, value - 1)), 1000);
-    return () => window.clearInterval(timer);
+    const timer = window.setTimeout(() => setResendAfter(value => Math.max(0, value - 1)), 1000);
+    return () => window.clearTimeout(timer);
   }, [resendAfter]);
 
   function switchType(next: UserType) {
@@ -89,6 +134,18 @@ export function Login() {
     setResendAfter(60);
   }
 
+  async function resendCode() {
+    setError('');
+    setBusy(true);
+    try {
+      await sendCode(email.trim().toLowerCase());
+    } catch (cause) {
+      setError(describeAuthError(cause, 'Unable to resend the code.'));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submit(event: FormEvent) {
     event.preventDefault();
     setError('');
@@ -100,18 +157,11 @@ export function Login() {
         if (!codeSent) {
           await sendCode(normalized);
         } else {
-          const { error: verifyError } = await supabase.auth.verifyOtp({
-            email: normalized,
-            token: code.trim(),
-            type: 'email',
-          });
+          const { error: verifyError } = await supabase.auth.verifyOtp({ email: normalized, token: code.trim(), type: 'email' });
           if (verifyError) throw verifyError;
         }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: backroomEmail(opsId),
-          password,
-        });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: backroomEmail(opsId), password });
         if (signInError) throw signInError;
       }
     } catch (cause) {
@@ -126,5 +176,50 @@ export function Login() {
     }
   }
 
-  return <main className="login"><section><p className="eyebrow">SHOPEE SORTING FACILITY</p><h1>SOC 5 Outbound</h1><p>Truck requests, assignments, and docking in one auditable workflow.</p></section><form onSubmit={submit}><h2>Sign in</h2><div className="user-toggle" role="tablist" aria-label="User type"><button type="button" className={type === 'fte' ? 'selected' : ''} onClick={() => switchType('fte')}>FTE</button><button type="button" className={type === 'backroom' ? 'selected' : ''} onClick={() => switchType('backroom')}>Backroom</button></div>{type === 'fte' ? <><button type="button" className="google-button" disabled={busy} onClick={signInWithGoogle}><span aria-hidden="true">G</span>Continue with Google</button><div className="auth-divider"><span>or use email verification</span></div><label>SPX work email<input type="email" required disabled={codeSent} placeholder="name@spxexpress.com" value={email} onChange={event => setEmail(event.target.value)} /></label>{codeSent && <><p className="hint">Enter the verification code sent to your email.</p><label>Verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}" minLength={6} maxLength={10} required value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 10))} /></label><button type="button" className="text-button" disabled={busy || resendAfter > 0} onClick={() => void sendCode(email.trim().toLowerCase()).catch(cause => setError(describeAuthError(cause, 'Unable to resend the code.')))}>{resendAfter > 0 ? `Resend code in ${resendAfter}s` : 'Resend code'}</button><button type="button" className="text-button" onClick={() => { setCodeSent(false); setCode(''); setError(''); setResendAfter(0); }}>Use a different email</button></>}</> : <><label>OPS ID<input required autoComplete="username" placeholder="ops71783" value={opsId} onChange={event => setOpsId(event.target.value)} /></label><label>Password<input type="password" required autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} /></label><p className="hint">Use the initial password provided by your supervisor. You will be asked to replace it after signing in.</p></>}{error && <p className="error" role="alert">{error}</p>}<button disabled={busy}>{busy ? 'Please wait...' : type === 'fte' && !codeSent ? 'Send verification code' : 'Sign in'}</button></form></main>;
+  const submitLabel = busy ? 'Please wait...' : type === 'fte' ? (codeSent ? 'Verify code' : 'Send verification code') : 'Sign in';
+
+  return (
+    <div className="auth-entry">
+      <LoginBackdrop />
+      <div className={`auth-modal-layer${modalVisible ? ' is-visible' : ''}`}>
+        <section ref={dialogRef} className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title" tabIndex={-1}>
+          <div className="auth-dialog-head">
+            <div className="auth-logo" aria-hidden="true">S5</div>
+            <div><p>SOC 5 OUTBOUND</p><h1 id="auth-title">Sign in</h1></div>
+          </div>
+
+          <form onSubmit={submit}>
+            <div className="user-toggle" role="tablist" aria-label="User type">
+              <button type="button" role="tab" aria-selected={type === 'fte'} className={type === 'fte' ? 'selected' : ''} onClick={() => switchType('fte')}>FTE</button>
+              <button type="button" role="tab" aria-selected={type === 'backroom'} className={type === 'backroom' ? 'selected' : ''} onClick={() => switchType('backroom')}>Backroom</button>
+            </div>
+
+            {type === 'fte' ? (
+              <div className="auth-fields" key="fte">
+                <button type="button" className="google-button" disabled={busy} onClick={signInWithGoogle}><span aria-hidden="true">G</span>Continue with Google</button>
+                <div className="auth-divider"><span>or use email verification</span></div>
+                <label>SPX work email<input type="email" required disabled={codeSent} autoComplete="email" placeholder="name@spxexpress.com" value={email} onChange={event => setEmail(event.target.value)} /></label>
+                {codeSent && <>
+                  <label>Verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}" minLength={6} maxLength={10} required placeholder="Enter code" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 10))} /></label>
+                  <div className="auth-secondary-actions">
+                    <button type="button" className="text-button" disabled={busy || resendAfter > 0} onClick={() => void resendCode()}>{resendAfter > 0 ? `Resend in ${resendAfter}s` : 'Resend code'}</button>
+                    <button type="button" className="text-button" onClick={() => { setCodeSent(false); setCode(''); setError(''); setResendAfter(0); }}>Change email</button>
+                  </div>
+                </>}
+              </div>
+            ) : (
+              <div className="auth-fields" key="backroom">
+                <label>OPS ID<input required autoComplete="username" placeholder="ops71783" value={opsId} onChange={event => setOpsId(event.target.value)} /></label>
+                <label>Password<input type="password" required autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} /></label>
+              </div>
+            )}
+
+            {error && <p className="error auth-error" role="alert">{error}</p>}
+            <button className="primary-button" disabled={busy}>{submitLabel}</button>
+          </form>
+          <p className="auth-footnote">Authorized operations personnel only</p>
+        </section>
+      </div>
+    </div>
+  );
 }

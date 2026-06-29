@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { api, ApiError } from './lib/api';
 import { Dashboard } from './pages/Dashboard';
-import { Login } from './pages/Login';
+import { Login, LoginBackdrop } from './pages/Login';
 import { ChangePassword } from './pages/ChangePassword';
 
 type AuthState = 'loading' | 'signed-out' | 'ready' | 'change-password' | 'unauthorized';
@@ -93,7 +93,7 @@ export default function App() {
     return () => data.subscription.unsubscribe();
   }, [resolveSession]);
 
-  if (state === 'loading') return <p className="state">Loading...</p>;
+  if (state === 'loading') return <LoginBackdrop />;
   if (state === 'signed-out') return <Login />;
   if (state === 'unauthorized') return <main className="state"><h1>{failure.title}</h1><p className="error">{failure.message}</p><p>{failure.detail}</p><button onClick={() => void retrySession()}>Try again</button> <button onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
   if (state === 'change-password') return <ChangePassword onComplete={() => setState('ready')} />;
