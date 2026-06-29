@@ -217,10 +217,12 @@ td { font-size: .9rem; line-height: 1.35; }
 .queue-panel { margin-bottom: 1.35rem; }
 .section-title { display: flex; align-items: center; gap: .6rem; }
 .count-badge { display: grid; min-width: 24px; height: 24px; place-items: center; padding: 0 .4rem; border-radius: 999px; background: #d9ec32; color: #292929; font-size: .7rem; font-weight: 850; }
-.request-list-section { margin-top: 1.35rem; }
-.section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: .9rem; }
+.request-list-section { margin-top: 1rem; }
+.workspace-view > .request-list-section:first-child, .workspace-view > .notice + .request-list-section { margin-top: .35rem; }
+.section-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: .8rem; }
 .section-heading h2 { color: #2b3140; font-size: 1rem; }
 .section-heading p { margin: .25rem 0 0; color: #9b9b9b; font-size: .8rem; line-height: 1.45; }
+.section-heading > button { display: inline-flex; min-height: 42px; align-items: center; justify-content: center; gap: .45rem; padding: .68rem 1.05rem; white-space: nowrap; }
 .inline-request-form { margin-bottom: 1.6rem; }
 .inline-request-form form { padding: 0 1.25rem 1.25rem; }
 .request-form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -303,8 +305,9 @@ td { font-size: .9rem; line-height: 1.35; }
   .mobile-nav-toggle { position: fixed; top: .85rem; left: .85rem; z-index: 10; display: grid; width: 40px; height: 40px; border: 1px solid #e1e1de; background: #fff; color: #48515d; box-shadow: 0 2px 8px rgba(16, 24, 40, .08); }
   .app-content { padding: 0 1rem 2rem; }
   .app-topbar { min-height: 64px; margin-left: 3.2rem; margin-bottom: 1.25rem; }
-  .page-header { align-items: stretch; flex-direction: column; }
+  .page-header, .section-heading { align-items: stretch; flex-direction: column; }
   .page-header > button { width: 100%; }
+  .section-heading > button { width: 100%; }
   .page-actions { justify-content: stretch; }
   .page-actions button { width: 100%; }
   .overview-metrics { grid-template-columns: 1fr 1fr; }
