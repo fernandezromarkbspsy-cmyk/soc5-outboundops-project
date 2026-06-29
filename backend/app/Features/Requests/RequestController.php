@@ -95,6 +95,7 @@ final class RequestController
             'region' => 'required|string|max:120',
             'dock_no' => 'required|string|max:50',
             'backlogs' => 'required|integer|min:0',
+            'backlogs_timestamp' => 'nullable|date',
             'truck_size' => 'required|in:4W,6W,10W,6WF',
             'truck_type' => 'required|in:WETLEASE,DRYLEASE',
         ];

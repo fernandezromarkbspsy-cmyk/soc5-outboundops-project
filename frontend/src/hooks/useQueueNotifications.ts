@@ -4,6 +4,8 @@ import { api } from '../lib/api';
 import type { Page, Status, TruckRequest, User } from '../types';
 
 let notificationAudioContext: AudioContext | null = null;
+let notificationAudio: HTMLAudioElement | null = null;
+const notificationSoundUrl = '/sounds/alert.wav';
 
 export type QueueSnapshot = {
   status: Status | null;
@@ -40,6 +42,27 @@ function playNotificationChime(count: number) {
   }).catch(() => undefined);
 }
 
+function playNotificationSound(count: number) {
+  if (count < 1) return;
+  if (typeof window.Audio === 'undefined') {
+    playNotificationChime(count);
+    return;
+  }
+  let failed = false;
+  for (let item = 0; item < count; item += 1) {
+    window.setTimeout(() => {
+      const audio = (notificationAudio?.cloneNode(true) as HTMLAudioElement | null) ?? new Audio(notificationSoundUrl);
+      audio.volume = 0.85;
+      void audio.play().catch(() => {
+        if (!failed) {
+          failed = true;
+          playNotificationChime(count);
+        }
+      });
+    }, item * 520);
+  }
+}
+
 export function useQueueNotifications(user: User): QueueSnapshot {
   const status: Status | null = user.role === 'fte_ops' ? 'PENDING' : user.role === 'fte_mm' ? 'APPROVED' : user.role === 'doc_officer' || user.role === 'dock_officer' ? 'FOR_DOCKING' : null;
   const knownIds = useRef<Set<string> | null>(null);
@@ -53,10 +76,15 @@ export function useQueueNotifications(user: User): QueueSnapshot {
   });
 
   useEffect(() => {
-    if (!status || typeof window.AudioContext === 'undefined') return;
+    if (!status) return;
     const unlock = () => {
-      notificationAudioContext ??= new window.AudioContext();
-      void notificationAudioContext.resume();
+      notificationAudio ??= new Audio(notificationSoundUrl);
+      notificationAudio.preload = 'auto';
+      notificationAudio.load();
+      if (typeof window.AudioContext !== 'undefined') {
+        notificationAudioContext ??= new window.AudioContext();
+        void notificationAudioContext.resume();
+      }
     };
     window.addEventListener('pointerdown', unlock, { once: true });
     window.addEventListener('keydown', unlock, { once: true });
@@ -75,7 +103,7 @@ export function useQueueNotifications(user: User): QueueSnapshot {
     }
     const newCount = query.data.data.filter(request => !knownIds.current?.has(request.id)).length;
     knownIds.current = new Set([...knownIds.current, ...current]);
-    if (newCount) playNotificationChime(newCount);
+    if (newCount) playNotificationSound(newCount);
   }, [query.data]);
 
   const rows = query.data?.data ?? [];

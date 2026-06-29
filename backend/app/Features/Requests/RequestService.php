@@ -65,7 +65,7 @@ final class RequestService
                 throw ValidationException::withMessages(['driver_id' => 'Driver ID and linehaul trip number are required.']);
             }
 
-            $fields = array_intersect_key($input, array_flip(['rejection_remarks', 'plate_number', 'provide_time', 'driver_id', 'linehaul_trip_no']));
+            $fields = array_intersect_key($input, array_flip(['rejection_remarks', 'plate_number', 'provide_time', 'driver_id', 'linehaul_trip_no', 'truck_size', 'truck_type', 'docked_time']));
             $fields['status'] = $to;
             if ($to === 'APPROVED') {
                 $fields['approved_at'] = now();
@@ -73,7 +73,7 @@ final class RequestService
             if ($to === 'REJECTED_BY_MM') {
                 $fields['rejected_at'] = now();
             }
-            if ($to === 'DOCKED') {
+            if ($to === 'DOCKED' && blank($fields['docked_time'] ?? null)) {
                 $fields['docked_time'] = now();
             }
             if ($to === 'CONFIRMED') {
@@ -93,6 +93,9 @@ final class RequestService
                 if ($to === 'CONFIRMED') {
                     $this->notify($id, 'fte_mm', $event, str_replace('_', ' ', $event), "Request {$id} is now {$to}.");
                 }
+            }
+            if ($action === 'reject-ops') {
+                $this->notifyUser($id, $request->created_by, $event, 'Request rejected', "Request {$id} was rejected by FTE Ops.");
             }
 
             return $updated;
@@ -121,5 +124,10 @@ final class RequestService
     private function notify(string $id, string $role, string $event, string $title, string $body): void
     {
         DB::table('notifications')->insert(['request_id' => $id, 'target_role' => $role, 'event_type' => $event, 'title' => $title, 'body' => $body]);
+    }
+
+    private function notifyUser(string $id, string $userId, string $event, string $title, string $body): void
+    {
+        DB::table('notifications')->insert(['request_id' => $id, 'user_id' => $userId, 'event_type' => $event, 'title' => $title, 'body' => $body]);
     }
 }

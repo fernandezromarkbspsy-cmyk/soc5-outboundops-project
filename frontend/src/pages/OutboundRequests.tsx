@@ -1,6 +1,6 @@
 import { FormEvent, useDeferredValue, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Ban, Check, Pencil, Plus, X, XCircle } from 'lucide-react';
+import { Ban, Check, Pencil, Plus, Save, X, XCircle } from 'lucide-react';
 import { Pagination } from '../components/Pagination';
 import { RequestFilters } from '../components/RequestFilters';
 import { RequestTable } from '../components/RequestTable';
@@ -8,10 +8,10 @@ import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import { api } from '../lib/api';
 import { defaultRequestFilters, exportRequestsCsv, requestQueryString } from '../lib/requests';
 import { useUiStore } from '../stores/ui';
-import type { Page, RequestSort, TruckRequest, User } from '../types';
+import type { ClusterLookup, Page, RequestSort, TruckRequest, User } from '../types';
 
 type EditableAction = { kind: 'edit' | 'reject'; request: TruckRequest };
-type RequestPayload = { cluster: FormDataEntryValue | null; region: FormDataEntryValue | null; dock_no: FormDataEntryValue | null; backlogs: number; truck_size: FormDataEntryValue | null; truck_type: FormDataEntryValue | null };
+type RequestPayload = { cluster: FormDataEntryValue | null; region: FormDataEntryValue | null; dock_no: FormDataEntryValue | null; backlogs: number; backlogs_timestamp?: FormDataEntryValue | null; truck_size: FormDataEntryValue | null; truck_type: FormDataEntryValue | null };
 
 export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const queryClient = useQueryClient();
@@ -20,6 +20,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   const [filters, setFilters] = useState(() => ({ ...defaultRequestFilters, search: globalSearch }));
   const deferredSearch = useDeferredValue(filters.search);
   const [activeAction, setActiveAction] = useState<EditableAction | null>(null);
+  const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState('');
   const [exporting, setExporting] = useState(false);
   const appliedFilters = { ...filters, search: deferredSearch };
@@ -38,11 +39,14 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
   const createRequest = useMutation({
     mutationFn: (payload: RequestPayload) => api<TruckRequest>('/requests', { method: 'POST', body: JSON.stringify(payload) }),
-    onSuccess: () => refreshData('LH request created.'),
+    onSuccess: async () => { setCreating(false); await refreshData('LH request created.'); },
   });
   const editRequest = useMutation({
-    mutationFn: ({ request, payload }: { request: TruckRequest; payload: RequestPayload }) => api<TruckRequest>(`/requests/${request.id}`, { method: 'PUT', body: JSON.stringify(payload) }),
-    onSuccess: async () => { setActiveAction(null); await refreshData('Request updated.'); },
+    mutationFn: async ({ request, payload }: { request: TruckRequest; payload: RequestPayload }) => {
+      await api<TruckRequest>(`/requests/${request.id}`, { method: 'PUT', body: JSON.stringify(payload) });
+      return api<TruckRequest>(`/requests/${request.id}/approve`, { method: 'POST', body: '{}' });
+    },
+    onSuccess: async () => { setActiveAction(null); await refreshData('Request updated and routed to FTE MM.'); },
   });
   const transition = useMutation({
     mutationFn: ({ request, action }: { request: TruckRequest; action: 'approve' | 'reject-ops' | 'cancel' }) => api<TruckRequest>(`/requests/${request.id}/${action}`, { method: 'POST', body: '{}' }),
@@ -75,17 +79,15 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
   const error = createRequest.error || editRequest.error || transition.error;
   return <div className="workspace-view">
-    <header className="page-header"><div><p className="eyebrow">OUTBOUND</p><h1>LH Request</h1><p>{user.role === 'ops_pic' ? 'Create and track your linehaul requests.' : 'Review pending requests and manage the complete outbound queue.'}</p></div></header>
+    <header className="page-header"><div><p className="eyebrow">OUTBOUND</p><h1>LH Request</h1><p>{user.role === 'ops_pic' ? 'Track linehaul requests from submission through docking.' : 'Review pending requests and manage the complete outbound queue.'}</p></div>{user.role === 'ops_pic' && <button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button>}</header>
     {(notice || error) && <p className={`notice${error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{error?.message || notice}</p>}
-
-    {user.role === 'ops_pic' && <InlineRequestForm busy={createRequest.isPending} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}
 
     {user.role === 'fte_ops' && <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending approval</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>New requests requiring FTE Ops review</p></div>{queue.rows.length>1&&<button disabled={bulkApprove.isPending} onClick={()=>bulkApprove.mutate(queue.rows.map(row=>row.id))}><Check size={16}/>{bulkApprove.isPending?'Approving…':`Approve all (${queue.rows.length})`}</button>}</div>{queue.isPending ? <div className="loading-block">Loading approval queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No requests are awaiting approval." actions={actions} />}</section>}
 
     <section className="request-list-section">
       <div className="section-heading"><div><h2>{user.role === 'fte_ops' ? 'All requests' : 'Requests'}</h2><p>Search, filter, sort, and export the request history.</p></div></div>
       <RequestFilters filters={filters} exporting={exporting} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
-      <section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
+      <section className="panel data-panel">{creating && <InlineCreateRow busy={createRequest.isPending} onCancel={() => setCreating(false)} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
     </section>
 
     {activeAction?.kind === 'edit' && <EditRequestDialog request={activeAction.request} busy={editRequest.isPending} error={editRequest.error?.message} onClose={() => setActiveAction(null)} onSubmit={payload => editRequest.mutate({ request: activeAction.request, payload })} />}
@@ -95,16 +97,43 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
 function requestPayload(form: HTMLFormElement): RequestPayload {
   const data = new FormData(form);
-  return { cluster: data.get('cluster'), region: data.get('region'), dock_no: data.get('dock_no'), backlogs: Number(data.get('backlogs')), truck_size: data.get('truck_size'), truck_type: data.get('truck_type') };
+  return { cluster: data.get('cluster'), region: data.get('region'), dock_no: data.get('dock_no'), backlogs: Number(data.get('backlogs')), backlogs_timestamp: data.get('backlogs_timestamp'), truck_size: data.get('truck_size'), truck_type: data.get('truck_type') };
 }
 
 function RequestFields({ request }: { request?: TruckRequest }) {
   return <div className="form-grid request-form-grid"><label>Cluster<input name="cluster" required maxLength={120} defaultValue={request?.cluster} /></label><label>Region<input name="region" required maxLength={120} defaultValue={request?.region} /></label><label>Dock number<input name="dock_no" required maxLength={50} defaultValue={request?.dock_no} /></label><label>Backlogs<input name="backlogs" type="number" required min={0} defaultValue={request?.backlogs ?? 0} /></label><label>Truck size<select name="truck_size" defaultValue={request?.truck_size ?? '6W'}><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label><label>Truck type<select name="truck_type" defaultValue={request?.truck_type ?? 'WETLEASE'}><option>WETLEASE</option><option>DRYLEASE</option></select></label></div>;
 }
 
-function InlineRequestForm({ busy, onSubmit }: { busy: boolean; onSubmit: (payload: RequestPayload) => void }) {
-  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onSubmit(requestPayload(event.currentTarget)); }
-  return <section className="panel inline-request-form"><div className="panel-head"><div><h2>New request</h2><p>Enter the current outbound load requirement.</p></div></div><form onSubmit={submit}><RequestFields /><div className="inline-form-actions"><button disabled={busy}><Plus size={17} />{busy ? 'Creating...' : 'Create request'}</button></div></form></section>;
+function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel: () => void; onSubmit: (payload: RequestPayload) => void }) {
+  const [clusterText, setClusterText] = useState('');
+  const [selected, setSelected] = useState<ClusterLookup | null>(null);
+  const clusterSearch = useDeferredValue(clusterText);
+  const lookup = useQuery({
+    queryKey: ['clusters', clusterSearch],
+    queryFn: () => api<{ data: ClusterLookup[] }>(`/clusters?search=${encodeURIComponent(clusterSearch)}`),
+    enabled: clusterSearch.trim().length >= 3,
+  });
+
+  function pick(cluster: ClusterLookup) {
+    setSelected(cluster);
+    setClusterText(cluster.hub_name || cluster.cluster_name);
+  }
+
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSubmit(requestPayload(event.currentTarget));
+  }
+
+  return <form className="inline-create-row" onSubmit={submit}>
+    <label className="cluster-lookup-field">Cluster<input name="cluster" required autoFocus maxLength={120} value={clusterText} onChange={event => { setClusterText(event.target.value); setSelected(null); }} placeholder="Type 3 chars" />{lookup.data && !selected && <div className="cluster-suggestions">{lookup.data.data.length ? lookup.data.data.map(cluster => <button key={cluster.id} type="button" onClick={() => pick(cluster)}><strong>{cluster.hub_name}</strong><span>{cluster.cluster_name} / {cluster.region}</span></button>) : <p>No cluster found.</p>}</div>}</label>
+    <label>Region<input name="region" required readOnly value={selected?.region ?? ''} /></label>
+    <label>Dock No<input name="dock_no" required maxLength={50} defaultValue={selected?.dock_number ?? ''} key={selected?.id ?? 'dock'} /></label>
+    <label>Backlogs<input name="backlogs" type="number" required readOnly min={0} value={selected?.backlogs ?? 0} /></label>
+    <label>Backlogs Timestamp<input readOnly value={selected?.backlogs_ts ? new Date(selected.backlogs_ts).toLocaleString() : ''} /><input type="hidden" name="backlogs_timestamp" value={selected?.backlogs_ts ?? ''} /></label>
+    <label>Truck Size<select name="truck_size" defaultValue="6W"><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label>
+    <label>Truck Type<select name="truck_type" defaultValue="WETLEASE"><option>WETLEASE</option><option>DRYLEASE</option></select></label>
+    <div className="inline-create-actions"><button className="secondary-button" type="button" onClick={onCancel}><X size={15} />Cancel</button><button disabled={busy || !selected}><Save size={15} />{busy ? 'Saving...' : 'Save'}</button></div>
+  </form>;
 }
 
 function EditRequestDialog({ request, busy, error, onClose, onSubmit }: { request: TruckRequest; busy: boolean; error?: string; onClose: () => void; onSubmit: (payload: RequestPayload) => void }) {

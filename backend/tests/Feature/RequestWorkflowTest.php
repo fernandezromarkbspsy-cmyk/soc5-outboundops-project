@@ -110,6 +110,8 @@ final class RequestWorkflowTest extends TestCase
             $table->string('region');
             $table->string('dock_no');
             $table->integer('backlogs');
+            $table->dateTime('backlogs_timestamp')->nullable();
+            $table->string('ob_fte')->nullable();
             $table->string('truck_size');
             $table->string('truck_type');
             $table->string('plate_number')->nullable();
@@ -135,6 +137,7 @@ final class RequestWorkflowTest extends TestCase
         Schema::create('notifications', function (Blueprint $table): void {
             $table->id();
             $table->uuid('request_id')->nullable();
+            $table->uuid('user_id')->nullable();
             $table->string('target_role')->nullable();
             $table->string('event_type');
             $table->string('title');

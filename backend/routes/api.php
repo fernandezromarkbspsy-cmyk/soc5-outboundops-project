@@ -39,6 +39,23 @@ Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
     Route::get('/notifications', [NotificationController::class, 'index']);
     Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
     Route::patch('/notifications/{id}/read', [NotificationController::class, 'read']);
+    Route::get('/clusters', function (Request $request) {
+        $data = $request->validate(['search' => 'required|string|min:3|max:80']);
+        $search = strtolower($data['search']);
+
+        return response()->json(['data' => DB::table('clusters')
+            ->select('id', 'cluster_name', 'hub_name', 'region', 'dock_number', 'backlogs', 'backlogs_ts')
+            ->where(function ($query) use ($search): void {
+                $query->whereRaw('lower(cluster_name) like ?', ["%{$search}%"])
+                    ->orWhereRaw('lower(hub_name) like ?', ["%{$search}%"]);
+            })
+            ->where(function ($query): void {
+                $query->where('active', true)->orWhereNull('active');
+            })
+            ->orderBy('hub_name')
+            ->limit(12)
+            ->get()]);
+    });
     Route::get('/kpi/summary', [KpiController::class, 'summary']);
     Route::get('/kpi/daily', [KpiController::class, 'daily']);
     Route::get('/requests/metrics', [RequestController::class, 'metrics']);
