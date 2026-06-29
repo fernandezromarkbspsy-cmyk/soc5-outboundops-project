@@ -48,6 +48,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     mutationFn: ({ request, action }: { request: TruckRequest; action: 'approve' | 'reject-ops' | 'cancel' }) => api<TruckRequest>(`/requests/${request.id}/${action}`, { method: 'POST', body: '{}' }),
     onSuccess: async (_, variables) => { setActiveAction(null); await refreshData(variables.action === 'approve' ? 'Request approved.' : variables.action === 'reject-ops' ? 'Request rejected.' : 'Request cancelled.'); },
   });
+  const bulkApprove = useMutation({mutationFn:(ids:string[])=>api('/requests/bulk-approve',{method:'POST',body:JSON.stringify({ids})}),onSuccess:()=>refreshData('Pending requests approved.')});
 
   const actionable = (request: TruckRequest) => request.status === 'PENDING' || request.status === 'REJECTED_BY_MM';
   const actions = (request: TruckRequest) => user.role === 'fte_ops' && actionable(request) ? <>
@@ -79,7 +80,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
     {user.role === 'ops_pic' && <InlineRequestForm busy={createRequest.isPending} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}
 
-    {user.role === 'fte_ops' && <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending approval</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>New requests requiring FTE Ops review</p></div></div>{queue.isPending ? <div className="loading-block">Loading approval queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No requests are awaiting approval." actions={actions} />}</section>}
+    {user.role === 'fte_ops' && <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending approval</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>New requests requiring FTE Ops review</p></div>{queue.rows.length>1&&<button disabled={bulkApprove.isPending} onClick={()=>bulkApprove.mutate(queue.rows.map(row=>row.id))}><Check size={16}/>{bulkApprove.isPending?'Approving…':`Approve all (${queue.rows.length})`}</button>}</div>{queue.isPending ? <div className="loading-block">Loading approval queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No requests are awaiting approval." actions={actions} />}</section>}
 
     <section className="request-list-section">
       <div className="section-heading"><div><h2>{user.role === 'fte_ops' ? 'All requests' : 'Requests'}</h2><p>Search, filter, sort, and export the request history.</p></div></div>

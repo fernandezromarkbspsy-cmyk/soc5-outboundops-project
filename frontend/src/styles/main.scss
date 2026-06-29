@@ -171,6 +171,7 @@ th { color: $muted; font-size: .75rem; text-transform: uppercase; }
 .notification-list { display: grid; max-height: 330px; overflow-y: auto; }
 .notification-list button { display: grid; gap: .2rem; padding: .8rem 1rem; border-bottom: 1px solid #f0f2f5; border-radius: 0; background: #fff; color: $ink; text-align: left; }
 .notification-list button:hover { background: #f8fafc; }
+.notification-list button.unread { box-shadow: inset 3px 0 #10b981; background: #f0fdf4; }
 .notification-list button span { font-size: .78rem; }
 .notification-list button small { color: $muted; font-size: .68rem; }
 .workspace-view { width: min(100%, 1500px); margin: 0 auto; animation: fields-enter 180ms ease-out both; }
@@ -334,6 +335,7 @@ th { color: $muted; font-size: .75rem; text-transform: uppercase; }
 
 @media (max-width: 1050px) { .dashboard-heading { align-items: stretch; flex-direction: column; }.dashboard-controls { flex-wrap: wrap; }.analytics-grid { grid-template-columns: 1fr; } }
 @media (max-width: 760px) { .dashboard-controls label { display: none; }.dashboard-controls form { flex: 1; }.dashboard-controls form input { width: 100%; }.chart-panel { min-width: 0; }.line-chart { overflow-x: auto; } }
+.kpi-chart { padding-bottom: 1.25rem; }.bar-chart { display:flex; min-height:230px; align-items:flex-end; gap:.55rem; padding:1rem 1.25rem 0; overflow-x:auto; }.bar-chart>div { display:grid; min-width:34px; height:205px; align-content:end; justify-items:center; gap:.4rem; }.bar-chart span { display:block; width:24px; border-radius:5px 5px 0 0; background:#10b981; }.bar-chart small { color:$muted; font-size:.58rem; white-space:nowrap; transform:rotate(-35deg); transform-origin:center; }
 
 // Sticky application toolbar
 .app-topbar { position: sticky; top: 0; z-index: 20; min-height: 76px; justify-content: space-between; margin: 0 calc(-1 * clamp(1.25rem, 3.2vw, 3.5rem)) 1.5rem; padding: 0 clamp(1.25rem, 3.2vw, 3.5rem); border-bottom: 1px solid $line; background: rgba(255,255,255,.96); box-shadow: 0 1px 8px rgba(16,24,40,.04); backdrop-filter: blur(12px); }
@@ -360,6 +362,7 @@ th { color: $muted; font-size: .75rem; text-transform: uppercase; }
 .profile-menu header div { display: grid; }.profile-menu header strong { color: $ink; font-size: .78rem; }.profile-menu header small { color: $muted; font-size: .64rem; }
 .profile-menu > button { display: flex; width: 100%; align-items: center; justify-content: space-between; padding: .68rem .9rem; border-radius: 0; background: #fff; color: #344054; font-size: .75rem; text-align: left; }
 .profile-menu > button:hover { background: #ecfdf3; color: #047857; }.profile-menu > p { margin: 0; padding: 1rem; color: $muted; font-size: .75rem; }
+.app-toast { position:fixed; top:88px; right:1.25rem; z-index:60; display:flex; width:min(360px,calc(100vw - 2rem)); gap:.65rem; padding:.85rem 1rem; border:1px solid #a6f4c5; border-radius:10px; background:#ecfdf3; color:#047857; box-shadow:0 14px 35px rgba(16,24,40,.16); animation:fields-enter 180ms ease-out; }.app-toast div { display:grid; }.app-toast strong { color:#14532d; font-size:.78rem; }.app-toast span { margin-top:.15rem; color:#475467; font-size:.7rem; }
 
 @media (max-width: 1120px) { .topbar-user div { display: none; }.topbar-dates input { width: 112px; }.topbar-search { width: 210px; }.topbar-search kbd { display: none; } }
 @media (max-width: 760px) { .app-topbar { min-height: 68px; margin: 0 -1rem 1.25rem; padding: 0 1rem 0 4.15rem; }.topbar-dates, .topbar-user { display: none; }.topbar-page h1 { font-size: 1.18rem; }.topbar-breadcrumbs { font-size: .58rem; }.topbar-tools { min-width: 0; flex: 1; }.topbar-search { width: auto; min-width: 100px; flex: 1; }.notification-button { flex: 0 0 38px; } }

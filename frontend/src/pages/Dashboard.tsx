@@ -9,14 +9,17 @@ import type { AppView, Role, User } from '../types';
 import { Overview } from './Overview';
 import { OutboundRequests } from './OutboundRequests';
 import { MidmileRequests } from './MidmileRequests';
+import { DockingConfirmation } from './DockingConfirmation';
+import { Kpi } from './Kpi';
+import { UserManagement } from './UserManagement';
 
 export function Dashboard({ user }: { user: User }) {
   const queryClient = useQueryClient();
   const viewRole = useUiStore(state => state.viewRole);
   const setViewRole = useUiStore(state => state.setViewRole);
   const activeUser = { ...user, role: user.is_admin && viewRole ? viewRole : user.role };
-  const allowed = (candidate: AppView) => candidate === 'overview' || (candidate === 'lh-request' && (activeUser.role === 'ops_pic' || activeUser.role === 'fte_ops')) || (candidate === 'truck-request' && activeUser.role === 'fte_mm');
-  const fromPath = (): AppView => window.location.pathname === '/outbound/lh-request' ? 'lh-request' : window.location.pathname === '/midmile/truck-request' ? 'truck-request' : 'overview';
+  const allowed = (candidate: AppView) => candidate === 'overview' || (candidate === 'lh-request' && (activeUser.role === 'ops_pic' || activeUser.role === 'fte_ops')) || (candidate === 'truck-request' && activeUser.role === 'fte_mm') || (candidate === 'docking' && (activeUser.role === 'doc_officer' || activeUser.role === 'dock_officer')) || (candidate === 'kpi' && activeUser.role === 'fte_ops') || (candidate === 'users' && (activeUser.role === 'fte_ops' || activeUser.role === 'fte_mm'));
+  const fromPath = (): AppView => ({'/outbound/lh-request':'lh-request','/midmile/truck-request':'truck-request','/docking':'docking','/kpi':'kpi','/users':'users'}[window.location.pathname] as AppView|undefined) ?? 'overview';
   const [view, setView] = useState<AppView>(() => allowed(fromPath()) ? fromPath() : 'overview');
   const [menuOpen, setMenuOpen] = useState(false);
   const queue = useQueueNotifications(activeUser);
@@ -30,7 +33,8 @@ export function Dashboard({ user }: { user: User }) {
 
   function navigate(next: AppView, replace = false) {
     if (!allowed(next)) next = 'overview';
-    const path = next === 'overview' ? '/dashboard' : next === 'lh-request' ? '/outbound/lh-request' : '/midmile/truck-request';
+    const paths:Record<AppView,string>={overview:'/dashboard','lh-request':'/outbound/lh-request','truck-request':'/midmile/truck-request',docking:'/docking',kpi:'/kpi',users:'/users'};
+    const path = paths[next];
     window.history[replace ? 'replaceState' : 'pushState']({}, '', path);
     setView(next);
   }
@@ -45,10 +49,13 @@ export function Dashboard({ user }: { user: User }) {
   return <div className="app-shell">
     <AppSidebar user={activeUser} activeView={view} open={menuOpen} onOpenChange={setMenuOpen} onNavigate={navigate} onSignOut={() => void supabase.auth.signOut()} pendingCount={queue.count} />
     <main className="app-content">
-      <AppHeader user={activeUser} view={view} count={queue.count} alerts={queue.alerts} onRoleChange={switchRole} onSearch={() => navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request')} onOpenAlert={request => { queue.acknowledge(request.id); navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request'); }} />
+      <AppHeader user={activeUser} view={view} onRoleChange={switchRole} onSearch={() => navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request')} />
       {view === 'overview' && <Overview user={activeUser} onNavigate={navigate} />}
       {view === 'lh-request' && <OutboundRequests user={activeUser} queue={queue} />}
       {view === 'truck-request' && <MidmileRequests user={activeUser} queue={queue} />}
+      {view === 'docking' && <DockingConfirmation user={activeUser} />}
+      {view === 'kpi' && <Kpi />}
+      {view === 'users' && <UserManagement />}
     </main>
   </div>;
 }

@@ -12,6 +12,13 @@ use Throwable;
 
 final class UserController
 {
+    public function index(Request $request): JsonResponse
+    {
+        $this->authorize($request);
+
+        return response()->json(['data' => DB::table('profiles')->select('id', 'name', 'role', 'email', 'ops_id', 'is_active', 'created_at')->orderBy('name')->get()]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $actor = $request->attributes->get('actor');
@@ -69,6 +76,40 @@ final class UserController
             throw $exception;
         }
 
+        $this->userEvent($profile, $actor->id, 'USER_CREATED', ['name' => $data['name'], 'ops_id' => $opsId]);
+
         return response()->json(['id' => $profile, 'name' => $data['name'], 'ops_id' => $opsId, 'must_change_password' => true], 201);
+    }
+
+    public function update(Request $request, string $id): JsonResponse
+    {
+        $this->authorize($request);
+        $data = $request->validate(['name' => 'required|string|min:2|max:120', 'role' => ['required', Rule::in(['ops_pic', 'fte_ops', 'fte_mm', 'doc_officer', 'dock_officer'])]]);
+        DB::table('profiles')->where('id', $id)->update($data + ['updated_at' => now()]);
+        $this->userEvent($id, $request->attributes->get('actor')->id, 'USER_UPDATED', $data);
+
+        return response()->json(DB::table('profiles')->where('id', $id)->firstOrFail());
+    }
+
+    public function disable(Request $request, string $id): JsonResponse
+    {
+        $this->authorize($request);
+        abort_if($request->attributes->get('actor')->id === $id, 409, 'You cannot disable your own account.');
+        DB::table('profiles')->where('id', $id)->update(['is_active' => false, 'updated_at' => now()]);
+        $this->userEvent($id, $request->attributes->get('actor')->id, 'USER_DISABLED');
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function authorize(Request $request): void
+    {
+        abort_unless(in_array($request->attributes->get('actor')->role, ['fte_ops', 'fte_mm'], true), 403, 'Only FTE users can manage users.');
+    }
+
+    private function userEvent(string $userId, string $actorId, string $type, array $metadata = []): void
+    {
+        if (DB::getSchemaBuilder()->hasTable('user_events')) {
+            DB::table('user_events')->insert(['user_id' => $userId, 'actor_id' => $actorId, 'event_type' => $type, 'metadata' => json_encode($metadata)]);
+        }
     }
 }

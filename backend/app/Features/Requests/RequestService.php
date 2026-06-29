@@ -46,21 +46,22 @@ final class RequestService
                 'reject-ops' => [['PENDING', 'REJECTED_BY_MM'], 'CANCELLED', 'fte_ops', 'REQUEST_REJECTED_BY_OPS'],
                 'cancel' => [['PENDING', 'REJECTED_BY_MM'], 'CANCELLED', null, 'REQUEST_CANCELLED'],
                 'reject-mm' => [['APPROVED'], 'REJECTED_BY_MM', 'fte_mm', 'REQUEST_REJECTED_BY_MM'],
-                'assign-truck' => [['APPROVED'], 'ASSIGNED', 'fte_mm', 'TRUCK_ASSIGNED'],
-                'mark-docked' => [['ASSIGNED', 'FOR_DOCKING'], 'DOCKED', 'doc_officer', 'TRUCK_DOCKED'],
-                'confirm' => [['DOCKED'], 'CONFIRMED', 'doc_officer', 'REQUEST_CONFIRMED'],
+                'assign-truck' => [['APPROVED'], 'FOR_DOCKING', 'fte_mm', 'TRUCK_ASSIGNED'],
+                'mark-docked' => [['ASSIGNED', 'FOR_DOCKING'], 'DOCKED', 'docking', 'TRUCK_DOCKED'],
+                'confirm' => [['DOCKED'], 'CONFIRMED', 'docking', 'REQUEST_CONFIRMED'],
                 default => throw ValidationException::withMessages(['action' => 'Unknown action.']),
             };
             abort_unless(in_array($request->status, $from, true), 409, "Cannot {$action} a {$request->status} request.");
             $ownsPending = $action === 'cancel' && $actor->role === 'ops_pic' && $request->created_by === $actor->id;
-            abort_unless($ownsPending || ($role ? $actor->role === $role : $actor->role === 'fte_ops'), 403);
+            $hasRole = $role === 'docking' ? in_array($actor->role, ['doc_officer', 'dock_officer'], true) : $actor->role === $role;
+            abort_unless($ownsPending || ($role ? $hasRole : $actor->role === 'fte_ops'), 403);
             if ($action === 'reject-mm' && blank($input['rejection_remarks'] ?? null)) {
                 throw ValidationException::withMessages(['rejection_remarks' => 'A rejection reason is required.']);
             }
             if ($action === 'assign-truck' && blank($input['plate_number'] ?? null)) {
                 throw ValidationException::withMessages(['plate_number' => 'Plate number is required.']);
             }
-            if ($action === 'confirm' && (blank($input['driver_id'] ?? null) || blank($input['linehaul_trip_no'] ?? null))) {
+            if ($action === 'confirm' && (blank($input['driver_id'] ?? $request->driver_id) || blank($input['linehaul_trip_no'] ?? $request->linehaul_trip_no))) {
                 throw ValidationException::withMessages(['driver_id' => 'Driver ID and linehaul trip number are required.']);
             }
 
@@ -80,14 +81,35 @@ final class RequestService
             }
             $updated = $this->requests->update($id, $fields);
             $this->event($id, $actor->id, $event, $request->status, $to, $input);
+            if ($action === 'assign-truck') {
+                $this->event($id, $actor->id, 'TRUCK_FOR_DOCKING', 'ASSIGNED', 'FOR_DOCKING', $input);
+            }
             $target = match ($to) {
-                'APPROVED' => 'fte_mm', 'REJECTED_BY_MM' => 'fte_ops', 'ASSIGNED','DOCKED' => 'doc_officer', 'CONFIRMED' => 'fte_ops', default => null
+                'APPROVED' => 'fte_mm', 'REJECTED_BY_MM' => 'fte_ops', 'FOR_DOCKING' => 'doc_officer', 'CONFIRMED' => 'fte_ops', default => null
             };
             if ($target) {
-                $this->notify($id, $target, $event, str_replace('_', ' ', $event), "Request {$id} is now {$to}.");
+                $notificationEvent = $action === 'assign-truck' ? 'TRUCK_FOR_DOCKING' : $event;
+                $this->notify($id, $target, $notificationEvent, str_replace('_', ' ', $notificationEvent), "Request {$id} is now {$to}.");
+                if ($to === 'CONFIRMED') {
+                    $this->notify($id, 'fte_mm', $event, str_replace('_', ' ', $event), "Request {$id} is now {$to}.");
+                }
             }
 
             return $updated;
+        });
+    }
+
+    public function bulkApprove(object $actor, array $ids): array
+    {
+        abort_unless($actor->role === 'fte_ops', 403, 'Only FTE Ops can bulk approve requests.');
+
+        return DB::transaction(function () use ($actor, $ids): array {
+            $approved = [];
+            foreach ($ids as $id) {
+                $approved[] = $this->transition($id, $actor, 'approve', []);
+            }
+
+            return $approved;
         });
     }
 

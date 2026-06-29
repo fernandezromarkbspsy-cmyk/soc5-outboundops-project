@@ -96,6 +96,23 @@ final class RequestRepository
         return DB::table('requests')->where('id', $id)->lockForUpdate()->firstOrFail();
     }
 
+    public function findVisible(string $id, object $actor): object
+    {
+        $query = DB::table('requests')->select(self::COLUMNS)->where('id', $id);
+        if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
+            $query->where('created_by', $actor->id);
+        }
+
+        return $query->firstOrFail();
+    }
+
+    public function events(string $id, object $actor): Collection
+    {
+        $this->findVisible($id, $actor);
+
+        return DB::table('request_events')->where('request_id', $id)->orderByDesc('created_at')->get();
+    }
+
     public function insert(array $data): object
     {
         $id = DB::table('requests')->insertGetId($data, 'id');

@@ -1,5 +1,7 @@
 <?php
 
+use App\Features\Kpi\KpiController;
+use App\Features\Notifications\NotificationController;
 use App\Features\Requests\RequestController;
 use App\Features\Users\UserController;
 use Carbon\CarbonImmutable;
@@ -30,11 +32,22 @@ Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
 
         return response()->json(['ok' => true]);
     });
+    Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+    Route::patch('/users/{id}/disable', [UserController::class, 'disable']);
+    Route::get('/notifications', [NotificationController::class, 'index']);
+    Route::patch('/notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::patch('/notifications/{id}/read', [NotificationController::class, 'read']);
+    Route::get('/kpi/summary', [KpiController::class, 'summary']);
+    Route::get('/kpi/daily', [KpiController::class, 'daily']);
     Route::get('/requests/metrics', [RequestController::class, 'metrics']);
     Route::get('/requests/analytics', [RequestController::class, 'analytics']);
     Route::get('/requests', [RequestController::class, 'index']);
     Route::post('/requests', [RequestController::class, 'store']);
+    Route::post('/requests/bulk-approve', [RequestController::class, 'bulkApprove']);
+    Route::get('/requests/{id}', [RequestController::class, 'show']);
+    Route::get('/requests/{id}/events', [RequestController::class, 'events']);
     Route::put('/requests/{id}', [RequestController::class, 'update']);
     Route::post('/requests/{id}/{action}', [RequestController::class, 'action'])
         ->whereIn('action', ['approve', 'reject-ops', 'cancel', 'reject-mm', 'assign-truck', 'mark-docked', 'confirm']);

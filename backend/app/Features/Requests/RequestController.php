@@ -59,6 +59,23 @@ final class RequestController
         return response()->json($this->service->create($request->attributes->get('actor'), $data), 201);
     }
 
+    public function show(Request $request, string $id): JsonResponse
+    {
+        return response()->json($this->repository->findVisible($id, $request->attributes->get('actor')));
+    }
+
+    public function events(Request $request, string $id): JsonResponse
+    {
+        return response()->json($this->repository->events($id, $request->attributes->get('actor')));
+    }
+
+    public function bulkApprove(Request $request): JsonResponse
+    {
+        $data = $request->validate(['ids' => 'required|array|min:1|max:100', 'ids.*' => 'required|uuid|distinct']);
+
+        return response()->json(['data' => $this->service->bulkApprove($request->attributes->get('actor'), $data['ids'])]);
+    }
+
     public function update(Request $request, string $id): JsonResponse
     {
         $data = $request->validate($this->requestRules());
