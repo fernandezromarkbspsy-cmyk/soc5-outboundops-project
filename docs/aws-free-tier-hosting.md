@@ -506,7 +506,7 @@ Run these checks:
 2. Confirm the certificate is valid and HTTPS is used.
 3. Confirm `http://soc5outboundops.app` redirects to HTTPS.
 4. Select FTE and request an OTP for an active staged user.
-5. Confirm the email contains a six-digit code, not a magic link.
+5. Confirm the email contains the configured numeric OTP, not a magic link.
 6. Enter the code and confirm the dashboard loads.
 7. Confirm `/api/auth/me` succeeds in browser developer tools.
 8. Confirm an unstaged SPX email cannot create an application account.

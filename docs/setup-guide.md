@@ -187,7 +187,7 @@ Open `http://localhost:5173`. The frontend proxies `/api` to Laravel at
 ## 6. First FTE login
 
 After running the user seed, enter one of its `@spxexpress.com` FTE addresses on
-the login page. Supabase sends the six-digit OTP, creates the Auth identity on
+the login page. Supabase sends the configured numeric OTP, creates the Auth identity on
 first use, and migration 003 creates the matching profile. Subsequent OTP logins
 reuse that Auth identity.
 

@@ -8,7 +8,7 @@ named page is not directly visible, expand **Authentication > Configuration**.
 The application supports two authentication paths:
 
 - **FTE:** an allowlisted `@spxexpress.com` email uses Google or receives a
-  six-digit email OTP.
+  configurable 6-to-10-digit email OTP.
 - **Backroom:** an FTE-created account signs in with an OPS ID and password. The
   initial password must be replaced immediately after the first login.
 
@@ -273,7 +273,7 @@ for Email Sending under the token's account.
 Supabase uses the same API and template slot for magic links and email OTPs. The
 template variable determines which experience the user receives:
 
-- `{{ .Token }}` sends a six-digit code.
+- `{{ .Token }}` sends the configured numeric OTP code.
 - `{{ .ConfirmationURL }}` sends a clickable magic link.
 
 1. Open **Authentication > Email Templates**.
@@ -300,8 +300,8 @@ template variable determines which experience the user receives:
 6. Save the template.
 
 The application calls `verifyOtp` with the email, token, and `type: 'email'`.
-Changing the code length in the application is not supported; Supabase generates
-the six-digit token.
+Supabase supports email OTP lengths from 6 to 10 digits, and the application
+accepts that full range.
 
 ## 8. Configure OTP expiry and rate limits
 
