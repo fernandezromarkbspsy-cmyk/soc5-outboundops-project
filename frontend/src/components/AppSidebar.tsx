@@ -1,5 +1,5 @@
 import { BarChart3, ChevronDown, LayoutDashboard, LogOut, Menu, Route, ShipWheel, Truck, Users, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { AppView, User } from '../types';
 
 type Props = {
@@ -20,13 +20,30 @@ const roleNames = {
   dock_officer: 'Dock Officer',
 } as const;
 
+type MenuGroup = 'dashboard' | 'outbound' | 'midmile';
+
+function groupForView(view: AppView): MenuGroup | null {
+  if (view === 'overview') return 'dashboard';
+  if (view === 'lh-request') return 'outbound';
+  if (view === 'truck-request') return 'midmile';
+  return null;
+}
+
 export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, onSignOut, pendingCount }: Props) {
   const showOutbound = user.role === 'ops_pic' || user.role === 'fte_ops';
   const showMidmile = user.role === 'fte_mm';
   const showDocking = user.role === 'doc_officer' || user.role === 'dock_officer';
   const showKpi = user.role === 'fte_ops';
   const showUsers = user.role === 'fte_ops' || user.role === 'fte_mm';
-  const [expanded, setExpanded] = useState({ dashboard: true, outbound: true, midmile: true });
+  const [expanded, setExpanded] = useState<MenuGroup | null>(() => groupForView(activeView) ?? 'dashboard');
+
+  useEffect(() => {
+    setExpanded(groupForView(activeView));
+  }, [activeView]);
+
+  function toggleGroup(group: MenuGroup) {
+    setExpanded(value => value === group ? null : group);
+  }
 
   function navigate(view: AppView) {
     onNavigate(view);
@@ -41,12 +58,12 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
       <button className="sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => onOpenChange(false)}><X size={19} /></button>
 
       <nav aria-label="Primary navigation">
-        <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded.dashboard} onClick={() => setExpanded(value => ({ ...value, dashboard: !value.dashboard }))}><span>Dashboard</span><ChevronDown size={14} /></button>{expanded.dashboard && <button className={activeView === 'overview' ? 'active' : ''} onClick={() => navigate('overview')}><LayoutDashboard size={18} /><span>Overview</span></button>}</div>
-        {showOutbound && <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded.outbound} onClick={() => setExpanded(value => ({ ...value, outbound: !value.outbound }))}><span>Outbound</span><ChevronDown size={14} /></button>{expanded.outbound && <button className={activeView === 'lh-request' ? 'active' : ''} onClick={() => navigate('lh-request')}><Route size={18} /><span>LH Request</span>{user.role === 'fte_ops' && pendingCount > 0 && <span className="nav-badge">{pendingCount > 99 ? '99+' : pendingCount}</span>}</button>}</div>}
-        {showMidmile && <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded.midmile} onClick={() => setExpanded(value => ({ ...value, midmile: !value.midmile }))}><span>Midmile</span><ChevronDown size={14} /></button>{expanded.midmile && <button className={activeView === 'truck-request' ? 'active' : ''} onClick={() => navigate('truck-request')}><Truck size={18} /><span>Truck Request</span>{pendingCount > 0 && <span className="nav-badge">{pendingCount > 99 ? '99+' : pendingCount}</span>}</button>}</div>}
-        {showDocking && <div className="nav-group"><button className={activeView === 'docking' ? 'active' : ''} onClick={() => navigate('docking')}><ShipWheel size={18}/><span>Docking Confirmation</span>{pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}</button></div>}
-        {showKpi && <div className="nav-group"><button className={activeView === 'kpi' ? 'active' : ''} onClick={() => navigate('kpi')}><BarChart3 size={18}/><span>KPI Analytics</span></button></div>}
-        {showUsers && <div className="nav-group"><button className={activeView === 'users' ? 'active' : ''} onClick={() => navigate('users')}><Users size={18}/><span>User Management</span></button></div>}
+        <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded === 'dashboard'} onClick={() => toggleGroup('dashboard')}><span>Dashboard</span><ChevronDown size={15} /></button>{expanded === 'dashboard' && <button className={`nav-subitem${activeView === 'overview' ? ' active' : ''}`} onClick={() => navigate('overview')}><LayoutDashboard size={17} /><span>Overview</span></button>}</div>
+        {showOutbound && <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded === 'outbound'} onClick={() => toggleGroup('outbound')}><span>Outbound</span><ChevronDown size={15} /></button>{expanded === 'outbound' && <button className={`nav-subitem${activeView === 'lh-request' ? ' active' : ''}`} onClick={() => navigate('lh-request')}><Route size={17} /><span>LH Request</span>{user.role === 'fte_ops' && pendingCount > 0 && <span className="nav-badge">{pendingCount > 99 ? '99+' : pendingCount}</span>}</button>}</div>}
+        {showMidmile && <div className="nav-group"><button className="nav-group-toggle" type="button" aria-expanded={expanded === 'midmile'} onClick={() => toggleGroup('midmile')}><span>Midmile</span><ChevronDown size={15} /></button>{expanded === 'midmile' && <button className={`nav-subitem${activeView === 'truck-request' ? ' active' : ''}`} onClick={() => navigate('truck-request')}><Truck size={17} /><span>Truck Request</span>{pendingCount > 0 && <span className="nav-badge">{pendingCount > 99 ? '99+' : pendingCount}</span>}</button>}</div>}
+        {showDocking && <div className="nav-group"><button className={`nav-link${activeView === 'docking' ? ' active' : ''}`} onClick={() => navigate('docking')}><ShipWheel size={18}/><span>Docking Confirmation</span>{pendingCount > 0 && <span className="nav-badge">{pendingCount}</span>}</button></div>}
+        {showKpi && <div className="nav-group"><button className={`nav-link${activeView === 'kpi' ? ' active' : ''}`} onClick={() => navigate('kpi')}><BarChart3 size={18}/><span>KPI Analytics</span></button></div>}
+        {showUsers && <div className="nav-group"><button className={`nav-link${activeView === 'users' ? ' active' : ''}`} onClick={() => navigate('users')}><Users size={18}/><span>User Management</span></button></div>}
       </nav>
 
       <div className="sidebar-account">
