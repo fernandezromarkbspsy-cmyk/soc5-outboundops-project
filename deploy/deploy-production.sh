@@ -5,6 +5,29 @@ set -Eeuo pipefail
 readonly APP_DIR="/opt/soc5-outbound"
 readonly BRANCH="main"
 readonly HEALTH_URL="http://127.0.0.1:8080/up"
+readonly ROOT_ENV_SECRET_ID="${ROOT_ENV_SECRET_ID:-soc5-outbound/root-env}"
+readonly BACKEND_ENV_SECRET_ID="${BACKEND_ENV_SECRET_ID:-soc5-outbound/backend-env}"
+
+write_secret_env_file() {
+  local secret_id="$1"
+  local target_path="$2"
+  local tmp_path
+
+  tmp_path="$(mktemp)"
+  aws secretsmanager get-secret-value \
+    --secret-id "$secret_id" \
+    --query SecretString \
+    --output text > "$tmp_path"
+
+  if [[ ! -s "$tmp_path" || "$(cat "$tmp_path")" == "None" ]]; then
+    rm -f "$tmp_path"
+    echo "Deployment refused: AWS Secrets Manager secret $secret_id is empty or not a string secret." >&2
+    exit 1
+  fi
+
+  chmod 600 "$tmp_path"
+  mv "$tmp_path" "$target_path"
+}
 
 exec 9>/tmp/soc5-outbound-deploy.lock
 echo "Waiting for the production deployment lock..."
@@ -22,14 +45,31 @@ if [[ -n "$(git status --porcelain --untracked-files=no)" ]]; then
   exit 1
 fi
 
+umask 077
+echo "Loading production environment from AWS Secrets Manager..."
+write_secret_env_file "$ROOT_ENV_SECRET_ID" .env
+write_secret_env_file "$BACKEND_ENV_SECRET_ID" backend/.env
+
 if [[ ! -f .env ]]; then
   echo "Deployment refused: $APP_DIR/.env is missing." >&2
+  exit 1
+fi
+
+if [[ ! -f backend/.env ]]; then
+  echo "Deployment refused: $APP_DIR/backend/.env is missing." >&2
   exit 1
 fi
 
 for variable in SUPABASE_URL SUPABASE_PUBLISHABLE_KEY; do
   if ! grep -Eq "^${variable}=.+" .env; then
     echo "Deployment refused: $variable is missing or empty in $APP_DIR/.env." >&2
+    exit 1
+  fi
+done
+
+for variable in SUPABASE_URL SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY; do
+  if ! grep -Eq "^${variable}=.+" backend/.env; then
+    echo "Deployment refused: $variable is missing or empty in $APP_DIR/backend/.env." >&2
     exit 1
   fi
 done
