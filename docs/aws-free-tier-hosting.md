@@ -591,6 +591,7 @@ Create an IAM policy named `soc5-outbound-github-deploy`:
     {
       "Effect": "Allow",
       "Action": [
+        "ssm:DescribeInstanceInformation",
         "ssm:GetCommandInvocation",
         "ssm:ListCommandInvocations"
       ],
