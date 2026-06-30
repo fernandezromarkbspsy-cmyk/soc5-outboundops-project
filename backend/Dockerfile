@@ -11,13 +11,21 @@ FROM runtime AS vendor
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 WORKDIR /app
 COPY composer.json composer.lock ./
-RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction \
- && composer check-platform-reqs --no-dev
+RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-autoloader \
+ && composer check-platform-reqs --no-dev \
+ && composer dump-autoload --optimize --no-dev
 
 FROM runtime
 WORKDIR /var/www/html
 COPY --from=vendor /app/vendor ./vendor
-COPY . .
+COPY composer.json composer.lock artisan ./
+COPY app ./app
+COPY bootstrap ./bootstrap
+COPY config ./config
+COPY database ./database
+COPY public ./public
+COPY resources ./resources
+COPY routes ./routes
 RUN php artisan package:discover --ansi
 RUN chmod -R a+rX app bootstrap config public routes \
  && chmod a+r artisan composer.json composer.lock \

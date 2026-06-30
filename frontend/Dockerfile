@@ -8,8 +8,11 @@ ENV VITE_API_URL=$VITE_API_URL
 ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
 ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
 COPY package*.json ./
-RUN npm ci
-COPY . .
+RUN npm ci --prefer-offline --no-audit
+COPY src ./src
+COPY public ./public
+COPY index.html ./
+COPY tsconfig.json vite.config.ts ./
 RUN npm run build
 
 FROM nginx:1.27-alpine

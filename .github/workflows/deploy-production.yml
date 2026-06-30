@@ -35,39 +35,33 @@ jobs:
           set -Eeuo pipefail
 
           echo "Checking SSM agent status on instance..."
-          ssm_status=$(aws ssm describe-instance-information \
+          ssm_info=$(aws ssm describe-instance-information \
             --instance-information-filter-list "key=InstanceIds,valueSet=$INSTANCE_ID" \
-            --query 'InstanceInformationList[0].PingStatus' \
-            --output text 2>/dev/null || echo "Offline")
+            --query 'InstanceInformationList[0]' \
+            --output json 2>/dev/null || echo "null")
+          
+          if [[ "$ssm_info" == "null" ]]; then
+            echo "Error: Could not retrieve instance information from SSM." >&2
+            echo "Instance ID: $INSTANCE_ID" >&2
+            exit 1
+          fi
+
+          ssm_status=$(echo "$ssm_info" | jq -r '.PingStatus // "Offline"')
+          ssm_platform_type=$(echo "$ssm_info" | jq -r '.PlatformType // "Unknown"')
+          ssm_agent_version=$(echo "$ssm_info" | jq -r '.AgentVersion // "Unknown"')
+
+          echo "SSM Status: $ssm_status"
+          echo "Platform: $ssm_platform_type"
+          echo "Agent Version: $ssm_agent_version"
 
           if [[ "$ssm_status" != "Online" ]]; then
-            echo "SSM agent is not online (status: $ssm_status). Restarting SSM agent..."
-            aws ssm send-command \
-              --instance-ids "$INSTANCE_ID" \
-              --document-name AWS-RunShellScript \
-              --parameters 'commands=["sudo systemctl restart amazon-ssm-agent"]' \
-              --comment "Restart SSM agent before deployment" \
-              --query 'Command.CommandId' \
-              --output text > /tmp/restart_command_id.txt
-
-            restart_command_id=$(cat /tmp/restart_command_id.txt)
-            echo "SSM restart command: $restart_command_id"
-
-            # Wait for restart to complete
-            for attempt in {1..30}; do
-              restart_status=$(aws ssm get-command-invocation \
-                --command-id "$restart_command_id" \
-                --instance-id "$INSTANCE_ID" \
-                --query 'Status' \
-                --output text 2>/dev/null || echo "Pending")
-
-              if [[ "$restart_status" == "Success" || "$restart_status" == "Failed" ]]; then
-                break
-              fi
-              sleep 2
-            done
-
-            echo "Waiting for SSM agent to come back online..."
+            echo "SSM agent is not online (status: $ssm_status)." >&2
+            echo "Attempting to restart instance to recover SSM agent..." >&2
+            if ! aws ec2 reboot-instances --instance-ids "$INSTANCE_ID"; then
+              echo "Failed to reboot instance." >&2
+              exit 1
+            fi
+            echo "Waiting for instance to reboot and SSM agent to come back online..."
             for attempt in {1..60}; do
               ssm_status=$(aws ssm describe-instance-information \
                 --instance-information-filter-list "key=InstanceIds,valueSet=$INSTANCE_ID" \
@@ -75,14 +69,18 @@ jobs:
                 --output text 2>/dev/null || echo "Offline")
 
               if [[ "$ssm_status" == "Online" ]]; then
-                echo "SSM agent is now online."
+                echo "SSM agent is now online after $((attempt * 10)) seconds."
                 break
               fi
+              if (( attempt % 6 == 0 )); then
+                echo "Still waiting for SSM agent... ($((attempt * 10)) seconds elapsed)"
+              fi
               if (( attempt == 60 )); then
-                echo "SSM agent failed to come back online after restart." >&2
+                echo "SSM agent failed to come back online after instance reboot." >&2
+                echo "Manual intervention required: SSH into instance and restart SSM agent." >&2
                 exit 1
               fi
-              sleep 5
+              sleep 10
             done
           fi
 
