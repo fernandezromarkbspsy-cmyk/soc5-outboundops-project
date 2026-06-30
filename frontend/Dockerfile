@@ -12,7 +12,7 @@ RUN npm ci --prefer-offline --no-audit
 COPY src ./src
 COPY public ./public
 COPY index.html ./
-COPY tsconfig.json vite.config.ts ./
+COPY tsconfig.json tsconfig.app.json vite.config.ts ./
 RUN npm run build
 
 FROM nginx:1.27-alpine
