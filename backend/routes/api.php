@@ -9,6 +9,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/health', fn () => response()->json(['ok' => true]));
+
 Route::get('/auth/status', function () {
     abort_unless(
         filled(config('services.supabase.url')) && filled(config('services.supabase.anon_key')),
