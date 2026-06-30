@@ -13,7 +13,7 @@ WORKDIR /app
 COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --prefer-dist --no-interaction --no-autoloader \
  && composer check-platform-reqs --no-dev \
- && composer dump-autoload --optimize --no-dev
+ && composer dump-autoload --optimize --no-dev --no-scripts
 
 FROM runtime
 WORKDIR /var/www/html
