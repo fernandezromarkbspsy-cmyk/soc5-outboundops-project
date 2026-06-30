@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "soc5-smart-mcp": {
+      "command": "C:\\ABSOLUTE\\PATH\\TO\\YOUR\\PROJECT\\tools\\soc5-smart-mcp\\bin\\smart-mcp.exe",
+      "args": [
+        "-config",
+        "C:\\ABSOLUTE\\PATH\\TO\\YOUR\\PROJECT\\smart-mcp.json"
+      ],
+      "env": {
+        "SMART_MCP_PROJECT_ROOT": "C:\\ABSOLUTE\\PATH\\TO\\YOUR\\PROJECT"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "project_snapshot",
+        "read_project_file",
+        "search_project",
+        "git_status",
+        "git_diff",
+        "list_quality_checks",
+        "read_project_memory"
+      ]
+    }
+  }
+}

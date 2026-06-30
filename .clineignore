@@ -1,0 +1,25 @@
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+credentials*.json
+service-account*.json
+secrets*.json
+
+# Dependencies and generated output
+node_modules/
+**/node_modules/
+vendor/
+dist/
+build/
+.next/
+coverage/
+.cache/
+
+# Large or local data
+*.sqlite
+*.db
+*.log
+*.csv
+*.xlsx
