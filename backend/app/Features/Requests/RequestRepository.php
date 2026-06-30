@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Schema;
 final class RequestRepository
 {
     private const COLUMNS = ['id', 'request_timestamp', 'cluster', 'region', 'dock_no', 'backlogs', 'backlogs_timestamp', 'ob_fte', 'truck_size', 'truck_type', 'trip_type', 'remarks', 'plate_number', 'provide_time', 'linehaul_trip_no', 'docked_time', 'status', 'rejection_remarks', 'driver_id', 'created_by', 'created_at', 'updated_at'];
+
     private const EVENT_USER_FIELDS = [
         'REQUEST_CREATED' => 'requested_by',
         'REQUEST_EDITED' => 'updated_by',

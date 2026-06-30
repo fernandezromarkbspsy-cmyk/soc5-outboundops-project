@@ -34,9 +34,61 @@ jobs:
         run: |
           set -Eeuo pipefail
 
+          echo "Checking SSM agent status on instance..."
+          ssm_status=$(aws ssm describe-instance-information \
+            --instance-information-filter-list "key=InstanceIds,valueSet=$INSTANCE_ID" \
+            --query 'InstanceInformationList[0].PingStatus' \
+            --output text 2>/dev/null || echo "Offline")
+
+          if [[ "$ssm_status" != "Online" ]]; then
+            echo "SSM agent is not online (status: $ssm_status). Restarting SSM agent..."
+            aws ssm send-command \
+              --instance-ids "$INSTANCE_ID" \
+              --document-name AWS-RunShellScript \
+              --parameters 'commands=["sudo systemctl restart amazon-ssm-agent"]' \
+              --comment "Restart SSM agent before deployment" \
+              --query 'Command.CommandId' \
+              --output text > /tmp/restart_command_id.txt
+
+            restart_command_id=$(cat /tmp/restart_command_id.txt)
+            echo "SSM restart command: $restart_command_id"
+
+            # Wait for restart to complete
+            for attempt in {1..30}; do
+              restart_status=$(aws ssm get-command-invocation \
+                --command-id "$restart_command_id" \
+                --instance-id "$INSTANCE_ID" \
+                --query 'Status' \
+                --output text 2>/dev/null || echo "Pending")
+
+              if [[ "$restart_status" == "Success" || "$restart_status" == "Failed" ]]; then
+                break
+              fi
+              sleep 2
+            done
+
+            echo "Waiting for SSM agent to come back online..."
+            for attempt in {1..60}; do
+              ssm_status=$(aws ssm describe-instance-information \
+                --instance-information-filter-list "key=InstanceIds,valueSet=$INSTANCE_ID" \
+                --query 'InstanceInformationList[0].PingStatus' \
+                --output text 2>/dev/null || echo "Offline")
+
+              if [[ "$ssm_status" == "Online" ]]; then
+                echo "SSM agent is now online."
+                break
+              fi
+              if (( attempt == 60 )); then
+                echo "SSM agent failed to come back online after restart." >&2
+                exit 1
+              fi
+              sleep 5
+            done
+          fi
+
           parameters=$(jq -n \
             --arg command "if ! command -v aws >/dev/null 2>&1; then apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; fi; sudo -u ubuntu bash /opt/soc5-outbound/deploy/deploy-production.sh" \
-            '{commands: [$command], executionTimeout: ["2400"]}')
+            '{commands: [$command], executionTimeout: ["3600"]}')
 
           command_id=$(aws ssm send-command \
             --instance-ids "$INSTANCE_ID" \
@@ -53,7 +105,7 @@ jobs:
           # Poll until SSM reports a terminal state so a workflow rerun cannot
           # overlap an orphaned deployment command.
           status="Pending"
-          for attempt in {1..480}; do
+          for attempt in {1..720}; do
             status=$(aws ssm get-command-invocation \
               --command-id "$command_id" \
               --instance-id "$INSTANCE_ID" \
