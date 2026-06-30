@@ -1,0 +1,636 @@
+Tailwind CSS Migration & UI Modernization Prompt
+
+You are a Senior Frontend Architect, Senior React Engineer, and Senior UI/UX Designer.
+
+Your task is to modernize the frontend of the SOC 5 Outbound Truck Request Portal while preserving all existing functionality and business logic.
+
+Project Context
+
+The application is an internal enterprise logistics system used for:
+
+- Truck Requests
+- Approval Workflow
+- Truck Assignment
+- Dock Assignment
+- Dispatch Monitoring
+- Realtime Status Updates
+- Audit Trail
+- User Management
+- Dashboard & Reports
+
+Current Stack
+
+- React 19
+- TypeScript
+- Vite
+- TanStack Query
+- Zustand
+- Laravel 12 Backend API
+- Supabase PostgreSQL
+- Supabase Auth
+- Supabase Realtime
+
+Current Styling
+
+- Sass (SCSS)
+
+Target Styling
+
+- Tailwind CSS (latest stable version)
+
+---
+
+Primary Goal
+
+Replace the entire Sass-based styling system with Tailwind CSS while significantly improving the application's UI/UX.
+
+The migration must not change any application behavior, API contracts, routing, authentication, business logic, state management, or data flow.
+
+Only improve the presentation layer.
+
+---
+
+Migration Requirements
+
+Completely remove the dependency on Sass.
+
+Remove:
+
+- SCSS files
+- Sass variables
+- Mixins
+- Nested styles
+- Unused CSS
+- Legacy global styling
+
+Replace them using:
+
+- Tailwind utility classes
+- Tailwind theme configuration
+- CSS variables only when necessary
+- Minimal custom CSS
+
+---
+
+UI Design Goals
+
+Create a modern enterprise dashboard similar in quality to premium internal systems used by:
+
+- Logistics companies
+- Warehouses
+- ERP systems
+- Transportation Management Systems (TMS)
+- Supply Chain dashboards
+
+The UI should feel:
+
+- Clean
+- Professional
+- Spacious
+- Fast
+- Easy to scan
+- Optimized for long working hours
+
+Avoid flashy consumer-style interfaces.
+
+---
+
+Visual Style
+
+Use:
+
+- Soft shadows
+- Rounded corners (lg or xl)
+- Large whitespace
+- Consistent spacing
+- Modern typography
+- Flat design
+- High readability
+
+Avoid:
+
+- Heavy gradients
+- Excessive animations
+- Glassmorphism
+- Neumorphism
+- Bright saturated colors
+
+---
+
+Color Palette
+
+Use semantic colors.
+
+Primary
+
+Blue
+
+Success
+
+Green
+
+Warning
+
+Amber
+
+Danger
+
+Red
+
+Information
+
+Sky Blue
+
+Neutral
+
+Slate Gray
+
+Background
+
+Light Gray
+
+Cards
+
+Pure White
+
+Text
+
+Dark Slate
+
+Muted Text
+
+Gray
+
+Every color must meet accessibility contrast guidelines.
+
+---
+
+Typography
+
+Use modern typography.
+
+Hierarchy
+
+- Dashboard Titles
+- Page Titles
+- Section Headers
+- Card Titles
+- Body Text
+- Small Labels
+- Table Headers
+
+Font weight should clearly communicate hierarchy.
+
+Improve spacing between sections.
+
+---
+
+Layout Improvements
+
+Improve every page layout.
+
+Use:
+
+- Responsive containers
+- CSS Grid
+- Flexbox
+- Proper spacing
+- Better alignment
+- Sticky headers where appropriate
+
+Avoid cramped layouts.
+
+---
+
+Sidebar
+
+Modernize the sidebar.
+
+Features
+
+- Active menu highlight
+- Icons
+- Collapsible
+- Smooth transitions
+- Better spacing
+- Clear navigation hierarchy
+
+---
+
+Top Navigation
+
+Improve:
+
+- Search
+- Notifications
+- User Profile
+- Current User
+- Role Badge
+- Breadcrumbs
+
+---
+
+Dashboard
+
+Create a professional dashboard.
+
+Include:
+
+Summary Cards
+
+- Pending Requests
+- Approved
+- Assigned Trucks
+- Dock Occupancy
+- Completed Today
+
+Charts
+
+- Requests by Hour
+- Status Distribution
+- Daily Volume
+
+Quick Actions
+
+Recent Activity
+
+Upcoming Dispatches
+
+Latest Requests
+
+---
+
+Tables
+
+Redesign every table.
+
+Improve:
+
+- Sticky header
+- Hover effect
+- Zebra rows (optional)
+- Better spacing
+- Pagination
+- Sorting indicators
+- Search
+- Filters
+- Responsive overflow
+
+Status should use colored badges.
+
+---
+
+Forms
+
+Redesign all forms.
+
+Use:
+
+- Better spacing
+- Floating labels or clear labels
+- Helper text
+- Required indicators
+- Validation messages
+- Disabled states
+- Loading states
+
+Improve usability.
+
+---
+
+Buttons
+
+Create consistent button variants.
+
+Primary
+
+Secondary
+
+Success
+
+Danger
+
+Outline
+
+Ghost
+
+Icon Button
+
+Loading Button
+
+Disabled Button
+
+---
+
+Inputs
+
+Standardize:
+
+Text
+
+Password
+
+Email
+
+Number
+
+Select
+
+Textarea
+
+Search
+
+Date
+
+Time
+
+Checkbox
+
+Radio
+
+Toggle
+
+Every component should share consistent sizing and spacing.
+
+---
+
+Cards
+
+Modernize every card.
+
+Include:
+
+- Header
+- Description
+- Actions
+- Content
+- Footer (optional)
+
+Maintain consistent spacing.
+
+---
+
+Status Badges
+
+Create reusable badges.
+
+Pending
+
+Approved
+
+Rejected
+
+Assigned
+
+Docked
+
+Loading
+
+Completed
+
+Cancelled
+
+Delayed
+
+Abnormal
+
+Use semantic colors.
+
+---
+
+Alerts
+
+Create reusable alerts.
+
+Success
+
+Warning
+
+Danger
+
+Info
+
+---
+
+Loading States
+
+Improve perceived performance.
+
+Use:
+
+- Skeleton loaders
+- Loading buttons
+- Progress indicators
+- Empty states
+
+Avoid blank pages while loading.
+
+---
+
+Empty States
+
+Design friendly empty screens.
+
+Example:
+
+"No Truck Requests Yet"
+
+Include:
+
+Illustration placeholder
+
+Short explanation
+
+Primary action button
+
+---
+
+Modals
+
+Improve dialogs.
+
+Include:
+
+Header
+
+Body
+
+Footer
+
+Primary Action
+
+Secondary Action
+
+Escape support
+
+Overlay
+
+Proper spacing
+
+---
+
+Notifications
+
+Improve toast notifications.
+
+Use:
+
+Success
+
+Warning
+
+Error
+
+Info
+
+Consistent placement and animation.
+
+---
+
+Responsive Design
+
+Support:
+
+Desktop
+
+Laptop
+
+Tablet
+
+Mobile
+
+Tables should remain usable on smaller screens.
+
+---
+
+Accessibility
+
+Follow WCAG AA where practical.
+
+Include:
+
+Keyboard navigation
+
+Focus states
+
+ARIA attributes
+
+High contrast
+
+Readable typography
+
+Accessible forms
+
+---
+
+Performance
+
+Optimize frontend performance.
+
+Reduce:
+
+Unused CSS
+
+Duplicate styling
+
+Render blocking
+
+Oversized bundles
+
+Prefer reusable components.
+
+---
+
+Component Structure
+
+Create reusable UI components.
+
+Examples:
+
+Button
+
+Card
+
+Input
+
+Table
+
+Badge
+
+Modal
+
+Alert
+
+Dropdown
+
+Tabs
+
+Breadcrumb
+
+Sidebar
+
+Navbar
+
+Pagination
+
+Loader
+
+Skeleton
+
+Each component must be reusable and consistent.
+
+---
+
+Code Quality
+
+Maintain:
+
+Strict TypeScript
+
+Reusable components
+
+Clean architecture
+
+Readable JSX
+
+No duplicated Tailwind utilities where abstraction is appropriate.
+
+---
+
+Business Logic Protection
+
+Do NOT modify:
+
+API endpoints
+
+Authentication
+
+Authorization
+
+TanStack Query logic
+
+Zustand stores
+
+Laravel backend
+
+Supabase integration
+
+Business rules
+
+Routing
+
+Database models
+
+Event flow
+
+Realtime functionality
+
+Only improve the presentation layer.
+
+---
+
+Expected Result
+
+The final application should look like a modern enterprise logistics platform while retaining all existing functionality.
+
+The interface should be significantly cleaner, more consistent, easier to navigate, responsive across devices, accessible, and maintainable through Tailwind CSS, without introducing regressions or changing backend behavior.

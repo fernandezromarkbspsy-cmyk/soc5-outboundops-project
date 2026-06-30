@@ -1,5 +1,8 @@
-import { FormEvent, useDeferredValue, useState } from 'react';
+import { useDeferredValue, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm, type FieldErrors, type UseFormRegister } from 'react-hook-form';
+import { z } from 'zod';
 import { Ban, Check, Pencil, Plus, Save, X, XCircle } from 'lucide-react';
 import { Pagination } from '../components/Pagination';
 import { RequestFilters } from '../components/RequestFilters';
@@ -7,11 +10,23 @@ import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import { api } from '../lib/api';
 import { defaultRequestFilters, exportRequestsCsv, requestQueryString } from '../lib/requests';
+import { numberFromInput, optionalText, requiredText } from '../lib/validation';
 import { useUiStore } from '../stores/ui';
 import type { ClusterLookup, Page, RequestSort, TruckRequest, User } from '../types';
 
 type EditableAction = { kind: 'edit' | 'reject'; request: TruckRequest };
-type RequestPayload = { cluster: FormDataEntryValue | null; region: FormDataEntryValue | null; dock_no: FormDataEntryValue | null; backlogs: number; backlogs_timestamp?: FormDataEntryValue | null; truck_size: FormDataEntryValue | null; trip_type?: FormDataEntryValue | null; remarks?: FormDataEntryValue | null };
+const requestSchema = z.object({
+  cluster: requiredText('Cluster'),
+  region: requiredText('Region'),
+  dock_no: requiredText('Dock number', 50),
+  backlogs: numberFromInput('Backlogs'),
+  backlogs_timestamp: z.string().optional().nullable(),
+  truck_size: z.enum(['4W', '6W', '10W', '6WF']),
+  trip_type: optionalText,
+  remarks: optionalText,
+});
+type RequestFormInput = z.input<typeof requestSchema>;
+type RequestPayload = z.output<typeof requestSchema>;
 
 export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const queryClient = useQueryClient();
@@ -93,19 +108,26 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   </div>;
 }
 
-function requestPayload(form: HTMLFormElement): RequestPayload {
-  const data = new FormData(form);
-  return { cluster: data.get('cluster'), region: data.get('region'), dock_no: data.get('dock_no'), backlogs: Number(data.get('backlogs')), backlogs_timestamp: data.get('backlogs_timestamp'), truck_size: data.get('truck_size'), trip_type: data.get('trip_type'), remarks: data.get('remarks') };
-}
-
-function RequestFields({ request }: { request?: TruckRequest }) {
-  return <div className="form-grid request-form-grid"><label>Cluster<input name="cluster" required maxLength={120} defaultValue={request?.cluster} /></label><label>Region<input name="region" required maxLength={120} defaultValue={request?.region} /></label><label>Dock number<input name="dock_no" required maxLength={50} defaultValue={request?.dock_no} /></label><label>Backlogs<input name="backlogs" type="number" required min={0} defaultValue={request?.backlogs ?? 0} /></label><label>Truck size<select name="truck_size" defaultValue={request?.truck_size ?? '6W'}><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label><label>Trip type (optional)<select name="trip_type" defaultValue={request?.trip_type ?? ''}><option value="">Select trip type</option><option>1st MDT</option><option>2nd MDT</option><option>Adv Request</option></select></label><label>Remarks (optional)<textarea name="remarks" rows={2} defaultValue={request?.remarks ?? ''} placeholder="Additional notes or remarks..." /></label></div>;
+function RequestFields({ register, errors }: { register: UseFormRegister<RequestFormInput>; errors: FieldErrors<RequestFormInput> }) {
+  return <div className="form-grid request-form-grid">
+    <label>Cluster<input aria-invalid={!!errors.cluster} maxLength={120} {...register('cluster')} />{errors.cluster && <span className="field-error">{errors.cluster.message}</span>}</label>
+    <label>Region<input aria-invalid={!!errors.region} maxLength={120} {...register('region')} />{errors.region && <span className="field-error">{errors.region.message}</span>}</label>
+    <label>Dock number<input aria-invalid={!!errors.dock_no} maxLength={50} {...register('dock_no')} />{errors.dock_no && <span className="field-error">{errors.dock_no.message}</span>}</label>
+    <label>Backlogs<input type="number" min={0} aria-invalid={!!errors.backlogs} {...register('backlogs')} />{errors.backlogs && <span className="field-error">{errors.backlogs.message}</span>}</label>
+    <label>Truck size<select {...register('truck_size')}><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label>
+    <label>Trip type (optional)<select {...register('trip_type')}><option value="">Select trip type</option><option>1st MDT</option><option>2nd MDT</option><option>Adv Request</option></select></label>
+    <label>Remarks (optional)<textarea rows={2} placeholder="Additional notes or remarks..." {...register('remarks')} /></label>
+  </div>;
 }
 
 function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel: () => void; onSubmit: (payload: RequestPayload) => void }) {
   const [clusterText, setClusterText] = useState('');
   const [selected, setSelected] = useState<ClusterLookup | null>(null);
   const clusterSearch = useDeferredValue(clusterText);
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<RequestFormInput, unknown, RequestPayload>({
+    resolver: zodResolver(requestSchema),
+    defaultValues: { cluster: '', region: '', dock_no: '', backlogs: 0, backlogs_timestamp: '', truck_size: '6W', trip_type: null, remarks: null },
+  });
   const lookup = useQuery({
     queryKey: ['clusters', clusterSearch],
     queryFn: () => api<{ data: ClusterLookup[] }>(`/clusters?search=${encodeURIComponent(clusterSearch)}`),
@@ -115,29 +137,33 @@ function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
   function pick(cluster: ClusterLookup) {
     setSelected(cluster);
     setClusterText(cluster.cluster_name);
+    setValue('cluster', cluster.cluster_name, { shouldValidate: true });
+    setValue('region', cluster.region, { shouldValidate: true });
+    setValue('dock_no', cluster.dock_number ?? '', { shouldValidate: true });
+    setValue('backlogs', cluster.backlogs ?? 0, { shouldValidate: true });
+    setValue('backlogs_timestamp', cluster.backlogs_ts ?? '');
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    onSubmit(requestPayload(event.currentTarget));
-  }
-
-  return <form className="inline-create-row" onSubmit={submit}>
-    <label className="cluster-lookup-field">Cluster<input name="cluster" required autoFocus maxLength={120} value={clusterText} onChange={event => { setClusterText(event.target.value); setSelected(null); }} placeholder="Type 3 chars" />{lookup.data && !selected && <div className="cluster-suggestions">{lookup.data.data.length ? lookup.data.data.map(cluster => <button key={cluster.id} type="button" onClick={() => pick(cluster)}><strong>{cluster.cluster_name}</strong><span>{cluster.hub_name} / {cluster.region}</span></button>) : <p>No cluster found.</p>}</div>}</label>
-    <label>Region<input name="region" required readOnly value={selected?.region ?? ''} /></label>
-    <label>Dock No<input name="dock_no" required maxLength={50} defaultValue={selected?.dock_number ?? ''} key={selected?.id ?? 'dock'} /></label>
-    <label>Backlogs<input name="backlogs" type="number" required readOnly min={0} value={selected?.backlogs ?? 0} /></label>
-    <label>Backlogs Timestamp<input readOnly value={selected?.backlogs_ts ? new Date(selected.backlogs_ts).toLocaleString() : ''} /><input type="hidden" name="backlogs_timestamp" value={selected?.backlogs_ts ?? ''} /></label>
-    <label>Truck Size<select name="truck_size" defaultValue="6W"><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label>
-    <label>Trip Type<select name="trip_type" defaultValue=""><option value="">Select trip type</option><option>1st MDT</option><option>2nd MDT</option><option>Adv Request</option></select></label>
-    <label>Remarks<textarea name="remarks" rows={1} placeholder="Additional notes..." /></label>
+  return <form className="inline-create-row" onSubmit={handleSubmit(onSubmit)}>
+    <label className="cluster-lookup-field">Cluster<input autoFocus maxLength={120} value={clusterText} aria-invalid={!!errors.cluster} onChange={event => { setClusterText(event.target.value); setSelected(null); setValue('cluster', event.target.value, { shouldValidate: true }); }} placeholder="Type 3 chars" />{errors.cluster && <span className="field-error">{errors.cluster.message}</span>}{lookup.data && !selected && <div className="cluster-suggestions">{lookup.data.data.length ? lookup.data.data.map(cluster => <button key={cluster.id} type="button" onClick={() => pick(cluster)}><strong>{cluster.cluster_name}</strong><span>{cluster.hub_name} / {cluster.region}</span></button>) : <p>No cluster found.</p>}</div>}</label>
+    <label>Region<input readOnly {...register('region')} />{errors.region && <span className="field-error">{errors.region.message}</span>}</label>
+    <label>Dock No<input maxLength={50} {...register('dock_no')} />{errors.dock_no && <span className="field-error">{errors.dock_no.message}</span>}</label>
+    <label>Backlogs<input type="number" readOnly min={0} {...register('backlogs')} />{errors.backlogs && <span className="field-error">{errors.backlogs.message}</span>}</label>
+    <label>Backlogs Timestamp<input readOnly value={selected?.backlogs_ts ? new Date(selected.backlogs_ts).toLocaleString() : ''} /><input type="hidden" {...register('backlogs_timestamp')} /></label>
+    <label>Truck Size<select {...register('truck_size')}><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label>
+    <label>Trip Type<select {...register('trip_type')}><option value="">Select trip type</option><option>1st MDT</option><option>2nd MDT</option><option>Adv Request</option></select></label>
+    <label>Remarks<textarea rows={1} placeholder="Additional notes..." {...register('remarks')} /></label>
     <div className="inline-create-actions"><button className="secondary-button" type="button" onClick={onCancel}><X size={15} />Cancel</button><button disabled={busy || !selected}><Save size={15} />{busy ? 'Saving...' : 'Save'}</button></div>
   </form>;
 }
 
 function EditRequestDialog({ request, busy, error, onClose, onSubmit }: { request: TruckRequest; busy: boolean; error?: string; onClose: () => void; onSubmit: (payload: RequestPayload) => void }) {
-  function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onSubmit(requestPayload(event.currentTarget)); }
-  return <div className="dialog-layer"><section className="form-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-title"><div className="dialog-head"><div><p className="eyebrow">FTE OPS</p><h2 id="edit-title">Edit LH request</h2></div><button className="icon-button" type="button" title="Close" aria-label="Close" onClick={onClose}><X size={19} /></button></div><form onSubmit={submit}><RequestFields request={request} />{error && <p className="error notice">{error}</p>}<div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Saving...' : 'Save changes'}</button></div></form></section></div>;
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<RequestFormInput, unknown, RequestPayload>({
+    resolver: zodResolver(requestSchema),
+    defaultValues: { cluster: request.cluster, region: request.region, dock_no: request.dock_no, backlogs: request.backlogs, backlogs_timestamp: request.backlogs_timestamp ?? '', truck_size: request.truck_size as RequestPayload['truck_size'], trip_type: request.trip_type ?? null, remarks: request.remarks ?? null },
+  });
+  useEffect(() => reset({ cluster: request.cluster, region: request.region, dock_no: request.dock_no, backlogs: request.backlogs, backlogs_timestamp: request.backlogs_timestamp ?? '', truck_size: request.truck_size as RequestPayload['truck_size'], trip_type: request.trip_type ?? null, remarks: request.remarks ?? null }), [request, reset]);
+  return <div className="dialog-layer"><section className="form-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-title"><div className="dialog-head"><div><p className="eyebrow">FTE OPS</p><h2 id="edit-title">Edit LH request</h2></div><button className="icon-button" type="button" title="Close" aria-label="Close" onClick={onClose}><X size={19} /></button></div><form onSubmit={handleSubmit(onSubmit)}><RequestFields register={register} errors={errors} />{error && <p className="error notice">{error}</p>}<div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Saving...' : 'Save changes'}</button></div></form></section></div>;
 }
 
 function ConfirmRejectDialog({ request, isCancel, busy, onClose, onConfirm }: { request: TruckRequest; isCancel: boolean; busy: boolean; onClose: () => void; onConfirm: () => void }) {

@@ -1,13 +1,23 @@
-import { FormEvent, useState } from 'react';
+import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { CheckCircle2, ShipWheel, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { PrintableTruckLabel } from '../components/PrintableTruckLabel';
 import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import type { Page, TruckRequest, User } from '../types';
+import { requiredText } from '../lib/validation';
 
 type DockAction = 'mark-docked' | 'confirm';
+const dockSchema = z.object({
+  driver_id: requiredText('Driver ID', 80),
+  linehaul_trip_no: requiredText('LH Trip Number', 80),
+  docked_time: requiredText('Docked time', 80),
+});
+type DockFields = z.infer<typeof dockSchema>;
 
 export function DockingConfirmation({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const client = useQueryClient();
@@ -46,10 +56,9 @@ function datetimeLocal(value?: string | null) {
 }
 
 function DockDialog({ request, busy, onClose, onSubmit }: { request: TruckRequest; busy: boolean; onClose: () => void; onSubmit: (payload: Record<string, unknown>) => void }) {
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    onSubmit({ driver_id: data.get('driver_id'), linehaul_trip_no: data.get('linehaul_trip_no'), docked_time: data.get('docked_time') });
-  }
-  return <div className="dialog-layer"><section className="form-dialog compact" role="dialog" aria-modal="true"><div className="dialog-head"><div><p className="eyebrow">{request.cluster}</p><h2>Dock truck</h2></div><button className="icon-button" onClick={onClose}><X size={18} /></button></div><form onSubmit={submit}><label>Driver ID<input name="driver_id" required autoFocus defaultValue={request.driver_id ?? ''} /></label><label>LH Trip Number<input name="linehaul_trip_no" required defaultValue={request.linehaul_trip_no ?? ''} /></label><label>Docked Time<input name="docked_time" type="datetime-local" required defaultValue={datetimeLocal(request.docked_time)} /></label><div className="dialog-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Saving...' : 'Mark as docked'}</button></div></form></section></div>;
+  const { register, handleSubmit, formState: { errors } } = useForm<DockFields>({
+    resolver: zodResolver(dockSchema),
+    defaultValues: { driver_id: request.driver_id ?? '', linehaul_trip_no: request.linehaul_trip_no ?? '', docked_time: datetimeLocal(request.docked_time) },
+  });
+  return <div className="dialog-layer"><section className="form-dialog compact" role="dialog" aria-modal="true"><div className="dialog-head"><div><p className="eyebrow">{request.cluster}</p><h2>Dock truck</h2></div><button className="icon-button" onClick={onClose}><X size={18} /></button></div><form onSubmit={handleSubmit(onSubmit)}><label>Driver ID<input autoFocus aria-invalid={!!errors.driver_id} {...register('driver_id')} />{errors.driver_id && <span className="field-error">{errors.driver_id.message}</span>}</label><label>LH Trip Number<input aria-invalid={!!errors.linehaul_trip_no} {...register('linehaul_trip_no')} />{errors.linehaul_trip_no && <span className="field-error">{errors.linehaul_trip_no.message}</span>}</label><label>Docked Time<input type="datetime-local" aria-invalid={!!errors.docked_time} {...register('docked_time')} />{errors.docked_time && <span className="field-error">{errors.docked_time.message}</span>}</label><div className="dialog-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Saving...' : 'Mark as docked'}</button></div></form></section></div>;
 }

@@ -1,10 +1,28 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
 import { isAuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
 type UserType = 'fte' | 'backroom';
 
 const backroomEmail = (opsId: string) => `${opsId.trim().toLowerCase()}@backroom.soc5.internal`;
+const loginSchema = (type: UserType, codeSent: boolean) => z.object({
+  email: type === 'fte'
+    ? z.string().trim().email('Enter a valid SPX email.').refine(value => value.toLowerCase().endsWith('@spxexpress.com'), 'Use your @spxexpress.com work email.')
+    : z.string().optional(),
+  code: type === 'fte' && codeSent
+    ? z.string().trim().regex(/^[0-9]{6,10}$/, 'Enter the 6 to 10 digit verification code.')
+    : z.string().optional(),
+  opsId: type === 'backroom'
+    ? z.string().trim().regex(/^ops[0-9]+$/i, 'Enter a valid OPS ID, for example ops71783.')
+    : z.string().optional(),
+  password: type === 'backroom'
+    ? z.string().min(1, 'Password is required.')
+    : z.string().optional(),
+});
+type LoginFields = z.infer<ReturnType<typeof loginSchema>>;
 const authErrorMessages: Record<string, string> = {
   email_address_not_authorized: 'Email delivery is not configured for this address. Ask an administrator to enable custom SMTP in Supabase.',
   email_provider_disabled: 'Email sign-in is disabled in Supabase Authentication settings.',
@@ -73,16 +91,17 @@ export function LoginBackdrop() {
 
 export function Login() {
   const [type, setType] = useState<UserType>('fte');
-  const [email, setEmail] = useState('');
-  const [code, setCode] = useState('');
   const [codeSent, setCodeSent] = useState(false);
   const [resendAfter, setResendAfter] = useState(0);
-  const [opsId, setOpsId] = useState('');
-  const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
+  const schema = useMemo(() => loginSchema(type, codeSent), [type, codeSent]);
+  const { register, handleSubmit, reset, setValue, getValues, formState: { errors } } = useForm<LoginFields>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: '', code: '', opsId: '', password: '' },
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -102,8 +121,8 @@ export function Login() {
     setType(next);
     setError('');
     setCodeSent(false);
-    setCode('');
     setResendAfter(0);
+    reset({ email: '', code: '', opsId: '', password: '' });
   }
 
   async function signInWithGoogle() {
@@ -139,7 +158,7 @@ export function Login() {
     setError('');
     setBusy(true);
     try {
-      await sendCode(email.trim().toLowerCase());
+      await sendCode((getValues('email') ?? '').trim().toLowerCase());
     } catch (cause) {
       setError(describeAuthError(cause, 'Unable to resend the code.'));
     } finally {
@@ -147,22 +166,20 @@ export function Login() {
     }
   }
 
-  async function submit(event: FormEvent) {
-    event.preventDefault();
+  async function submit(values: LoginFields) {
     setError('');
     setBusy(true);
     try {
       if (type === 'fte') {
-        const normalized = email.trim().toLowerCase();
-        if (!normalized.endsWith('@spxexpress.com')) throw new Error('Use your @spxexpress.com work email.');
+        const normalized = values.email!.trim().toLowerCase();
         if (!codeSent) {
           await sendCode(normalized);
         } else {
-          const { error: verifyError } = await supabase.auth.verifyOtp({ email: normalized, token: code.trim(), type: 'email' });
+          const { error: verifyError } = await supabase.auth.verifyOtp({ email: normalized, token: values.code!.trim(), type: 'email' });
           if (verifyError) throw verifyError;
         }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email: backroomEmail(opsId), password });
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: backroomEmail(values.opsId!), password: values.password! });
         if (signInError) throw signInError;
       }
     } catch (cause) {
@@ -189,7 +206,7 @@ export function Login() {
             <div><p>SOC 5 OUTBOUND</p><h1 id="auth-title">Sign in</h1></div>
           </div>
 
-          <form onSubmit={submit}>
+          <form onSubmit={handleSubmit(submit)}>
             <div className="user-toggle" role="tablist" aria-label="User type">
               <button type="button" role="tab" aria-selected={type === 'fte'} className={type === 'fte' ? 'selected' : ''} onClick={() => switchType('fte')}>FTE</button>
               <button type="button" role="tab" aria-selected={type === 'backroom'} className={type === 'backroom' ? 'selected' : ''} onClick={() => switchType('backroom')}>Backroom</button>
@@ -199,19 +216,19 @@ export function Login() {
               <div className="auth-fields" key="fte">
                 <button type="button" className="google-button" disabled={busy} onClick={signInWithGoogle}><span aria-hidden="true">G</span>Continue with Google</button>
                 <div className="auth-divider"><span>or use email verification</span></div>
-                <label>SPX work email<input type="email" required disabled={codeSent} autoComplete="email" placeholder="name@spxexpress.com" value={email} onChange={event => setEmail(event.target.value)} /></label>
+                <label>SPX work email<input type="email" aria-invalid={!!errors.email} disabled={codeSent} autoComplete="email" placeholder="name@spxexpress.com" {...register('email')} />{errors.email && <span className="field-error">{errors.email.message}</span>}</label>
                 {codeSent && <>
-                  <label>Verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}" minLength={6} maxLength={10} required placeholder="Enter code" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 10))} /></label>
+                  <label>Verification code<input inputMode="numeric" autoComplete="one-time-code" aria-invalid={!!errors.code} placeholder="Enter code" {...register('code', { onChange: event => setValue('code', event.target.value.replace(/\D/g, '').slice(0, 10), { shouldValidate: true }) })} />{errors.code && <span className="field-error">{errors.code.message}</span>}</label>
                   <div className="auth-secondary-actions">
                     <button type="button" className="text-button" disabled={busy || resendAfter > 0} onClick={() => void resendCode()}>{resendAfter > 0 ? `Resend in ${resendAfter}s` : 'Resend code'}</button>
-                    <button type="button" className="text-button" onClick={() => { setCodeSent(false); setCode(''); setError(''); setResendAfter(0); }}>Change email</button>
+                    <button type="button" className="text-button" onClick={() => { setCodeSent(false); setValue('code', ''); setError(''); setResendAfter(0); }}>Change email</button>
                   </div>
                 </>}
               </div>
             ) : (
               <div className="auth-fields" key="backroom">
-                <label>OPS ID<input required autoComplete="username" placeholder="ops71783" value={opsId} onChange={event => setOpsId(event.target.value)} /></label>
-                <label>Password<input type="password" required autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} /></label>
+                <label>OPS ID<input autoComplete="username" aria-invalid={!!errors.opsId} placeholder="ops71783" {...register('opsId')} />{errors.opsId && <span className="field-error">{errors.opsId.message}</span>}</label>
+                <label>Password<input type="password" aria-invalid={!!errors.password} autoComplete="current-password" {...register('password')} />{errors.password && <span className="field-error">{errors.password.message}</span>}</label>
               </div>
             )}
 
