@@ -1,4 +1,5 @@
 import { Printer, X } from 'lucide-react';
+import { createPortal } from 'react-dom';
 import type { TruckRequest } from '../types';
 
 type TemplateKind = 'single' | 'coload' | 'triload';
@@ -63,20 +64,22 @@ export function PrintableTruckLabel({ request, onClose }: { request: TruckReques
   const clusterValues = clusters(request);
   const kind = templateKind(clusterValues.length);
 
-  return <div className="dialog-layer print-layer">
+  return createPortal(<div className="dialog-layer print-layer" onMouseDown={event => event.target === event.currentTarget && onClose()}>
     <section className="print-dialog" role="dialog" aria-modal="true" aria-label="Printable truck label">
       <div className="print-toolbar">
         <strong>Printable LH label</strong>
         <div><button className="secondary-button" type="button" onClick={() => window.print()}><Printer size={16} />Print</button><button className="icon-button" type="button" aria-label="Close" onClick={onClose}><X size={18} /></button></div>
       </div>
-      <div className={`truck-label truck-label--${kind}`}>
-        <img src={templateSrc[kind]} alt="" />
-        <div className="label-value plate">{request.plate_number || ''}</div>
-        <div className="label-value driver"><DriverQr value={request.driver_id || ''} /><span>{request.driver_id || ''}</span></div>
-        <div className="label-value dock">{request.dock_no}</div>
-        <div className="label-value dock-time">{dockTime(request)}</div>
-        {loadSlots(kind, clusterValues).map(slot => <div key={slot.className} className={`label-value ${slot.className}`}>{slot.value}</div>)}
+      <div className="print-preview">
+        <div className={`truck-label truck-label--${kind}`}>
+          <img src={templateSrc[kind]} alt="" />
+          <div className="label-value plate">{request.plate_number || ''}</div>
+          <div className="label-value driver"><DriverQr value={request.driver_id || ''} /><span>{request.driver_id || ''}</span></div>
+          <div className="label-value dock">{request.dock_no}</div>
+          <div className="label-value dock-time">{dockTime(request)}</div>
+          {loadSlots(kind, clusterValues).map(slot => <div key={slot.className} className={`label-value ${slot.className}`}>{slot.value}</div>)}
+        </div>
       </div>
     </section>
-  </div>;
+  </div>, document.body);
 }
