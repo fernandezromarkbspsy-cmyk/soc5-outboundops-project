@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "node -e \"process.env.ESBUILD_BINARY_PATH=require('esbuild').binaryPath\" && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
