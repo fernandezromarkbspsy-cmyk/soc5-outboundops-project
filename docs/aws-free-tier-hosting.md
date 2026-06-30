@@ -574,8 +574,7 @@ Skip creation only when that exact provider already exists in the account.
 
 #### Create the GitHub deployment role
 
-Create an IAM policy named `soc5-outbound-github-deploy`. Replace
-`ACCOUNT_ID` and `INSTANCE_ID` with the real values:
+Create an IAM policy named `soc5-outbound-github-deploy`:
 
 ```json
 {
@@ -585,7 +584,7 @@ Create an IAM policy named `soc5-outbound-github-deploy`. Replace
       "Effect": "Allow",
       "Action": "ssm:SendCommand",
       "Resource": [
-        "arn:aws:ec2:ap-southeast-1:ACCOUNT_ID:instance/INSTANCE_ID",
+        "arn:aws:ec2:ap-southeast-1:793524670277:instance/i-05f248ec566ccefc7",
         "arn:aws:ssm:ap-southeast-1::document/AWS-RunShellScript"
       ]
     },
@@ -596,6 +595,16 @@ Create an IAM policy named `soc5-outbound-github-deploy`. Replace
         "ssm:ListCommandInvocations"
       ],
       "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ec2:DescribeInstances",
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": "ec2:RebootInstances",
+      "Resource": "arn:aws:ec2:ap-southeast-1:793524670277:instance/i-05f248ec566ccefc7"
     }
   ]
 }
