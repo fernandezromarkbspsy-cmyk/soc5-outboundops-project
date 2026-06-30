@@ -34,6 +34,16 @@ jobs:
         run: |
           set -Eeuo pipefail
 
+          echo "Instance ID: $INSTANCE_ID"
+          echo "AWS Region: ap-southeast-1"
+          
+          echo "Verifying instance exists in EC2..."
+          if ! aws ec2 describe-instances --instance-ids "$INSTANCE_ID" --query 'Reservations[0].Instances[0].State.Name' --output text 2>/dev/null; then
+            echo "Error: Instance $INSTANCE_ID does not exist or is not accessible." >&2
+            echo "Please verify the AWS_EC2_INSTANCE_ID secret is correct." >&2
+            exit 1
+          fi
+
           echo "Checking SSM agent status on instance..."
           ssm_info=$(aws ssm describe-instance-information \
             --instance-information-filter-list "key=InstanceIds,valueSet=$INSTANCE_ID" \
@@ -43,6 +53,14 @@ jobs:
           if [[ "$ssm_info" == "null" ]]; then
             echo "Error: Could not retrieve instance information from SSM." >&2
             echo "Instance ID: $INSTANCE_ID" >&2
+            echo "This usually means:" >&2
+            echo "  1. SSM agent is not installed on the instance" >&2
+            echo "  2. Instance does not have the SSM IAM role attached" >&2
+            echo "  3. Instance is in a private subnet without SSM VPC endpoint" >&2
+            echo "  4. Security groups are blocking SSM traffic" >&2
+            echo "" >&2
+            echo "Attempting to list all SSM-managed instances for debugging..." >&2
+            aws ssm describe-instance-information --query 'InstanceInformationList[*].[InstanceId,PlatformType,PingStatus]' --output table 2>/dev/null || echo "No SSM-managed instances found." >&2
             exit 1
           fi
 
