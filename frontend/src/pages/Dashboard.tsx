@@ -53,7 +53,7 @@ export function Dashboard({ user }: { user: User }) {
       {view === 'overview' && <Overview user={activeUser} onNavigate={navigate} />}
       {view === 'lh-request' && <OutboundRequests user={activeUser} queue={queue} />}
       {view === 'truck-request' && <MidmileRequests user={activeUser} queue={queue} />}
-      {view === 'docking' && <DockingConfirmation user={activeUser} />}
+      {view === 'docking' && <DockingConfirmation user={activeUser} queue={queue} />}
       {view === 'kpi' && <Kpi />}
       {view === 'users' && <UserManagement />}
     </main>

@@ -4,15 +4,16 @@ import { CheckCircle2, ShipWheel, X } from 'lucide-react';
 import { api } from '../lib/api';
 import { PrintableTruckLabel } from '../components/PrintableTruckLabel';
 import { RequestTable } from '../components/RequestTable';
+import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import type { Page, TruckRequest, User } from '../types';
 
 type DockAction = 'mark-docked' | 'confirm';
 
-export function DockingConfirmation({ user }: { user: User }) {
+export function DockingConfirmation({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const client = useQueryClient();
   const [selected, setSelected] = useState<TruckRequest | null>(null);
   const [printable, setPrintable] = useState<TruckRequest | null>(null);
-  const queue = useQuery({
+  const dockRequests = useQuery({
     queryKey: ['requests', 'docking'],
     queryFn: () => api<Page<TruckRequest>>('/requests?per_page=100&sort=created_at&direction=desc'),
     enabled: user.role === 'doc_officer' || user.role === 'dock_officer',
@@ -25,14 +26,14 @@ export function DockingConfirmation({ user }: { user: User }) {
       await client.invalidateQueries({ queryKey: ['requests'] });
     },
   });
-  const rows = (queue.data?.data ?? []).filter(request => request.status === 'FOR_DOCKING' || request.status === 'ASSIGNED' || request.status === 'DOCKED');
+  const rows = (dockRequests.data?.data ?? []).filter(request => request.status === 'FOR_DOCKING' || request.status === 'ASSIGNED' || request.status === 'DOCKED');
   const actions = (request: TruckRequest) => request.status === 'DOCKED'
-    ? <button className="table-action approve" onClick={() => action.mutate({ request, action: 'confirm' })}><CheckCircle2 size={15} />Confirm</button>
-    : <button className="table-action assign" onClick={() => setSelected(request)}><ShipWheel size={15} />Dock truck</button>;
+    ? <button className="table-action approve" onClick={() => {queue.acknowledge(request.id);action.mutate({ request, action: 'confirm' });}}><CheckCircle2 size={15} />Confirm</button>
+    : <button className="table-action assign" onClick={() => {queue.acknowledge(request.id);setSelected(request);}}><ShipWheel size={15} />Dock truck</button>;
 
   return <div className="workspace-view">
     {action.error && <p className="notice error">{action.error.message}</p>}
-    <section className="panel data-panel"><div className="panel-head"><div><h2>Docking queue</h2><p>Assigned trucks requiring dock action or final confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading docking queue...</div> : <RequestTable rows={rows} actions={actions} emptyMessage="No trucks are waiting for docking." />}</section>
+    <section className="panel data-panel"><div className="panel-head"><div><h2>Docking queue</h2><p>Assigned trucks requiring dock action or final confirmation</p></div></div>{dockRequests.isPending ? <div className="loading-block">Loading docking queue...</div> : <RequestTable rows={rows} actions={actions} emptyMessage="No trucks are waiting for docking." />}</section>
     {selected && <DockDialog request={selected} busy={action.isPending} onClose={() => setSelected(null)} onSubmit={payload => action.mutate({ request: selected, action: 'mark-docked', payload })} />}
     {printable && <PrintableTruckLabel request={printable} onClose={() => setPrintable(null)} />}
   </div>;

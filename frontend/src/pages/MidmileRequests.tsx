@@ -30,7 +30,7 @@ export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnaps
     onSuccess: async (_, variables) => { setSelected(null); setNotice(variables.action === 'assign-truck' ? 'Truck confirmed.' : 'Request returned to Outbound.'); await queryClient.invalidateQueries({ queryKey: ['requests'] }); await queryClient.invalidateQueries({ queryKey: ['request-metrics'] }); },
   });
 
-  const actions = (request: TruckRequest) => request.status === 'APPROVED' ? <><button className="table-action assign" type="button" onClick={() => setSelected({ request, action: 'assign-truck' })}><CheckCircle2 size={15} />Assign</button><button className="table-action reject" type="button" onClick={() => setSelected({ request, action: 'reject-mm' })}><XCircle size={15} />Reject</button></> : null;
+  const actions = (request: TruckRequest) => request.status === 'APPROVED' ? <><button className="table-action assign" type="button" onClick={() => {queue.acknowledge(request.id);setSelected({ request, action: 'assign-truck' });}}><CheckCircle2 size={15} />Assign</button><button className="table-action reject" type="button" onClick={() => {queue.acknowledge(request.id);setSelected({ request, action: 'reject-mm' });}}><XCircle size={15} />Reject</button></> : null;
   function sortBy(sort: RequestSort) { setFilters(value => ({ ...value, sort, direction: value.sort === sort && value.direction === 'asc' ? 'desc' : 'asc', page: 1 })); }
   async function exportCsv() {
     setExporting(true);

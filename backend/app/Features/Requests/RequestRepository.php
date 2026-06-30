@@ -6,10 +6,22 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 final class RequestRepository
 {
-    private const COLUMNS = ['id', 'request_timestamp', 'cluster', 'region', 'dock_no', 'backlogs', 'backlogs_timestamp', 'ob_fte', 'truck_size', 'truck_type', 'plate_number', 'provide_time', 'linehaul_trip_no', 'docked_time', 'status', 'rejection_remarks', 'driver_id', 'created_by', 'created_at', 'updated_at'];
+    private const COLUMNS = ['id', 'request_timestamp', 'cluster', 'region', 'dock_no', 'backlogs', 'backlogs_timestamp', 'ob_fte', 'truck_size', 'truck_type', 'trip_type', 'remarks', 'plate_number', 'provide_time', 'linehaul_trip_no', 'docked_time', 'status', 'rejection_remarks', 'driver_id', 'created_by', 'created_at', 'updated_at'];
+    private const EVENT_USER_FIELDS = [
+        'REQUEST_CREATED' => 'requested_by',
+        'REQUEST_EDITED' => 'updated_by',
+        'REQUEST_APPROVED' => 'approved_by',
+        'REQUEST_REJECTED_BY_OPS' => 'rejected_by',
+        'REQUEST_CANCELLED' => 'cancelled_by',
+        'REQUEST_REJECTED_BY_MM' => 'rejected_by',
+        'TRUCK_ASSIGNED' => 'assigned_by',
+        'TRUCK_DOCKED' => 'docked_by',
+        'REQUEST_CONFIRMED' => 'confirmed_by',
+    ];
 
     public function paginate(object $actor, array $filters): LengthAwarePaginator
     {
@@ -34,7 +46,16 @@ final class RequestRepository
         $direction = $filters['direction'] ?? 'desc';
         $query->orderBy($sort, $direction)->orderByDesc('id');
 
-        return $query->paginate(min((int) ($filters['per_page'] ?? 20), 100));
+        $paginator = $query->paginate(min((int) ($filters['per_page'] ?? 20), 100));
+        $offset = max(0, ((int) ($paginator->currentPage() - 1)) * (int) $paginator->perPage());
+        $paginator->getCollection()->transform(function (object $request, int $index) use ($offset): object {
+            $request->request_code = $this->requestCode($request, $offset + $index + 1);
+
+            return $request;
+        });
+        $this->hydrateUserDisplayFields($paginator->getCollection());
+
+        return $paginator;
     }
 
     public function metrics(object $actor, array $filters = []): Collection
@@ -103,7 +124,11 @@ final class RequestRepository
             $query->where('created_by', $actor->id);
         }
 
-        return $query->firstOrFail();
+        $request = $query->firstOrFail();
+        $request->request_code = $this->requestCode($request, 1);
+        $this->hydrateUserDisplayFields(collect([$request]));
+
+        return $request;
     }
 
     public function events(string $id, object $actor): Collection
@@ -117,13 +142,59 @@ final class RequestRepository
     {
         $id = DB::table('requests')->insertGetId($data, 'id');
 
-        return DB::table('requests')->where('id', $id)->first();
+        $request = DB::table('requests')->where('id', $id)->first();
+        $request->request_code = $this->requestCode($request, 1);
+        $this->hydrateUserDisplayFields(collect([$request]));
+
+        return $request;
     }
 
     public function update(string $id, array $data): object
     {
         DB::table('requests')->where('id', $id)->update($data);
 
-        return DB::table('requests')->where('id', $id)->first();
+        $request = DB::table('requests')->where('id', $id)->first();
+        $request->request_code = $this->requestCode($request, 1);
+        $this->hydrateUserDisplayFields(collect([$request]));
+
+        return $request;
+    }
+
+    private function requestCode(object $request, int $count): string
+    {
+        $date = CarbonImmutable::parse($request->request_timestamp ?? $request->created_at)->setTimezone('Asia/Manila');
+
+        return strtolower($date->format('mdy').'-req#'.$count.'soc5');
+    }
+
+    private function hydrateUserDisplayFields(Collection $requests): void
+    {
+        if ($requests->isEmpty()) {
+            return;
+        }
+
+        $requestIds = $requests->pluck('id')->filter()->values();
+        $profileIds = $requests->pluck('created_by')->filter();
+
+        $events = DB::table('request_events')
+            ->whereIn('request_id', $requestIds)
+            ->whereIn('event_type', array_keys(self::EVENT_USER_FIELDS))
+            ->orderByDesc('created_at')
+            ->get(['request_id', 'event_type', 'actor_id']);
+
+        $profileIds = $profileIds->merge($events->pluck('actor_id')->filter())->unique()->values();
+        $names = Schema::hasTable('profiles') ? DB::table('profiles')->whereIn('id', $profileIds)->pluck('name', 'id') : collect();
+        $eventsByRequest = $events->groupBy('request_id');
+
+        $requests->each(function (object $request) use ($eventsByRequest, $names): void {
+            $request->requested_by = $names[$request->created_by] ?? $request->created_by;
+
+            foreach ($eventsByRequest[$request->id] ?? [] as $event) {
+                $field = self::EVENT_USER_FIELDS[$event->event_type] ?? null;
+                if ($field && ! isset($request->{$field})) {
+                    $request->{$field} = $names[$event->actor_id] ?? $event->actor_id;
+                }
+            }
+        });
     }
 }

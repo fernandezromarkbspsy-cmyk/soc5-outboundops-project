@@ -11,7 +11,7 @@ import { useUiStore } from '../stores/ui';
 import type { ClusterLookup, Page, RequestSort, TruckRequest, User } from '../types';
 
 type EditableAction = { kind: 'edit' | 'reject'; request: TruckRequest };
-type RequestPayload = { cluster: FormDataEntryValue | null; region: FormDataEntryValue | null; dock_no: FormDataEntryValue | null; backlogs: number; backlogs_timestamp?: FormDataEntryValue | null; truck_size: FormDataEntryValue | null; truck_type: FormDataEntryValue | null };
+type RequestPayload = { cluster: FormDataEntryValue | null; region: FormDataEntryValue | null; dock_no: FormDataEntryValue | null; backlogs: number; backlogs_timestamp?: FormDataEntryValue | null; truck_size: FormDataEntryValue | null; trip_type?: FormDataEntryValue | null; remarks?: FormDataEntryValue | null };
 
 export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const queryClient = useQueryClient();
@@ -56,10 +56,10 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
   const actionable = (request: TruckRequest) => request.status === 'PENDING' || request.status === 'REJECTED_BY_MM';
   const actions = (request: TruckRequest) => user.role === 'fte_ops' && actionable(request) ? <>
-    <button className="table-action approve" type="button" disabled={transition.isPending} onClick={() => transition.mutate({ request, action: 'approve' })}><Check size={15} />Approve</button>
-    <button className="table-action edit" type="button" disabled={editRequest.isPending} onClick={() => setActiveAction({ kind: 'edit', request })}><Pencil size={15} />Edit</button>
-    <button className="table-action reject" type="button" disabled={transition.isPending} onClick={() => setActiveAction({ kind: 'reject', request })}><XCircle size={15} />Reject</button>
-  </> : user.role === 'ops_pic' && actionable(request) ? <button className="table-action cancel" type="button" disabled={transition.isPending} onClick={() => setActiveAction({ kind: 'reject', request })}><Ban size={15} />Cancel</button> : null;
+    <button className="table-action approve" type="button" disabled={transition.isPending} onClick={() => {queue.acknowledge(request.id);transition.mutate({ request, action: 'approve' });}}><Check size={15} />Approve</button>
+    <button className="table-action edit" type="button" disabled={editRequest.isPending} onClick={() => {queue.acknowledge(request.id);setActiveAction({ kind: 'edit', request });}}><Pencil size={15} />Edit</button>
+    <button className="table-action reject" type="button" disabled={transition.isPending} onClick={() => {queue.acknowledge(request.id);setActiveAction({ kind: 'reject', request });}}><XCircle size={15} />Reject</button>
+  </> : user.role === 'ops_pic' && actionable(request) ? <button className="table-action cancel" type="button" disabled={transition.isPending} onClick={() => {queue.acknowledge(request.id);setActiveAction({ kind: 'reject', request });}}><Ban size={15} />Cancel</button> : null;
 
   function sortBy(sort: RequestSort) {
     setFilters(value => ({ ...value, sort, direction: value.sort === sort && value.direction === 'asc' ? 'desc' : 'asc', page: 1 }));
@@ -81,11 +81,10 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   return <div className="workspace-view">
     {(notice || error) && <p className={`notice${error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{error?.message || notice}</p>}
 
-    {user.role === 'fte_ops' && <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending approval</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>New requests requiring FTE Ops review</p></div>{queue.rows.length>1&&<button disabled={bulkApprove.isPending} onClick={()=>bulkApprove.mutate(queue.rows.map(row=>row.id))}><Check size={16}/>{bulkApprove.isPending?'Approving…':`Approve all (${queue.rows.length})`}</button>}</div>{queue.isPending ? <div className="loading-block">Loading approval queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No requests are awaiting approval." actions={actions} />}</section>}
+    {user.role === 'fte_ops' && <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending approval</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>New requests requiring FTE Ops review</p></div>{queue.rows.length>1&&<button disabled={bulkApprove.isPending} onClick={()=>{queue.rows.forEach(row=>queue.acknowledge(row.id));bulkApprove.mutate(queue.rows.map(row=>row.id));}}><Check size={16}/>{bulkApprove.isPending?'Approving…':`Approve all (${queue.rows.length})`}</button>}</div>{queue.isPending ? <div className="loading-block">Loading approval queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No requests are awaiting approval." actions={actions} />}</section>}
 
     <section className="request-list-section">
-      {user.role === 'ops_pic' && <div className="page-actions"><button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button></div>}
-      <RequestFilters filters={filters} exporting={exporting} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
+      <RequestFilters filters={filters} exporting={exporting} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} createButton={user.role === 'ops_pic' && <button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button>} />
       <section className="panel data-panel">{creating && <InlineCreateRow busy={createRequest.isPending} onCancel={() => setCreating(false)} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
     </section>
 
@@ -96,11 +95,11 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
 function requestPayload(form: HTMLFormElement): RequestPayload {
   const data = new FormData(form);
-  return { cluster: data.get('cluster'), region: data.get('region'), dock_no: data.get('dock_no'), backlogs: Number(data.get('backlogs')), backlogs_timestamp: data.get('backlogs_timestamp'), truck_size: data.get('truck_size'), truck_type: data.get('truck_type') };
+  return { cluster: data.get('cluster'), region: data.get('region'), dock_no: data.get('dock_no'), backlogs: Number(data.get('backlogs')), backlogs_timestamp: data.get('backlogs_timestamp'), truck_size: data.get('truck_size'), trip_type: data.get('trip_type'), remarks: data.get('remarks') };
 }
 
 function RequestFields({ request }: { request?: TruckRequest }) {
-  return <div className="form-grid request-form-grid"><label>Cluster<input name="cluster" required maxLength={120} defaultValue={request?.cluster} /></label><label>Region<input name="region" required maxLength={120} defaultValue={request?.region} /></label><label>Dock number<input name="dock_no" required maxLength={50} defaultValue={request?.dock_no} /></label><label>Backlogs<input name="backlogs" type="number" required min={0} defaultValue={request?.backlogs ?? 0} /></label><label>Truck size<select name="truck_size" defaultValue={request?.truck_size ?? '6W'}><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label><label>Truck type<select name="truck_type" defaultValue={request?.truck_type ?? 'WETLEASE'}><option>WETLEASE</option><option>DRYLEASE</option></select></label></div>;
+  return <div className="form-grid request-form-grid"><label>Cluster<input name="cluster" required maxLength={120} defaultValue={request?.cluster} /></label><label>Region<input name="region" required maxLength={120} defaultValue={request?.region} /></label><label>Dock number<input name="dock_no" required maxLength={50} defaultValue={request?.dock_no} /></label><label>Backlogs<input name="backlogs" type="number" required min={0} defaultValue={request?.backlogs ?? 0} /></label><label>Truck size<select name="truck_size" defaultValue={request?.truck_size ?? '6W'}><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label><label>Trip type (optional)<select name="trip_type" defaultValue={request?.trip_type ?? ''}><option value="">Select trip type</option><option>1st MDT</option><option>2nd MDT</option><option>Adv Request</option></select></label><label>Remarks (optional)<textarea name="remarks" rows={2} defaultValue={request?.remarks ?? ''} placeholder="Additional notes or remarks..." /></label></div>;
 }
 
 function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel: () => void; onSubmit: (payload: RequestPayload) => void }) {
@@ -130,7 +129,8 @@ function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
     <label>Backlogs<input name="backlogs" type="number" required readOnly min={0} value={selected?.backlogs ?? 0} /></label>
     <label>Backlogs Timestamp<input readOnly value={selected?.backlogs_ts ? new Date(selected.backlogs_ts).toLocaleString() : ''} /><input type="hidden" name="backlogs_timestamp" value={selected?.backlogs_ts ?? ''} /></label>
     <label>Truck Size<select name="truck_size" defaultValue="6W"><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label>
-    <label>Truck Type<select name="truck_type" defaultValue="WETLEASE"><option>WETLEASE</option><option>DRYLEASE</option></select></label>
+    <label>Trip Type<select name="trip_type" defaultValue=""><option value="">Select trip type</option><option>1st MDT</option><option>2nd MDT</option><option>Adv Request</option></select></label>
+    <label>Remarks<textarea name="remarks" rows={1} placeholder="Additional notes..." /></label>
     <div className="inline-create-actions"><button className="secondary-button" type="button" onClick={onCancel}><X size={15} />Cancel</button><button disabled={busy || !selected}><Save size={15} />{busy ? 'Saving...' : 'Save'}</button></div>
   </form>;
 }
