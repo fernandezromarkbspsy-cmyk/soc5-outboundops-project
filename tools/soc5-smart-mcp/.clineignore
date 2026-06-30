@@ -7,19 +7,37 @@ credentials*.json
 service-account*.json
 secrets*.json
 
-# Dependencies and generated output
+# SMART MCP implementation
+tools/soc5-smart-mcp/
+
+# Dependencies
 node_modules/
 **/node_modules/
 vendor/
+
+# Generated output
 dist/
 build/
 .next/
+.vite/
+.turbo/
 coverage/
 .cache/
+bin/
+tmp/
+temp/
+logs/
 
-# Large or local data
-*.sqlite
-*.db
+# Lock and generated files
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+*.map
 *.log
+
+# Local data
+*.sqlite
+*.sqlite3
+*.db
 *.csv
 *.xlsx

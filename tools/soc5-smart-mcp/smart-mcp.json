@@ -6,13 +6,24 @@
   "allow_memory_writes": true,
   "ignore_directories": [
     ".git",
+    ".github",
+    ".idea",
+    ".vscode",
+    ".smart-mcp",
     "node_modules",
     "vendor",
     "dist",
     "build",
     ".next",
+    ".vite",
+    ".turbo",
     "coverage",
-    ".cache"
+    ".cache",
+    "bin",
+    "tmp",
+    "temp",
+    "logs",
+    "tools"
   ],
   "denied_file_names": [
     ".env",

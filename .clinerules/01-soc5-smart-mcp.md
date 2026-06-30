@@ -1,27 +1,29 @@
 # SOC 5 Outbound Agent Rules
 
-## Mission
-Build and maintain the SOC 5 Outbound internal linehaul request system without bypassing its role-based workflow, authentication, auditability, or real-time status rules.
+## Fast workflow
 
-## Required workflow
-1. Start with `project_snapshot`, `read_project_memory`, and `git_status`.
-2. Inspect existing code before proposing changes.
-3. Make the smallest coherent change that solves the task.
-4. Never read or display `.env`, private keys, service-account files, JWT secrets, Supabase service-role keys, or bot credentials.
-5. Never change database schema, authentication, authorization, or production deployment configuration without an explicit plan and approval.
-6. After code changes, run the relevant allowlisted checks through `run_quality_check`.
-7. Review `git_diff` before declaring the task complete.
-8. Record only durable architecture decisions in project memory; do not store secrets or temporary debugging notes there.
+1. For a normal task, call only `git_status` initially.
+2. Call `project_snapshot` only when the repository structure is unknown.
+3. Call `read_project_memory` only for architecture, authentication, database, deployment, or workflow changes.
+4. Search only the relevant folder using `path_prefix`.
+5. Use a maximum of 20 search results.
+6. Read only the files needed for the current task.
+7. Do not run quality checks until code has been changed.
+8. After changes, run only the relevant quality check.
+9. Review `git_diff` before completing the task.
 
 ## Project architecture
-- Frontend: React + TypeScript + Vite.
-- Backend: Go + Echo.
-- Database: Supabase/PostgreSQL.
-- Real-time updates: SSE and/or Supabase real-time, according to the existing implementation.
-- Roles: Ops PIC, FTE Ops, FTE MM, and Doc Officer.
 
-## Safety boundaries
+- Frontend: React, TypeScript, and Vite
+- Backend: Go and Echo
+- Database: Supabase PostgreSQL
+- Real-time updates: SSE and/or Supabase Realtime
+- Roles: Ops PIC, FTE Ops, FTE MM, and Doc Officer
+
+## Safety
+
+- Never read `.env`, private keys, JWT secrets, Supabase service-role keys, or credentials.
+- Never reset Git, force-push, rewrite history, or delete project files without approval.
+- Never modify production data.
 - Do not execute arbitrary shell commands through MCP.
-- Do not delete files, reset Git, force-push, rewrite history, or modify production data.
-- Do not auto-approve write operations.
-- Treat user and operational data as confidential.
+- Make the smallest coherent change required.

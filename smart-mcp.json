@@ -1,18 +1,29 @@
 {
   "project_root": ".",
-  "max_file_bytes": 524288,
-  "max_search_results": 100,
-  "max_command_output": 24000,
+  "max_file_bytes": 262144,
+  "max_search_results": 25,
+  "max_command_output": 12000,
   "allow_memory_writes": true,
   "ignore_directories": [
     ".git",
+    ".github",
+    ".idea",
+    ".vscode",
+    ".smart-mcp",
     "node_modules",
     "vendor",
     "dist",
     "build",
     ".next",
+    ".vite",
+    ".turbo",
     "coverage",
-    ".cache"
+    ".cache",
+    "bin",
+    "tmp",
+    "temp",
+    "logs",
+    "tools"
   ],
   "denied_file_names": [
     ".env",
