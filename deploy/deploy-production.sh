@@ -140,33 +140,6 @@ for attempt in {1..24}; do
   sleep 5
 done
 
-echo "Validating host NGINX configuration..."
-if ! sudo nginx -t; then
-  echo "Host NGINX configuration is invalid." >&2
-  sudo journalctl -u nginx --since "15 minutes ago" --no-pager >&2 || true
-  exit 1
-fi
-
-echo "Starting host NGINX..."
-sudo systemctl enable nginx
-sudo systemctl restart nginx
-
-if ! sudo systemctl is-active --quiet nginx; then
-  echo "Host NGINX failed to start." >&2
-  sudo systemctl status nginx --no-pager >&2 || true
-  sudo journalctl -u nginx --since "15 minutes ago" --no-pager >&2 || true
-  exit 1
-fi
-
-echo "Checking the local HTTPS origin..."
-if ! curl --fail --silent --show-error --max-time 10 --insecure \
-  --resolve soc5outboundops.app:443:127.0.0.1 \
-  https://soc5outboundops.app/up >/dev/null; then
-  echo "Host NGINX is active but the local HTTPS origin check failed." >&2
-  sudo journalctl -u nginx --since "15 minutes ago" --no-pager >&2 || true
-  exit 1
-fi
-
 echo "Deployment completed successfully."
 docker compose ps
 git log -1 --oneline
