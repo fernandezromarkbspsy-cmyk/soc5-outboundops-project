@@ -9,7 +9,7 @@ export const defaultRequestFilters: RequestFilters = {
   sort: 'created_at',
   direction: 'desc',
   page: 1,
-  perPage: 20,
+  perPage: 50,
 };
 
 export function requestQueryString(filters: RequestFilters, overrides: Partial<RequestFilters> = {}) {
