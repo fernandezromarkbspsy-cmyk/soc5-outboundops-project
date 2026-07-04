@@ -1,4 +1,4 @@
-import { BarChart3, ChevronDown, LayoutDashboard, LogOut, Menu, Route, ShipWheel, Truck, Users, X } from 'lucide-react';
+import { BarChart3, ChevronDown, ChevronsUpDown, LayoutDashboard, LogOut, Menu, Route, ShipWheel, Truck, Users, Warehouse, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { AppView, User } from '../types';
 
@@ -53,7 +53,7 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
     <button className="mobile-nav-toggle" type="button" title="Open navigation" aria-label="Open navigation" onClick={() => onOpenChange(true)}><Menu size={20} /></button>
     <div className={`sidebar-scrim${open ? ' is-open' : ''}`} onClick={() => onOpenChange(false)} />
     <aside className={`app-sidebar${open ? ' is-open' : ''}`}>
-      <div className="sidebar-brand"><strong>SOC 5</strong><small>Outbound</small></div>
+      <div className="sidebar-brand"><span className="brand-mark"><Warehouse size={18} /></span><span><strong>SOC 5</strong><small>Outbound Operations</small></span><ChevronsUpDown size={15} /></div>
       <button className="sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => onOpenChange(false)}><X size={19} /></button>
 
       <nav aria-label="Primary navigation">

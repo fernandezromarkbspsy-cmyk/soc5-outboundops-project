@@ -518,3 +518,149 @@ td { font-size: .9rem; line-height: 1.35; }
 @media (max-width: 1120px) { .topbar-user div { display: none; }.topbar-dates input { width: 112px; }.topbar-search { width: 210px; }.topbar-search kbd { display: none; } }
 @media (max-width: 760px) { .app-topbar { min-height: 72px; margin: 0 -1rem 1.25rem; padding: 0 1rem 0 4.15rem; }.topbar-dates, .topbar-user { display: none; }.topbar-page h1 { font-size: 1.16rem; }.topbar-breadcrumbs { font-size: .62rem; }.topbar-tools { min-width: 0; flex: 1; }.topbar-search { width: auto; min-width: 100px; flex: 1; }.notification-button { flex: 0 0 44px; } }
 @media (max-width: 430px) { .topbar-page { display: none !important; }.app-topbar { justify-content: flex-end; }.topbar-tools { max-width: 100%; } }
+
+// Nuxt UI dashboard visual system, adapted to the existing React application.
+:root {
+  --ui-primary: #00a155;
+  --ui-primary-soft: #effdf5;
+  --ui-primary-border: #b3f5d1;
+  --ui-text: #18181b;
+  --ui-muted: #71717a;
+  --ui-dimmed: #a1a1aa;
+  --ui-border: #e4e4e7;
+  --ui-elevated: #f4f4f5;
+  --ui-bg: #ffffff;
+}
+
+body { color: var(--ui-text); background: var(--ui-bg); font-family: "Public Sans", Inter, "Segoe UI", sans-serif; }
+button { border-radius: 8px; background: var(--ui-primary); }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline-color: rgba(0, 161, 85, .3); }
+
+.app-shell { grid-template-columns: 256px minmax(0, 1fr); background: var(--ui-bg); }
+.app-sidebar { padding: .75rem; border-right: 1px solid var(--ui-border); background: color-mix(in srgb, var(--ui-elevated) 55%, white); color: var(--ui-text); }
+.sidebar-brand { display: grid; min-height: 48px; grid-template-columns: 32px minmax(0, 1fr) 16px; align-items: center; gap: .65rem; padding: .4rem .5rem; border-radius: 8px; }
+.sidebar-brand:hover { background: var(--ui-elevated); }
+.sidebar-brand > span:nth-child(2) { display: grid; min-width: 0; }
+.sidebar-brand strong { color: var(--ui-text); font-family: inherit; font-size: .9rem; font-weight: 600; line-height: 1.2; transform: none; }
+.sidebar-brand small { margin: .12rem 0 0; overflow: hidden; color: var(--ui-muted); font-size: .68rem; text-overflow: ellipsis; white-space: nowrap; }
+.sidebar-brand > svg { color: var(--ui-dimmed); }
+.brand-mark { display: grid; width: 32px; height: 32px; place-items: center; border-radius: 7px; background: var(--ui-primary); color: #fff; }
+.app-sidebar nav { gap: .2rem; margin-top: .9rem; }
+.nav-group { gap: .15rem; }
+.nav-group button, .nav-group .nav-group-toggle, .nav-group .nav-link { min-height: 38px; margin: 0; padding: .55rem .65rem; border-radius: 7px; color: #52525b; font-size: .82rem; font-weight: 500; }
+.nav-group .nav-subitem { min-height: 34px; margin-left: 1.15rem; padding: .45rem .65rem; border-left: 1px solid var(--ui-border); border-radius: 0 7px 7px 0; color: var(--ui-muted); }
+.nav-group .nav-group-toggle:hover, .nav-group button:hover { background: var(--ui-elevated); color: var(--ui-text); }
+.nav-group button.active { background: var(--ui-elevated); color: var(--ui-text); box-shadow: inset 3px 0 var(--ui-primary); }
+.nav-group button.active svg { color: var(--ui-primary); }
+.nav-badge { min-width: 20px; height: 20px; background: #fee2e2; color: #b91c1c; }
+.sidebar-account { margin-top: auto; padding: .75rem .35rem .15rem; border-top: 1px solid var(--ui-border); }
+.account-avatar { background: #d9fbe8; color: #007f45; }
+.sidebar-account strong { color: var(--ui-text); font-weight: 600; }
+.sidebar-account small { color: var(--ui-muted); }
+.sidebar-account button { color: var(--ui-muted); }
+.sidebar-account button:hover { background: var(--ui-elevated); color: var(--ui-text); }
+
+.app-content { padding: 0 clamp(1rem, 2vw, 2rem) 2rem; }
+.app-topbar { min-height: 64px; margin: 0 calc(-1 * clamp(1rem, 2vw, 2rem)) 1.5rem; padding: 0 clamp(1rem, 2vw, 2rem); border-bottom: 1px solid var(--ui-border); background: rgba(255,255,255,.92); box-shadow: none; }
+.topbar-page h1 { color: var(--ui-text); font-size: 1rem; font-weight: 600; }
+.topbar-breadcrumbs { color: var(--ui-dimmed); }
+.topbar-breadcrumbs span:last-child { color: var(--ui-muted); }
+.topbar-tools { gap: .5rem; }
+.topbar-dates, .topbar-search, .topbar-user, .notification-button, .theme-toggle { min-height: 36px; border-color: var(--ui-border); border-radius: 8px; box-shadow: none; }
+.topbar-dates { height: 36px; }
+.topbar-search { width: min(280px, 24vw); height: 36px; }
+.topbar-user { height: 36px; }
+.notification-button, .theme-toggle { width: 36px; height: 36px; }
+.theme-toggle { display: grid; flex: 0 0 36px; place-items: center; padding: 0; border: 1px solid var(--ui-border); background: var(--ui-bg); color: var(--ui-muted); }
+.topbar-dates:focus-within, .topbar-search:focus-within { border-color: var(--ui-primary); box-shadow: 0 0 0 3px rgba(0,161,85,.1); }
+.topbar-user:hover, .notification-button:hover, .theme-toggle:hover { border-color: var(--ui-border); background: var(--ui-elevated); color: var(--ui-text); box-shadow: none; }
+.topbar-dates button { background: var(--ui-elevated); color: #3f3f46; }
+.topbar-breadcrumbs span:last-child, .profile-menu header { color: var(--ui-primary); }
+.profile-menu, .notification-popover { border-color: var(--ui-border); border-radius: 8px; box-shadow: 0 12px 32px rgba(24,24,27,.12); }
+.profile-menu > button:hover, .notification-list button:hover { background: var(--ui-elevated); color: var(--ui-text); }
+.notification-list button.unread { background: var(--ui-primary-soft); box-shadow: inset 3px 0 var(--ui-primary); }
+
+.workspace-view { max-width: 1440px; margin: 0 auto; }
+.overview-metrics { gap: 1px; overflow: hidden; margin-bottom: 1.5rem; border: 1px solid var(--ui-border); border-radius: 9px; background: var(--ui-border); }
+.metric-card { min-height: 126px; padding: 1.25rem; border-radius: 0; background: var(--ui-bg); }
+.metric-card:hover { z-index: 1; transform: none; background: #fafafa; box-shadow: 0 0 0 1px var(--ui-primary); }
+.metric-card small { color: var(--ui-muted); font-size: .72rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+.metric-card strong { color: var(--ui-text); font-size: 1.5rem; font-weight: 600; }
+.metric-card::after { display: none; }
+.metric-icon, .metric-card.primary .metric-icon { width: 38px; height: 38px; border: 1px solid var(--ui-primary-border); border-radius: 999px; background: var(--ui-primary-soft); color: var(--ui-primary); }
+.dashboard-grid { gap: 1rem; }
+.dashboard-view .panel, .panel { border: 1px solid var(--ui-border); border-radius: 9px; background: var(--ui-bg); }
+.dashboard-view .panel-head { padding: 1.1rem 1.25rem .7rem; }
+.dashboard-view .panel-head h2, .section-heading h2 { color: var(--ui-text); font-size: .9rem; font-weight: 600; }
+.dashboard-view .panel-head p, .section-heading p { color: var(--ui-muted); }
+.text-button { color: var(--ui-primary); }
+.text-button:hover { background: var(--ui-primary-soft); }
+.line-stroke { stroke: var(--ui-primary); }
+.line-chart circle { fill: var(--ui-primary); }
+.donut { box-shadow: inset 0 0 0 1px var(--ui-border); }
+
+.request-list-section, .inline-request-form { border-radius: 9px; }
+.search-field, .filter-field select, .request-controls .filter-field input, .request-controls .filter-field select, .export-button, .control-actions .icon-button { border-color: var(--ui-border); border-radius: 8px; box-shadow: none; }
+.search-field:focus-within, .request-controls .filter-field input:focus, .request-controls .filter-field select:focus { border-color: var(--ui-primary); box-shadow: 0 0 0 3px rgba(0,161,85,.1); }
+thead { background: color-mix(in srgb, var(--ui-elevated) 55%, white); }
+th { color: var(--ui-muted); }
+tbody tr:hover { background: #fafafa; }
+.count-badge { background: var(--ui-primary-soft); color: #007f45; }
+.form-dialog { border: 1px solid var(--ui-border); border-radius: 10px; }
+
+[data-theme="dark"] {
+  --ui-primary: #00dc82;
+  --ui-primary-soft: #052e16;
+  --ui-primary-border: #0a5331;
+  --ui-text: #fafafa;
+  --ui-muted: #a1a1aa;
+  --ui-dimmed: #71717a;
+  --ui-border: #3f3f46;
+  --ui-elevated: #27272a;
+  --ui-bg: #18181b;
+}
+
+[data-theme="dark"] body, [data-theme="dark"] .app-shell { background: var(--ui-bg); color: var(--ui-text); }
+[data-theme="dark"] .app-sidebar { background: #202023; }
+[data-theme="dark"] .app-topbar { background: rgba(24,24,27,.94); }
+[data-theme="dark"] .topbar-dates,
+[data-theme="dark"] .topbar-search,
+[data-theme="dark"] .topbar-user,
+[data-theme="dark"] .notification-button,
+[data-theme="dark"] .theme-toggle,
+[data-theme="dark"] .panel,
+[data-theme="dark"] .metric-card,
+[data-theme="dark"] .profile-menu,
+[data-theme="dark"] .notification-popover,
+[data-theme="dark"] .notification-list button,
+[data-theme="dark"] .form-dialog,
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea,
+[data-theme="dark"] .search-field,
+[data-theme="dark"] .export-button,
+[data-theme="dark"] .control-actions .icon-button { background-color: var(--ui-bg); color: var(--ui-text); border-color: var(--ui-border); }
+[data-theme="dark"] .metric-card:hover,
+[data-theme="dark"] tbody tr:hover,
+[data-theme="dark"] .profile-menu > button:hover,
+[data-theme="dark"] .notification-list button:hover { background: var(--ui-elevated); }
+[data-theme="dark"] .profile-menu > button { background: var(--ui-bg); color: var(--ui-text); }
+[data-theme="dark"] h1,
+[data-theme="dark"] h2,
+[data-theme="dark"] h3,
+[data-theme="dark"] .topbar-page h1,
+[data-theme="dark"] .metric-card strong,
+[data-theme="dark"] .dashboard-view .panel-head h2,
+[data-theme="dark"] .section-heading h2,
+[data-theme="dark"] .profile-menu header strong { color: var(--ui-text); }
+[data-theme="dark"] thead { background: var(--ui-elevated); }
+[data-theme="dark"] td { border-color: var(--ui-border); }
+[data-theme="dark"] .topbar-search kbd { border-color: var(--ui-border); background: var(--ui-elevated); color: var(--ui-muted); }
+[data-theme="dark"] .topbar-dates button { background: var(--ui-elevated); color: var(--ui-text); }
+[data-theme="dark"] .metric-card:hover { background: #202023; }
+
+@media (max-width: 760px) {
+  .app-sidebar { color: var(--ui-text); }
+  .sidebar-close { color: var(--ui-muted); }
+  .app-topbar { margin: 0 -1rem 1.25rem; padding-left: 4.25rem; }
+}
