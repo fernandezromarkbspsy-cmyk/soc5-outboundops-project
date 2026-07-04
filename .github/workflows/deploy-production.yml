@@ -34,8 +34,38 @@ jobs:
         run: |
           set -Eeuo pipefail
 
+          read -r -d '' remote_command <<'REMOTE_COMMAND' || true
+          set -Eeuo pipefail
+          export DEBIAN_FRONTEND=noninteractive
+
+          packages=()
+          command -v aws >/dev/null 2>&1 || packages+=(awscli)
+          command -v docker >/dev/null 2>&1 || packages+=(docker.io)
+
+          if ! docker compose version >/dev/null 2>&1; then
+            apt-get update
+            if apt-cache show docker-compose-v2 >/dev/null 2>&1; then
+              packages+=(docker-compose-v2)
+            elif apt-cache show docker-compose-plugin >/dev/null 2>&1; then
+              packages+=(docker-compose-plugin)
+            else
+              echo "Docker Compose v2 is unavailable from the configured APT repositories." >&2
+              exit 1
+            fi
+          fi
+
+          if (( ${#packages[@]} > 0 )); then
+            apt-get update
+            apt-get install -y "${packages[@]}"
+          fi
+
+          systemctl enable --now docker
+          usermod -aG docker ubuntu
+          sudo -u ubuntu -H bash /opt/soc5-outbound/deploy/deploy-production.sh
+          REMOTE_COMMAND
+
           parameters=$(jq -n \
-            --arg command "if ! command -v aws >/dev/null 2>&1; then apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; fi; sudo -u ubuntu bash /opt/soc5-outbound/deploy/deploy-production.sh" \
+            --arg command "$remote_command" \
             '{commands: [$command], executionTimeout: ["2400"]}')
 
           command_id=$(aws ssm send-command \
@@ -81,6 +111,11 @@ jobs:
 
           status=$(echo "$invocation" | jq -r '.Status')
           if [[ "$status" != "Success" ]]; then
-            echo "Deployment failed with SSM status: $status" >&2
+            echo "$invocation" | jq -r '
+              "Deployment failed with SSM status: \(.Status)",
+              "Status details: \(.StatusDetails // "not provided")",
+              "Response code: \(.ResponseCode // "not provided")",
+              "Execution: \(.ExecutionStartDateTime // "unknown") to \(.ExecutionEndDateTime // "unknown")"
+            ' >&2
             exit 1
           fi

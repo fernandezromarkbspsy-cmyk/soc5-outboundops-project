@@ -20,6 +20,8 @@
 
 set -Eeuo pipefail
 
+trap 'status=$?; echo "Deployment command failed (exit $status) at line $LINENO: $BASH_COMMAND" >&2; exit "$status"' ERR
+
 readonly APP_DIR="/opt/soc5-outbound"
 readonly BRANCH="main"
 readonly HEALTH_URL="http://127.0.0.1:8080/up"
