@@ -50,8 +50,9 @@ td { font-size: .9rem; line-height: 1.35; }
 .request-table-wrap { border-top: 0; background: #fff; scrollbar-color: #9aa9a6 #edf1f0; }
 .request-table { width: 100%; min-width: 1500px; table-layout: auto; border-collapse: separate; border-spacing: 0; }
 .request-table thead { position: sticky; top: 0; z-index: 6; }
-.request-table th { padding: .85rem .75rem; border: 0; border-bottom: 1px solid #cfe0dc; background: #edf7f5; color: #285f59; font-size: .69rem; font-weight: 800; letter-spacing: .035em; text-align: center; white-space: normal; }
-.request-table td { height: 52px; padding: .78rem .75rem; border-top: 1px solid #edf0ef; color: #3f4b57; font-size: .84rem; text-align: center; vertical-align: middle; white-space: normal; overflow-wrap: anywhere; word-break: normal; }
+.request-table th { padding: .85rem .75rem; border: 0; border-bottom: 1px solid #cfe0dc; background: #edf7f5; color: #285f59; font-size: .69rem; font-weight: 800; letter-spacing: .035em; text-align: center; white-space: nowrap; }
+.request-table td { height: 52px; padding: .78rem .75rem; border-top: 1px solid #edf0ef; color: #3f4b57; font-size: .84rem; text-align: center; vertical-align: middle; white-space: nowrap; }
+.request-table .request-column--cluster { min-width: 220px; max-width: 320px; white-space: normal; overflow-wrap: anywhere; }
 .request-table tbody tr.request-row { cursor: pointer; transition: background-color 140ms ease, box-shadow 140ms ease; }
 .request-table tbody tr.request-row:nth-child(even) { background: #fbfcfc; }
 .request-table tbody tr.request-row:hover { background: #eef7f5; box-shadow: inset 3px 0 #2f8f83; }
