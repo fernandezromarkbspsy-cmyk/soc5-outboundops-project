@@ -48,15 +48,20 @@ th, td { padding: .8rem 1.1rem; border-top: 1px solid $line; white-space: nowrap
 th { color: $muted; font-size: .72rem; font-weight: 600; line-height: 1.25; text-transform: uppercase; }
 td { font-size: .9rem; line-height: 1.35; }
 .request-table-wrap { border-top: 0; background: #fff; scrollbar-color: #9aa9a6 #edf1f0; }
-.request-table { width: 100%; min-width: 1500px; table-layout: auto; border-collapse: separate; border-spacing: 0; }
+.request-table { --status-width: 130px; --trip-width: 150px; --plate-width: 115px; --cluster-width: 250px; width: 100%; min-width: 1500px; table-layout: auto; border-collapse: separate; border-spacing: 0; }
 .request-table thead { position: sticky; top: 0; z-index: 6; }
 .request-table th { padding: .85rem .75rem; border: 0; border-bottom: 1px solid #cfe0dc; background: #edf7f5; color: #285f59; font-size: .69rem; font-weight: 800; letter-spacing: .035em; text-align: center; white-space: nowrap; }
 .request-table td { height: 52px; padding: .78rem .75rem; border-top: 1px solid #edf0ef; color: #3f4b57; font-size: .84rem; text-align: center; vertical-align: middle; white-space: nowrap; }
-.request-table .request-column--cluster { position: sticky; left: 0; z-index: 3; min-width: 220px; max-width: 320px; background: #fff; text-align: left; white-space: normal; overflow-wrap: anywhere; box-shadow: 10px 0 18px -16px rgba(16, 38, 40, .75); }
-.request-table thead .request-column--cluster { z-index: 8; background: #edf7f5; }
-.request-table tbody tr.request-row:nth-child(even) > .request-column--cluster { background: #fbfcfc; }
-.request-table tbody tr.request-row:hover > .request-column--cluster { background: #eef7f5; }
-.request-table tbody tr.request-row[aria-expanded="true"] > .request-column--cluster { background: #f2f8f6; }
+.request-table .request-column--status, .request-table .request-column--linehaul_trip_no, .request-table .request-column--plate_number, .request-table .request-column--cluster { position: sticky; z-index: 3; overflow: hidden; text-overflow: ellipsis; }
+.request-table .request-column--status { left: 0; width: var(--status-width); min-width: var(--status-width); max-width: var(--status-width); }
+.request-table .request-column--linehaul_trip_no { left: var(--status-width); width: var(--trip-width); min-width: var(--trip-width); max-width: var(--trip-width); }
+.request-table .request-column--plate_number { left: calc(var(--status-width) + var(--trip-width)); width: var(--plate-width); min-width: var(--plate-width); max-width: var(--plate-width); }
+.request-table .request-column--cluster { left: calc(var(--status-width) + var(--trip-width) + var(--plate-width)); width: var(--cluster-width); min-width: var(--cluster-width); max-width: var(--cluster-width); text-align: left; white-space: normal; overflow-wrap: anywhere; box-shadow: 10px 0 18px -16px rgba(16, 38, 40, .75); }
+.request-table thead .request-column--status, .request-table thead .request-column--linehaul_trip_no, .request-table thead .request-column--plate_number, .request-table thead .request-column--cluster { z-index: 8; background: #edf7f5; }
+.request-table tbody .request-column--status, .request-table tbody .request-column--linehaul_trip_no, .request-table tbody .request-column--plate_number, .request-table tbody .request-column--cluster { background: #fff; }
+.request-table tbody tr.request-row:nth-child(even) > .request-column--status, .request-table tbody tr.request-row:nth-child(even) > .request-column--linehaul_trip_no, .request-table tbody tr.request-row:nth-child(even) > .request-column--plate_number, .request-table tbody tr.request-row:nth-child(even) > .request-column--cluster { background: #fbfcfc; }
+.request-table tbody tr.request-row:hover > .request-column--status, .request-table tbody tr.request-row:hover > .request-column--linehaul_trip_no, .request-table tbody tr.request-row:hover > .request-column--plate_number, .request-table tbody tr.request-row:hover > .request-column--cluster { background: #eef7f5; }
+.request-table tbody tr.request-row[aria-expanded="true"] > .request-column--status, .request-table tbody tr.request-row[aria-expanded="true"] > .request-column--linehaul_trip_no, .request-table tbody tr.request-row[aria-expanded="true"] > .request-column--plate_number, .request-table tbody tr.request-row[aria-expanded="true"] > .request-column--cluster { background: #f2f8f6; }
 .request-table tbody tr.request-row { cursor: pointer; transition: background-color 140ms ease, box-shadow 140ms ease; }
 .request-table tbody tr.request-row:nth-child(even) { background: #fbfcfc; }
 .request-table tbody tr.request-row:hover { background: #eef7f5; box-shadow: inset 3px 0 #2f8f83; }
