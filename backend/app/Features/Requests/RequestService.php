@@ -15,7 +15,7 @@ final class RequestService
         abort_unless(in_array($actor->role, ['ops_pic', 'fte_ops'], true), 403);
 
         return DB::transaction(function () use ($actor, $data) {
-            $request = $this->requests->insert($data + ['id' => (string) Str::uuid(), 'created_by' => $actor->id, 'status' => 'PENDING']);
+            $request = $this->requests->insert($data + ['id' => (string) Str::uuid(), 'created_by' => $actor->id, 'ob_ops_pic' => $actor->name ?? null, 'status' => 'PENDING']);
             $this->event($request->id, $actor->id, 'REQUEST_CREATED', null, 'PENDING');
             $this->notify($request->id, 'fte_ops', 'REQUEST_CREATED', 'New request', 'A truck request needs review.');
 
@@ -69,12 +69,16 @@ final class RequestService
             $fields['status'] = $to;
             if ($to === 'APPROVED') {
                 $fields['approved_at'] = now();
+                $fields['ob_fte'] = $actor->name ?? null;
             }
             if ($to === 'REJECTED_BY_MM') {
                 $fields['rejected_at'] = now();
             }
             if ($to === 'DOCKED' && blank($fields['docked_time'] ?? null)) {
                 $fields['docked_time'] = now();
+            }
+            if (in_array($action, ['assign-truck', 'reject-mm'], true)) {
+                $fields['midmile_fte'] = $actor->name ?? null;
             }
             if ($to === 'CONFIRMED') {
                 $fields['confirmed_at'] = now();

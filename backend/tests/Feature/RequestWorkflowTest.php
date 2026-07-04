@@ -103,6 +103,10 @@ final class RequestWorkflowTest extends TestCase
 
     private function createSchema(): void
     {
+        Schema::create('profiles', function (Blueprint $table): void {
+            $table->uuid('id')->primary();
+            $table->string('name');
+        });
         Schema::create('requests', function (Blueprint $table): void {
             $table->uuid('id')->primary();
             $table->dateTime('request_timestamp');
@@ -112,6 +116,8 @@ final class RequestWorkflowTest extends TestCase
             $table->integer('backlogs');
             $table->dateTime('backlogs_timestamp')->nullable();
             $table->string('ob_fte')->nullable();
+            $table->string('ob_ops_pic')->nullable();
+            $table->string('midmile_fte')->nullable();
             $table->string('truck_size');
             $table->string('truck_type');
             $table->string('plate_number')->nullable();

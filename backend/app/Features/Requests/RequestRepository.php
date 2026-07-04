@@ -9,30 +9,30 @@ use Illuminate\Support\Facades\DB;
 
 final class RequestRepository
 {
-    private const COLUMNS = ['id', 'request_timestamp', 'cluster', 'region', 'dock_no', 'backlogs', 'backlogs_timestamp', 'ob_fte', 'truck_size', 'truck_type', 'plate_number', 'provide_time', 'linehaul_trip_no', 'docked_time', 'status', 'rejection_remarks', 'driver_id', 'created_by', 'created_at', 'updated_at'];
+    private const COLUMNS = ['id', 'request_timestamp', 'cluster', 'region', 'dock_no', 'backlogs', 'backlogs_timestamp', 'ob_fte', 'ob_ops_pic', 'midmile_fte', 'truck_size', 'truck_type', 'plate_number', 'provide_time', 'linehaul_trip_no', 'docked_time', 'status', 'rejection_remarks', 'driver_id', 'created_by', 'created_at', 'updated_at'];
 
     public function paginate(object $actor, array $filters): LengthAwarePaginator
     {
-        $query = DB::table('requests')->select(self::COLUMNS);
+        $query = $this->visibleRequestQuery();
         if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
-            $query->where('created_by', $actor->id);
+            $query->where('r.created_by', $actor->id);
         }
         if ($status = $filters['status'] ?? null) {
-            $query->where('status', $status);
+            $query->where('r.status', $status);
         }
         if ($search = trim((string) ($filters['search'] ?? ''))) {
-            $query->whereRaw("lower(coalesce(plate_number, '')) like ?", ['%'.strtolower($search).'%']);
+            $query->whereRaw("lower(coalesce(r.plate_number, '')) like ?", ['%'.strtolower($search).'%']);
         }
         if ($dateFrom = $filters['date_from'] ?? null) {
-            $query->whereDate('request_timestamp', '>=', $dateFrom);
+            $query->whereDate('r.request_timestamp', '>=', $dateFrom);
         }
         if ($dateTo = $filters['date_to'] ?? null) {
-            $query->whereDate('request_timestamp', '<=', $dateTo);
+            $query->whereDate('r.request_timestamp', '<=', $dateTo);
         }
 
         $sort = $filters['sort'] ?? 'created_at';
         $direction = $filters['direction'] ?? 'desc';
-        $query->orderBy($sort, $direction)->orderByDesc('id');
+        $query->orderBy('r.'.$sort, $direction)->orderByDesc('r.id');
 
         return $query->paginate(min((int) ($filters['per_page'] ?? 20), 100));
     }
@@ -98,12 +98,30 @@ final class RequestRepository
 
     public function findVisible(string $id, object $actor): object
     {
-        $query = DB::table('requests')->select(self::COLUMNS)->where('id', $id);
+        $query = $this->visibleRequestQuery()->where('r.id', $id);
         if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
-            $query->where('created_by', $actor->id);
+            $query->where('r.created_by', $actor->id);
         }
 
         return $query->firstOrFail();
+    }
+
+    private function visibleRequestQuery()
+    {
+        $columns = array_map(static fn (string $column): string => 'r.'.$column, self::COLUMNS);
+
+        return DB::table('requests as r')
+            ->leftJoin('profiles as creator', 'creator.id', '=', 'r.created_by')
+            ->select([...$columns, 'creator.name as requested_by'])
+            ->selectSub(function ($query): void {
+                $query->from('request_events as docking_event')
+                    ->join('profiles as docking_user', 'docking_user.id', '=', 'docking_event.actor_id')
+                    ->select('docking_user.name')
+                    ->whereColumn('docking_event.request_id', 'r.id')
+                    ->where('docking_event.event_type', 'TRUCK_DOCKED')
+                    ->orderByDesc('docking_event.id')
+                    ->limit(1);
+            }, 'doc_officer');
     }
 
     public function events(string $id, object $actor): Collection
