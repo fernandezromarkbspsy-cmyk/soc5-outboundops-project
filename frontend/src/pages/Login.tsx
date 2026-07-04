@@ -71,7 +71,7 @@ export function LoginBackdrop() {
   );
 }
 
-export function Login() {
+export function Login({ allowSkip = false, onSkip }: { allowSkip?: boolean; onSkip?: () => void } = {}) {
   const [type, setType] = useState<UserType>('fte');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
@@ -217,6 +217,7 @@ export function Login() {
 
             {error && <p className="error auth-error" role="alert">{error}</p>}
             <button className="primary-button" disabled={busy}>{submitLabel}</button>
+            {allowSkip && <button className="secondary-button admin-skip-button" type="button" disabled={busy} onClick={onSkip}>Skip login and return to dashboard</button>}
           </form>
           <p className="auth-footnote">Authorized operations personnel only</p>
         </section>

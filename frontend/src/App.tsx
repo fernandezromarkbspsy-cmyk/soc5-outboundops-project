@@ -47,6 +47,7 @@ export default function App() {
   const [state, setState] = useState<AuthState>('loading');
   const [failure, setFailure] = useState<AuthFailure>(defaultFailure);
   const [profile, setProfile] = useState<User | null>(null);
+  const [testingLogin, setTestingLogin] = useState(false);
   const lastToken = useRef<string | null>(null);
   const requestSequence = useRef(0);
 
@@ -94,6 +95,7 @@ export default function App() {
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+        if (event === 'SIGNED_IN') setTestingLogin(false);
         // Supabase advises against awaiting other auth calls inside this callback.
         window.setTimeout(() => void resolveSession(session), 0);
       }
@@ -105,5 +107,6 @@ export default function App() {
   if (state === 'signed-out') return <Login />;
   if (state === 'unauthorized') return <main className="state"><h1>{failure.title}</h1><p className="error">{failure.message}</p><p>{failure.detail}</p><button onClick={() => void retrySession()}>Try again</button> <button onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
   if (state === 'change-password') return <ChangePassword onComplete={() => setState('ready')} />;
-  return profile ? <Dashboard user={profile} /> : <LoginBackdrop />;
+  if (testingLogin && profile?.is_admin) return <Login allowSkip onSkip={() => setTestingLogin(false)} />;
+  return profile ? <Dashboard user={profile} onTestLogin={() => setTestingLogin(true)} /> : <LoginBackdrop />;
 }

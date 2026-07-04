@@ -13,7 +13,7 @@ import { DockingConfirmation } from './DockingConfirmation';
 import { Kpi } from './Kpi';
 import { UserManagement } from './UserManagement';
 
-export function Dashboard({ user }: { user: User }) {
+export function Dashboard({ user, onTestLogin }: { user: User; onTestLogin: () => void }) {
   const queryClient = useQueryClient();
   const viewRole = useUiStore(state => state.viewRole);
   const setViewRole = useUiStore(state => state.setViewRole);
@@ -49,7 +49,7 @@ export function Dashboard({ user }: { user: User }) {
   return <div className="app-shell">
     <AppSidebar user={activeUser} activeView={view} open={menuOpen} onOpenChange={setMenuOpen} onNavigate={navigate} onSignOut={() => void supabase.auth.signOut()} pendingCount={queue.count} />
     <main className="app-content">
-      <AppHeader user={activeUser} view={view} onRoleChange={switchRole} onSearch={() => navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request')} />
+      <AppHeader user={activeUser} view={view} onRoleChange={switchRole} onTestLogin={onTestLogin} onSearch={() => navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request')} />
       {view === 'overview' && <Overview user={activeUser} onNavigate={navigate} />}
       {view === 'lh-request' && <OutboundRequests user={activeUser} queue={queue} />}
       {view === 'truck-request' && <MidmileRequests user={activeUser} queue={queue} />}

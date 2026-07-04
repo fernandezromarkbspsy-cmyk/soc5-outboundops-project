@@ -1,11 +1,11 @@
-import { Bell, CalendarDays, Check, ChevronDown, ChevronRight, Search, ShieldCheck, UserCircle } from 'lucide-react';
+import { Bell, CalendarDays, Check, ChevronDown, ChevronRight, LogIn, Search, ShieldCheck, UserCircle } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from '../lib/api';
 import { useUiStore } from '../stores/ui';
 import type { AppView, Notification as AppNotification, Role, User } from '../types';
 
-type Props = { user:User; view:AppView; onRoleChange:(role:Role)=>void; onSearch:()=>void };
+type Props = { user:User; view:AppView; onRoleChange:(role:Role)=>void; onTestLogin:()=>void; onSearch:()=>void };
 const roles: Array<{value:Role;label:string}> = [{value:'fte_ops',label:'FTE Ops'},{value:'fte_mm',label:'FTE Midmile'},{value:'ops_pic',label:'Ops PIC'},{value:'doc_officer',label:'Document Officer'},{value:'dock_officer',label:'Dock Officer'}];
 const page = {
   overview: { name: 'Dashboard', section: 'Overview' },
@@ -16,7 +16,7 @@ const page = {
   users: { name: 'User Management', section: 'Administration' },
 };
 
-export function AppHeader({ user, view, onRoleChange, onSearch }: Props) {
+export function AppHeader({ user, view, onRoleChange, onTestLogin, onSearch }: Props) {
   const client=useQueryClient();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -49,7 +49,7 @@ export function AppHeader({ user, view, onRoleChange, onSearch }: Props) {
       {view === 'overview' && <div className="topbar-dates"><CalendarDays size={17}/><input aria-label="Start date" type="date" value={from} max={to} onChange={e=>setDateRange(e.target.value,to)}/><span>–</span><input aria-label="End date" type="date" value={to} min={from} onChange={e=>setDateRange(from,e.target.value)}/><button type="button" onClick={resetDateRange}>Today</button></div>}
       <form className="topbar-search" onSubmit={event=>{event.preventDefault();if(search.trim())onSearch();}}><Search size={17}/><input ref={searchRef} aria-label="Search requests" placeholder="Search requests…" value={search} onChange={e=>setSearch(e.target.value)}/><kbd>Ctrl F</kbd></form>
       <div className="notification-menu"><button className="notification-button" type="button" title="Notifications" aria-label={`Open notifications, ${count} unread`} aria-expanded={open} onClick={()=>setOpen(value=>!value)}><Bell size={19}/>{count>0&&<span>{count>99?'99+':count}</span>}</button>{open&&<section className="notification-popover" aria-label="Notifications"><div><strong>Notifications</strong>{count>0?<button className="text-button" onClick={()=>readAll.mutate()}>Mark all read</button>:<span>0</span>}</div>{alerts.length?<div className="notification-list">{alerts.slice(0,6).map(item=><button key={item.id} className={item.read_at?'':'unread'} type="button" onClick={()=>{if(!item.read_at)read.mutate(item.id);}}><span>{item.title}</span><small>{item.body}</small></button>)}</div>:<p>No notifications.</p>}</section>}</div>
-      <div className="profile-switcher"><button className="topbar-user" type="button" aria-expanded={profileOpen} onClick={()=>setProfileOpen(value=>!value)}><UserCircle size={22}/><div><strong>{user.name}</strong><small>{user.is_admin?'Administrator':user.role.replaceAll('_',' ')}</small></div>{user.is_admin&&<ChevronDown size={14}/>}</button>{profileOpen&&<section className="profile-menu"><header><ShieldCheck size={18}/><div><strong>Test role view</strong><small>Admin access remains enabled</small></div></header>{user.is_admin?roles.map(role=><button key={role.value} type="button" onClick={()=>{setProfileOpen(false);void onRoleChange(role.value);}}><span>{role.label}</span>{user.role===role.value&&<Check size={16}/>}</button>):<p>Signed in as {user.role.replaceAll('_',' ')}</p>}</section>}</div>
+      <div className="profile-switcher"><button className="topbar-user" type="button" aria-expanded={profileOpen} onClick={()=>setProfileOpen(value=>!value)}><UserCircle size={22}/><div><strong>{user.name}</strong><small>{user.is_admin?'Administrator':user.role.replaceAll('_',' ')}</small></div>{user.is_admin&&<ChevronDown size={14}/>}</button>{profileOpen&&<section className="profile-menu">{user.is_admin?<><header><ShieldCheck size={18}/><div><strong>Administrator tools</strong><small>Test role and authentication flows</small></div></header>{roles.map(role=><button key={role.value} type="button" onClick={()=>{setProfileOpen(false);void onRoleChange(role.value);}}><span>{role.label}</span>{user.role===role.value&&<Check size={16}/>}</button>)}<button type="button" onClick={()=>{setProfileOpen(false);onTestLogin();}}><span>Test login authentication</span><LogIn size={16}/></button></>:<p>Signed in as {user.role.replaceAll('_',' ')}</p>}</section>}</div>
     </div>
   </header>;
 }
