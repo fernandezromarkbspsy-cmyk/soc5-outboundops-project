@@ -1,6 +1,5 @@
 import { Fragment, type ReactNode, useState } from 'react';
 import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
-import { formatRequestCode } from '../lib/requestCode';
 import type { RequestSort, SortDirection, TruckRequest } from '../types';
 import { StatusBadge } from './StatusBadge';
 
@@ -23,8 +22,7 @@ const columns: Array<{ key: keyof TruckRequest; sortKey?: RequestSort; label: st
   { key: 'backlogs_timestamp', label: 'Backlogs Timestamp', render: request => formatDateTime(request.backlogs_timestamp) },
   { key: 'ob_fte', label: 'OB FTE', render: request => empty(request.ob_fte) },
   { key: 'truck_size', label: 'Truck Size', render: request => request.truck_size },
-  { key: 'trip_type', label: 'Trip Type', render: request => empty(request.trip_type) },
-  { key: 'remarks', label: 'Remarks', render: request => empty(request.remarks) },
+  { key: 'truck_type', label: 'Truck Type', render: request => request.truck_type },
   { key: 'plate_number', sortKey: 'plate_number', label: 'Plate Number', render: request => empty(request.plate_number) },
   { key: 'provide_time', label: 'Provide Time', render: request => formatDateTime(request.provide_time) },
   { key: 'linehaul_trip_no', label: 'Linehaul Trip No', render: request => empty(request.linehaul_trip_no) },
@@ -42,15 +40,14 @@ export function RequestTable({ rows, actions, emptyMessage = 'No requests found.
     return <button className="sort-button" type="button" onClick={() => onSort(column.sortKey!)}>{column.label}<Icon size={14} /></button>;
   }
 
-  return <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr>{columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map((request, index) => {
+  return <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr>{columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map(request => {
     const expanded = expandedId === request.id;
-    const requestCode = formatRequestCode(request, index + 1);
     return <Fragment key={request.id}>
       <tr className="request-row" aria-expanded={expanded} onClick={() => setExpandedId(value => value === request.id ? null : request.id)}>
         {columns.map(column => <td key={column.key} className={`request-column request-column--${column.key}`} data-label={column.label}>{column.render(request)}</td>)}
         {actions && <td data-label="Actions" onClick={event => event.stopPropagation()}><div className="row-actions">{actions(request)}</div></td>}
       </tr>
-      {expanded && <tr className="request-detail-row"><td colSpan={columns.length + (actions ? 1 : 0)}><RequestDetails request={request} requestCode={requestCode} /></td></tr>}
+      {expanded && <tr className="request-detail-row"><td colSpan={columns.length + (actions ? 1 : 0)}><RequestDetails request={request} /></td></tr>}
     </Fragment>;
   })}</tbody></table></div>;
 }
@@ -65,16 +62,10 @@ function formatDateTime(value: string | null | undefined) {
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
 }
 
-function RequestDetails({ request, requestCode }: { request: TruckRequest; requestCode: string }) {
+function RequestDetails({ request }: { request: TruckRequest }) {
   const fields: Array<[string, ReactNode]> = [
-    ['Request ID', requestCode],
-    ['Requested By', empty(request.requested_by ?? request.created_by)],
-    ['Approved By', empty(request.approved_by)],
-    ['Assigned By', empty(request.assigned_by)],
-    ['Docked By', empty(request.docked_by)],
-    ['Confirmed By', empty(request.confirmed_by)],
-    ['Rejected/Cancelled By', empty(request.rejected_by || request.cancelled_by)],
-    ['Updated By', empty(request.updated_by)],
+    ['Request ID', request.id],
+    ['Created By', request.created_by],
     ['Created At', formatDateTime(request.created_at)],
     ['Updated At', formatDateTime(request.updated_at)],
     ['Driver ID', empty(request.driver_id)],

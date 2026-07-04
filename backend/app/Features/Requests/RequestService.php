@@ -65,7 +65,7 @@ final class RequestService
                 throw ValidationException::withMessages(['driver_id' => 'Driver ID and linehaul trip number are required.']);
             }
 
-            $fields = array_intersect_key($input, array_flip(['rejection_remarks', 'plate_number', 'provide_time', 'driver_id', 'linehaul_trip_no', 'truck_size', 'truck_type', 'trip_type', 'remarks', 'docked_time']));
+            $fields = array_intersect_key($input, array_flip(['rejection_remarks', 'plate_number', 'provide_time', 'driver_id', 'linehaul_trip_no', 'truck_size', 'truck_type', 'docked_time']));
             $fields['status'] = $to;
             if ($to === 'APPROVED') {
                 $fields['approved_at'] = now();

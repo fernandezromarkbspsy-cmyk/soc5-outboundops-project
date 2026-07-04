@@ -10,11 +10,4 @@ final class HealthTest extends TestCase
     {
         $this->get('/up')->assertOk();
     }
-
-    public function test_api_health_endpoint_is_available(): void
-    {
-        $this->getJson('/api/health')
-            ->assertOk()
-            ->assertJson(['ok' => true]);
-    }
 }

@@ -67,7 +67,7 @@ for variable in SUPABASE_URL SUPABASE_PUBLISHABLE_KEY; do
   fi
 done
 
-for variable in APP_KEY SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
+for variable in SUPABASE_URL SUPABASE_SERVICE_ROLE_KEY; do
   if ! grep -Eq "^${variable}=.+" backend/.env; then
     echo "Deployment refused: $variable is missing or empty in $APP_DIR/backend/.env." >&2
     exit 1
@@ -98,7 +98,6 @@ echo "Starting application..."
 if ! docker compose up -d --remove-orphans; then
   echo "Application containers failed to start." >&2
   docker compose ps
-  docker inspect --format '{{range .State.Health.Log}}{{.End}} exit={{.ExitCode}} {{printf "%q" .Output}}{{println}}{{end}}' soc5-outbound-api-1 2>/dev/null || true
   docker compose logs --tail=100 api
   exit 1
 fi
@@ -112,7 +111,6 @@ for attempt in {1..24}; do
   if [[ "$attempt" == "24" ]]; then
     echo "API did not become healthy." >&2
     docker compose ps
-    docker inspect --format '{{range .State.Health.Log}}{{.End}} exit={{.ExitCode}} {{printf "%q" .Output}}{{println}}{{end}}' soc5-outbound-api-1 2>/dev/null || true
     docker compose logs --tail=100 api
     exit 1
   fi

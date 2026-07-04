@@ -1,5 +1,4 @@
 import { api } from './api';
-import { formatRequestCode } from './requestCode';
 import type { Page, RequestFilters, TruckRequest } from '../types';
 
 export const defaultRequestFilters: RequestFilters = {
@@ -40,8 +39,8 @@ export async function exportRequestsCsv(filters: RequestFilters, filename: strin
     page += 1;
   } while (page <= lastPage);
 
-  const columns: Array<[string, (request: TruckRequest, index: number) => unknown]> = [
-    ['Request ID', (request, index) => formatRequestCode(request, index + 1)],
+  const columns: Array<[string, (request: TruckRequest) => unknown]> = [
+    ['Request ID', request => request.id],
     ['Created', request => request.created_at],
     ['Cluster', request => request.cluster],
     ['Region', request => request.region],
@@ -55,7 +54,7 @@ export async function exportRequestsCsv(filters: RequestFilters, filename: strin
     ['Rejection Remarks', request => request.rejection_remarks ?? ''],
   ];
   const escape = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`;
-  const csv = [columns.map(([label]) => escape(label)).join(','), ...all.map((request, index) => columns.map(([, read]) => escape(read(request, index))).join(','))].join('\r\n');
+  const csv = [columns.map(([label]) => escape(label)).join(','), ...all.map(request => columns.map(([, read]) => escape(read(request))).join(','))].join('\r\n');
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
   const link = document.createElement('a');
   link.href = url;

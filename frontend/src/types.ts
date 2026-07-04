@@ -1,8 +1,7 @@
 export type Role = 'ops_pic'|'fte_ops'|'fte_mm'|'doc_officer'|'dock_officer';
 export type Status = 'PENDING'|'APPROVED'|'CANCELLED'|'REJECTED_BY_MM'|'ASSIGNED'|'FOR_DOCKING'|'DOCKED'|'CONFIRMED';
-export type TripType = '1st MDT'|'2nd MDT'|'Adv Request';
 export interface User {id:string;name:string;role:Role;original_role?:Role;is_admin?:boolean;email?:string;ops_id?:string;must_change_password?:boolean;is_active?:boolean;password_changed_at?:string|null}
-export interface TruckRequest {id:string;request_code?:string;request_timestamp?:string;cluster:string;region:string;dock_no:string;backlogs:number;backlogs_timestamp?:string|null;ob_fte?:string|null;truck_size:string;truck_type:string;trip_type?:TripType|null;remarks?:string|null;plate_number?:string|null;provide_time?:string|null;linehaul_trip_no?:string|null;docked_time?:string|null;status:Status;rejection_remarks?:string|null;driver_id?:string|null;created_by:string;requested_by?:string|null;updated_by?:string|null;approved_by?:string|null;assigned_by?:string|null;docked_by?:string|null;confirmed_by?:string|null;rejected_by?:string|null;cancelled_by?:string|null;created_at:string;updated_at?:string}
+export interface TruckRequest {id:string;request_timestamp?:string;cluster:string;region:string;dock_no:string;backlogs:number;backlogs_timestamp?:string|null;ob_fte?:string|null;truck_size:string;truck_type:string;plate_number?:string|null;provide_time?:string|null;linehaul_trip_no?:string|null;docked_time?:string|null;status:Status;rejection_remarks?:string|null;driver_id?:string|null;created_by:string;created_at:string;updated_at?:string}
 export interface ClusterLookup {id:string;cluster_name:string;hub_name:string;region:string;dock_number?:string|null;backlogs?:number|null;backlogs_ts?:string|null}
 export interface Page<T> {data:T[];current_page:number;last_page:number;per_page:number;from?:number|null;to?:number|null;total:number}
 
