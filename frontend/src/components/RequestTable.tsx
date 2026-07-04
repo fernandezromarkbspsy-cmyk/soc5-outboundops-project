@@ -14,22 +14,21 @@ type Props = {
 
 const columns: Array<{ key: keyof TruckRequest; sortKey?: RequestSort; label: string; render: (request: TruckRequest) => ReactNode }> = [
   { key: 'status', sortKey: 'status', label: 'Status', render: request => <StatusBadge status={request.status} /> },
-  { key: 'request_timestamp', sortKey: 'request_timestamp', label: 'Request Timestamp', render: request => formatDateTime(request.request_timestamp) },
-  { key: 'requested_by', label: 'Requested By', render: request => firstName(request.requested_by || request.ob_ops_pic) },
+  { key: 'linehaul_trip_no', label: 'Linehaul Trip No', render: request => empty(request.linehaul_trip_no) },
+  { key: 'plate_number', sortKey: 'plate_number', label: 'Plate #', render: request => empty(request.plate_number) },
   { key: 'cluster', sortKey: 'cluster', label: 'Cluster', render: request => request.cluster },
   { key: 'region', label: 'Region', render: request => request.region },
   { key: 'dock_no', sortKey: 'dock_no', label: 'Dock No', render: request => request.dock_no },
   { key: 'backlogs', sortKey: 'backlogs', label: 'Backlogs', render: request => request.backlogs.toLocaleString() },
-  { key: 'backlogs_timestamp', label: 'Backlogs Timestamp', render: request => formatDateTime(request.backlogs_timestamp) },
-  { key: 'ob_fte', label: 'OB FTE', render: request => empty(request.ob_fte) },
-  { key: 'midmile_fte', label: 'Midmile FTE', render: request => empty(request.midmile_fte) },
-  { key: 'doc_officer', label: 'Doc Officer', render: request => empty(request.doc_officer) },
+  { key: 'backlogs_timestamp', label: 'Backlogs TS', render: request => formatDateTime(request.backlogs_timestamp) },
   { key: 'truck_size', label: 'Truck Size', render: request => request.truck_size },
   { key: 'truck_type', label: 'Truck Type', render: request => request.truck_type },
-  { key: 'plate_number', sortKey: 'plate_number', label: 'Plate Number', render: request => empty(request.plate_number) },
-  { key: 'provide_time', label: 'Provide Time', render: request => formatDateTime(request.provide_time) },
-  { key: 'linehaul_trip_no', label: 'Linehaul Trip No', render: request => empty(request.linehaul_trip_no) },
+  { key: 'provide_time', label: 'Provided Time', render: request => formatDateTime(request.provide_time) },
   { key: 'docked_time', label: 'Docked Time', render: request => formatDateTime(request.docked_time) },
+  { key: 'requested_by', label: 'Requested by', render: request => firstName(request.requested_by || request.ob_ops_pic) },
+  { key: 'ob_fte', label: 'OB FTE', render: request => empty(request.ob_fte) },
+  { key: 'midmile_fte', label: 'MIDMILE FTE', render: request => empty(request.midmile_fte) },
+  { key: 'doc_officer', label: 'DOC Officer', render: request => empty(request.doc_officer) },
 ];
 
 export function RequestTable({ rows, actions, emptyMessage = 'No requests found.', sort, direction, onSort }: Props) {

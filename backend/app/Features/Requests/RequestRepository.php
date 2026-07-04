@@ -24,10 +24,10 @@ final class RequestRepository
             $query->whereRaw("lower(coalesce(r.plate_number, '')) like ?", ['%'.strtolower($search).'%']);
         }
         if ($dateFrom = $filters['date_from'] ?? null) {
-            $query->whereDate('r.request_timestamp', '>=', $dateFrom);
+            $query->where('r.request_timestamp', '>=', CarbonImmutable::parse($dateFrom, 'Asia/Manila')->startOfDay()->utc());
         }
         if ($dateTo = $filters['date_to'] ?? null) {
-            $query->whereDate('r.request_timestamp', '<=', $dateTo);
+            $query->where('r.request_timestamp', '<=', CarbonImmutable::parse($dateTo, 'Asia/Manila')->endOfDay()->utc());
         }
 
         $sort = $filters['sort'] ?? 'created_at';
@@ -50,31 +50,32 @@ final class RequestRepository
         $sizes = DB::table('requests')->select('truck_size', DB::raw('count(*) as total'))->groupBy('truck_size');
         $this->scope($sizes, $actor, $filters);
 
-        $now = CarbonImmutable::now('Asia/Manila');
-        $shiftStart = $now->hour < 6
-            ? $now->subDay()->setTime(18, 0)
-            : $now->setTime(18, 0);
-        $shiftEnd = $shiftStart->addHours(13);
-        $shiftQuery = DB::table('requests')->whereBetween('request_timestamp', [$shiftStart->utc(), $shiftEnd->utc()]);
+        $timezone = 'Asia/Manila';
+        $rangeStart = isset($filters['date_from'])
+            ? CarbonImmutable::parse($filters['date_from'], $timezone)->startOfDay()
+            : CarbonImmutable::now($timezone)->startOfDay();
+        $rangeEnd = isset($filters['date_to'])
+            ? CarbonImmutable::parse($filters['date_to'], $timezone)->endOfDay()
+            : CarbonImmutable::now($timezone)->endOfDay();
+        $hourlyQuery = DB::table('requests')->whereBetween('request_timestamp', [$rangeStart->utc(), $rangeEnd->utc()]);
         if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
-            $shiftQuery->where('created_by', $actor->id);
+            $hourlyQuery->where('created_by', $actor->id);
         }
-        $timestamps = $shiftQuery->pluck('request_timestamp');
-        $counts = array_fill(0, 13, 0);
+        $timestamps = $hourlyQuery->pluck('request_timestamp');
+        $counts = array_fill(0, 24, 0);
         foreach ($timestamps as $timestamp) {
-            $index = $shiftStart->diffInHours(CarbonImmutable::parse($timestamp)->setTimezone('Asia/Manila'), false);
-            if ($index >= 0 && $index <= 12) {
-                $counts[$index]++;
-            }
+            $hour = CarbonImmutable::parse($timestamp)->setTimezone($timezone)->hour;
+            $counts[$hour]++;
         }
 
         return [
             'truck_sizes' => $sizes->pluck('total', 'truck_size'),
             'hourly' => collect($counts)->map(fn (int $count, int $hour) => [
-                'label' => $shiftStart->addHours($hour)->format('gA'),
+                'label' => CarbonImmutable::createFromTime($hour, 0, 0, $timezone)->format('g A'),
                 'count' => $count,
             ])->values(),
-            'shift_start' => $shiftStart->toIso8601String(),
+            'range_start' => $rangeStart->toIso8601String(),
+            'range_end' => $rangeEnd->toIso8601String(),
         ];
     }
 
@@ -84,10 +85,10 @@ final class RequestRepository
             $query->where('created_by', $actor->id);
         }
         if ($dateFrom = $filters['date_from'] ?? null) {
-            $query->whereDate('request_timestamp', '>=', $dateFrom);
+            $query->where('request_timestamp', '>=', CarbonImmutable::parse($dateFrom, 'Asia/Manila')->startOfDay()->utc());
         }
         if ($dateTo = $filters['date_to'] ?? null) {
-            $query->whereDate('request_timestamp', '<=', $dateTo);
+            $query->where('request_timestamp', '<=', CarbonImmutable::parse($dateTo, 'Asia/Manila')->endOfDay()->utc());
         }
     }
 

@@ -96,7 +96,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
 function requestPayload(form: HTMLFormElement): RequestPayload {
   const data = new FormData(form);
-  return { cluster: data.get('cluster'), region: data.get('region'), dock_no: data.get('dock_no'), backlogs: Number(data.get('backlogs')), backlogs_timestamp: data.get('backlogs_timestamp'), truck_size: data.get('truck_size'), truck_type: data.get('truck_type') };
+  return { cluster: data.get('cluster'), region: data.get('region'), dock_no: data.get('dock_no'), backlogs: Number(data.get('backlogs')), backlogs_timestamp: data.get('backlogs_timestamp'), truck_size: data.get('truck_size'), truck_type: data.get('truck_type') ?? 'WETLEASE' };
 }
 
 function RequestFields({ request }: { request?: TruckRequest }) {
@@ -130,7 +130,6 @@ function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
     <label>Backlogs<input name="backlogs" type="number" required readOnly min={0} value={selected?.backlogs ?? 0} /></label>
     <label>Backlogs Timestamp<input readOnly value={selected?.backlogs_ts ? new Date(selected.backlogs_ts).toLocaleString() : ''} /><input type="hidden" name="backlogs_timestamp" value={selected?.backlogs_ts ?? ''} /></label>
     <label>Truck Size<select name="truck_size" defaultValue="6W"><option>4W</option><option>6W</option><option>10W</option><option>6WF</option></select></label>
-    <label>Truck Type<select name="truck_type" defaultValue="WETLEASE"><option>WETLEASE</option><option>DRYLEASE</option></select></label>
     <div className="inline-create-actions"><button className="secondary-button" type="button" onClick={onCancel}><X size={15} />Cancel</button><button disabled={busy || !selected}><Save size={15} />{busy ? 'Saving...' : 'Save'}</button></div>
   </form>;
 }

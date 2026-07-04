@@ -6,7 +6,7 @@ export interface ClusterLookup {id:string;cluster_name:string;hub_name:string;re
 export interface Page<T> {data:T[];current_page:number;last_page:number;per_page:number;from?:number|null;to?:number|null;total:number}
 
 export interface RequestMetrics {total:number;awaiting_action:number;by_status:Partial<Record<Status, number>>}
-export interface RequestAnalytics {truck_sizes:Partial<Record<'4W'|'6W'|'10W'|'6WF',number>>;hourly:Array<{label:string;count:number}>;shift_start:string}
+export interface RequestAnalytics {truck_sizes:Partial<Record<'4W'|'6W'|'10W'|'6WF',number>>;hourly:Array<{label:string;count:number}>;range_start:string;range_end:string}
 
 export type AppView = 'overview'|'lh-request'|'truck-request'|'docking'|'kpi'|'users';
 export interface Notification {id:number;request_id:string|null;event_type:string;title:string;body:string;read_at:string|null;created_at:string}
