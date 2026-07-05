@@ -1,5 +1,8 @@
 # Outbound Reference Data Import
 
+Last reviewed: 2026-07-05. The AdminKit frontend replacement does not change the
+cluster/user import schema or ordering described here.
+
 ## Validation summary
 
 - `cluster.csv`: 134 rows, no duplicate `hub_name` values.

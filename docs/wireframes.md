@@ -2,9 +2,11 @@
 
 ## Visual direction
 
-Dense but readable operations UI. Inter font, navy `#172554`, orange `#F97316`,
-cool-gray surfaces, 8 px spacing grid, 10 px radii, and WCAG AA contrast. Status is
-communicated by text plus color.
+Dense but readable AdminKit operations UI. The implemented palette uses Inter,
+AdminKit navy `#222e3c`, primary blue `#3b7ddd`, a `#f5f7fb` content canvas,
+compact 4 px card radii, and subtle shadows. Status is communicated by text plus
+color. The wireframes describe interaction hierarchy; `dashboard.md` is the
+source of truth for the implemented visual system.
 
 ## Login
 
@@ -35,4 +37,3 @@ communicated by text plus color.
 Desktop uses a fixed sidebar; mobile uses a drawer and card rows. Action buttons
 appear only when both role and current state permit them. Destructive actions require
 confirmation. Forms retain entered values after validation errors.
-

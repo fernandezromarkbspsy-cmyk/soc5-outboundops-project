@@ -1,10 +1,13 @@
 # Feature Breakdown
 
+Last reviewed: 2026-07-05. Phases 1 through 3 are represented in the current
+codebase; production-readiness work remains iterative.
+
 ## Phase 1 - Foundation
 
 - Supabase project, schema, indexes, RLS, seed administrator
 - Laravel health endpoint, JWT verification, profile lookup, rate limiting
-- React shell, login, role guards, API client, error boundary
+- React shell, AdminKit visual system, login, role guards, API client, error boundary
 
 ## Phase 2 - Request lifecycle
 
@@ -26,4 +29,3 @@
 - Backup and restore drill
 - Sentry/PostHog/Better Stack adapters when configured
 - Load test expected concurrency; optimize only observed bottlenecks
-

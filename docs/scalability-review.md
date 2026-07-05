@@ -1,5 +1,11 @@
 # Scalability Review
 
+Last reviewed: 2026-07-05. The AdminKit migration does not change API or database
+scaling characteristics. The latest successful frontend build produced about
+293 kB of CSS (46 kB gzip) and a 537 kB JavaScript chunk (151 kB gzip).
+Route-level code splitting is the next frontend optimization if measurements
+justify it.
+
 ## Key bottlenecks
 
 1. **Authentication adds one external network call to every protected API request.**

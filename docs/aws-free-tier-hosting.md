@@ -1,5 +1,7 @@
 # AWS Free Tier Hosting Guide — SOC 5 Outbound
 
+Last reviewed: 2026-07-05.
+
 This guide deploys SOC 5 Outbound to one Amazon EC2 instance, with Cloudflare
 managing DNS and edge traffic and Supabase providing PostgreSQL and Auth. It is
 written for the AWS Console UI available in June 2026.
@@ -331,6 +333,11 @@ SUPABASE_PUBLISHABLE_KEY=REPLACE_WITH_PUBLISHABLE_KEY
 
 The publishable key is intentionally included in browser code. The secret key
 must never appear in this root file because the frontend build consumes it.
+
+The web image bundles the committed AdminKit stylesheet, namespaced media
+assets, and MIT notice. It needs no AdminKit runtime CDN or separate package
+installation. Styling or asset changes require rebuilding the web image but no
+Laravel migration.
 
 ## 12. Build and start the application
 

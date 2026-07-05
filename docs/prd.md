@@ -19,6 +19,10 @@ Authentication, role-based navigation, paginated request lists, request creation
 approval/bulk approval, rejection, truck assignment, docking, confirmation,
 notifications, event history, user administration, and basic daily KPIs.
 
+The operator experience uses a responsive AdminKit dashboard shell with a dark
+role-aware sidebar, compact topbar, accessible forms, cards, tables, status
+badges, notifications, and print-specific truck-label views.
+
 Later phases may add Google Sheet import/export, email digests, richer analytics,
 and measured performance improvements. Vector search is not a product requirement.
 
@@ -40,4 +44,3 @@ updated state and audit trail.
 
 Microservices, sharding, dedicated load balancers, Pinecone, multi-region failover,
 and speculative writes. These add cost and operational risk without current demand.
-

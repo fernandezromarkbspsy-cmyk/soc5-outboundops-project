@@ -1,8 +1,10 @@
 # Implementation Contract
 
 Build SOC 5 Outbound from `docs/system-blueprint.md` and the approved documents in
-this directory. Use Laravel 12, PHP 8.2+, PostgreSQL, React/TypeScript/Vite,
-TanStack Query, Zustand, and Sass.
+this directory. Use Laravel 12, PHP 8.2+, PostgreSQL, React 19/TypeScript/Vite,
+TanStack Query, Zustand, and the committed AdminKit 3.4.0 stylesheet with the
+React compatibility layer in `frontend/src/styles/main.css`. Do not replace
+React interactions with AdminKit's static demo HTML or imperative JavaScript.
 
 Rules: group backend code by feature; keep controllers thin; keep HTTP out of
 services; keep SQL/Eloquent access in repositories; validate every payload; enforce

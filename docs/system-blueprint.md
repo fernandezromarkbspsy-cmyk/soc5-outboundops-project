@@ -367,6 +367,10 @@ KPI:
 
 ## 14. Frontend Pages
 
+Frontend stack: Next.js 16, React 19, TypeScript, TanStack Query, Zustand, Supabase JS,
+Lucide icons, and AdminKit 3.4.0 styling. `adminkit.css` supplies the template
+foundation and `main.css` maps it to application-specific components.
+
 Pages:
 - Login
 - Dashboard

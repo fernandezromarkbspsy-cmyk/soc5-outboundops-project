@@ -1,5 +1,8 @@
 # Supabase Auth Setup — SOC 5 Outbound
 
+Last reviewed: 2026-07-05. The AdminKit frontend migration changes presentation
+only; provider, redirect, session, and authorization requirements are unchanged.
+
 This guide configures the hosted Supabase Auth service used by this repository.
 It was written for the current Supabase Dashboard navigation as of June 2026.
 Supabase sometimes moves settings within the **Authentication** section; when a

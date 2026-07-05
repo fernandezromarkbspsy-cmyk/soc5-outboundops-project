@@ -8,12 +8,12 @@ an auditable event history.
 ## Technology
 
 - Laravel 12 modular-monolith API on PHP 8.4
-- React 19, TypeScript, and Vite
+- Next.js 16, React 19, and TypeScript
 - TanStack Query for server state
 - Zustand for client UI state
-- Sass for styling
+- Tailwind CSS 4 and reusable Radix UI components
 - Supabase PostgreSQL, Auth, and Realtime
-- NGINX and Docker for deployment
+- Docker for deployment, with Next.js proxying browser API requests
 
 The MVP intentionally avoids microservices, Redis, Pinecone, and dedicated load
 balancers. These should only be introduced after production measurements establish
@@ -23,7 +23,7 @@ a concrete need. The rationale is documented in [System Design](docs/system-desi
 
 ```text
 backend/                 Laravel API
-frontend/                React/Vite application
+frontend/                Next.js application (the sole frontend)
 supabase/migrations/     PostgreSQL schema and RLS policies
 docs/                    Product and architecture documents
 tools/php.ini            Project-local PHP configuration
@@ -36,7 +36,7 @@ start-backend.ps1        Backend development server
 No administrator access is required. PHP and Composer use the project-local
 configuration in `tools/php.ini`.
 
-1. Configure `backend/.env` and `frontend/.env` as described in the
+1. Configure `backend/.env` and `frontend/.env.local` as described in the
    [Setup Guide](docs/setup-guide.md).
 2. Initialize the backend:
 
@@ -50,18 +50,18 @@ configuration in `tools/php.ini`.
    .\start-backend.ps1
    ```
 
-4. Start React in a second terminal:
+4. Start Next.js in a second terminal:
 
    ```powershell
    cd frontend
-   npm install
-   npm run dev
+   pnpm install
+   pnpm dev
    ```
 
-5. Open `http://localhost:5173`.
+5. Open `http://localhost:3000`.
 
-Laravel runs on `http://127.0.0.1:8000`; Vite proxies browser `/api` requests to
-that address.
+Laravel runs on `http://127.0.0.1:8000`; Next.js rewrites browser `/api`
+requests to `API_ORIGIN` (which defaults to that address in local development).
 
 ## Supabase initialization
 
@@ -70,7 +70,7 @@ the Supabase SQL Editor. Then create Auth users and matching `public.profiles`
 rows. The profile UUID must equal the corresponding `auth.users.id`.
 
 The publishable key may be used in the browser. Never put the service-role key in
-`frontend/.env`, source control, screenshots, or client-side code.
+`frontend/.env.local`, source control, screenshots, or client-side code.
 
 ## Validation
 
@@ -83,7 +83,7 @@ php artisan test
 
 # Frontend
 cd ..\frontend
-npm run build
+pnpm build
 ```
 
 ## Documentation

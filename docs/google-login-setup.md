@@ -1,5 +1,8 @@
 # Google Login Setup — SOC 5 Outbound
 
+Last reviewed: 2026-07-05. AdminKit styling does not alter the Google OAuth or
+Supabase redirect flow described below.
+
 This guide configures Google OAuth for the hosted Supabase project used by SOC
 5 Outbound. It follows the Google Auth Platform and Supabase Dashboard UI as of
 June 2026.

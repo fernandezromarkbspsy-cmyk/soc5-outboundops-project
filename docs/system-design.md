@@ -6,6 +6,10 @@ Use a modular monolith: a stateless Laravel API and a React single-page client,
 backed by Supabase PostgreSQL/Auth/Realtime. Feature boundaries preserve the
 controller -> service -> repository flow without introducing network boundaries.
 
+The client uses the committed AdminKit 3.4.0 CSS distribution as its design
+foundation. React remains responsible for rendering and interactions; Bootstrap
+or AdminKit demo JavaScript is not part of the runtime.
+
 ## Runtime flow
 
 Browser -> Cloudflare -> NGINX -> React assets or `/api` -> Laravel -> Supabase.
@@ -66,4 +70,3 @@ First tune queries and indexes. Then add queue workers and Redis for measured ho
 reads. Because the API is stateless, multiple replicas can sit behind NGINX or the
 hosting platform. Add Supabase read replicas/partitioning only when database metrics
 justify them. Split a service only after it needs independent ownership or scaling.
-

@@ -1,5 +1,7 @@
 # Setup Guide
 
+Last reviewed: 2026-07-05.
+
 This guide covers local development on the current restricted Windows machine.
 It does not require administrator privileges.
 
@@ -161,6 +163,11 @@ Install frontend dependencies:
 cd frontend
 npm install
 ```
+
+The frontend loads the committed AdminKit 3.4.0 CSS distribution from
+`frontend/src/styles/adminkit.css`; no separate Bootstrap or Sass compilation is
+required. AdminKit assets are under `frontend/public/adminkit`, and its MIT
+notice is retained in `frontend/ADMINKIT-LICENSE.txt`.
 
 `@supabase/ssr` and Next.js middleware are not used because this frontend is a
 Vite single-page application. Supabase JS handles session persistence and token

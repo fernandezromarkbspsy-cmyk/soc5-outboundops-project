@@ -1,3 +1,12 @@
+# Original Project Brief and Research Notes
+
+Status reviewed: 2026-07-05. This file preserves the initial brief and research
+notes; it is not the current implementation contract. The authoritative product,
+architecture, frontend, and setup documents are `prd.md`, `system-design.md`,
+`system-blueprint.md`, `dashboard.md`, and `setup-guide.md`. The implemented UI
+uses Next.js 16 and React 19 with the migrated dashboard design system rather
+than the speculative styling choices below.
+
 Develop my internal web app tool. This web app is a Truck Request Portal switching from Google Sheet and Modernize it. Use or suggest any  lightweight techstack for backend maybe Supabase, suggest frontend and etc for database use supabase free tier. Use event driven system design. 
 Note: Develop this web app Fully Free.
 

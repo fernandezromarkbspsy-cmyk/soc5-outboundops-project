@@ -1,8 +1,14 @@
 # SOC 5 Outbound — Fix Recommendations & Audit Report
 
 **Generated:** 2026-06-29  
+**Status reviewed:** 2026-07-05
 **Scope:** Full-stack audit (frontend, backend, Docker, CI/CD, Supabase migrations, deployment)  
 **Production URL:** https://soc5outboundops.app
+
+> This is a historical point-in-time audit, not a live defect tracker. Several
+> findings reference code that has since changed. Reproduce a finding against
+> the current branch before treating it as open work. The current React/Vite
+> frontend uses AdminKit 3.4.0 CSS and passes `npm run build`.
 
 ---
 

@@ -1,17 +1,33 @@
+FROM node:22-alpine AS dependencies
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
 FROM node:22-alpine AS build
 WORKDIR /app
-ARG VITE_API_URL=/api
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_PUBLISHABLE_KEY
-RUN test -n "$VITE_SUPABASE_URL" && test -n "$VITE_SUPABASE_PUBLISHABLE_KEY"
-ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_PUBLISHABLE_KEY=$VITE_SUPABASE_PUBLISHABLE_KEY
-COPY package*.json ./
-RUN npm ci
+RUN corepack enable
+ARG NEXT_PUBLIC_API_URL=/api
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+RUN test -n "$NEXT_PUBLIC_SUPABASE_URL" && test -n "$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL
+ENV NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=$NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
-RUN npm run build
+RUN pnpm build
 
-FROM nginx:1.27-alpine
-COPY --from=build /app/dist /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+FROM node:22-alpine AS runtime
+WORKDIR /app
+RUN corepack enable
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV API_ORIGIN=http://api:8000
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY --from=build /app/package.json /app/pnpm-lock.yaml ./
+COPY --from=build /app/public ./public
+COPY --from=build /app/.next ./.next
+EXPOSE 3000
+CMD ["pnpm", "start"]
