@@ -53,7 +53,7 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
     <button className="mobile-nav-toggle" type="button" title="Open navigation" aria-label="Open navigation" onClick={() => onOpenChange(true)}><Menu size={20} /></button>
     <div className={`sidebar-scrim${open ? ' is-open' : ''}`} onClick={() => onOpenChange(false)} />
     <aside className={`app-sidebar${open ? ' is-open' : ''}`}>
-      <div className="sidebar-brand"><span className="sidebar-brand-mark">S5</span><div><strong>SOC 5</strong><small>Outbound control</small></div></div>
+      <div className="sidebar-brand"><div><strong>SOC 5</strong><small>Outbound control</small></div></div>
       <button className="sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => onOpenChange(false)}><X size={19} /></button>
 
       <label className="sidebar-search"><Search size={17} /><input aria-label="Search navigation" placeholder="Search" /><kbd>⌘ F</kbd></label>

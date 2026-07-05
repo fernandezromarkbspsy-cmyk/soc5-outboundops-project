@@ -31,7 +31,7 @@ export function ChangePassword({ onComplete }: { onComplete: () => void }) {
   return (
     <main className="password-page">
       <section className="password-intro" aria-labelledby="password-title">
-        <div className="password-brand"><span>S5</span> Outbound</div>
+        <div className="password-brand">SOC 5 Outbound</div>
         <div className="password-intro-copy">
           <span className="password-icon"><ShieldCheck aria-hidden="true" /></span>
           <p className="eyebrow">FIRST-TIME SIGN IN</p>

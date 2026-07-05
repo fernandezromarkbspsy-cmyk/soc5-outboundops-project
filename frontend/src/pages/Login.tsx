@@ -40,7 +40,7 @@ export function LoginBackdrop() {
   return (
     <div className="shell auth-preview" aria-hidden="true">
       <aside>
-        <div className="preview-brand"><span>S5</span><div><strong>SOC 5</strong><small>Outbound</small></div></div>
+        <div className="preview-brand"><div><strong>SOC 5 Outbound</strong><small>Operations control</small></div></div>
         <nav>
           <p>Dashboard</p><a className="active"><span className="nav-mark" />Overview</a>
           <p>Outbound</p><a><span className="nav-mark" />LH Request</a>
@@ -190,7 +190,6 @@ export function Login({ allowSkip = false, onSkip }: { allowSkip?: boolean; onSk
       <div className={`auth-modal-layer${modalVisible ? ' is-visible' : ''}`}>
         <section ref={dialogRef} className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title" tabIndex={-1}>
           <div className="auth-dialog-head">
-            <div className="auth-logo" aria-hidden="true">S5</div>
             <div><p>SOC 5 OUTBOUND</p><h1 id="auth-title">Sign in</h1></div>
           </div>
 

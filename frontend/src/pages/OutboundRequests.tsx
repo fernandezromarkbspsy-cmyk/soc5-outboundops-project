@@ -78,7 +78,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   }
 
   const error = createRequest.error || editRequest.error || transition.error;
-  return <div className="workspace-view">
+  return <div className="workspace-view outbound-view">
     {(notice || error) && <p className={`notice${error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{error?.message || notice}</p>}
 
     {user.role === 'fte_ops' && <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending approval</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>New requests requiring FTE Ops review</p></div>{queue.rows.length>1&&<button disabled={bulkApprove.isPending} onClick={()=>bulkApprove.mutate(queue.rows.map(row=>row.id))}><Check size={16}/>{bulkApprove.isPending?'Approving…':`Approve all (${queue.rows.length})`}</button>}</div>{queue.isPending ? <div className="loading-block">Loading approval queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No requests are awaiting approval." actions={actions} />}</section>}
