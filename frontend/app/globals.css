@@ -4,76 +4,82 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated theme colors to match the green and white dashboard design */
-  --background: oklch(0.98 0.005 120);
-  --foreground: oklch(0.25 0.02 120);
+  /* Premium logistics dashboard theme - Deep navy with cyan/teal and warm accents */
+  --background: oklch(0.98 0.002 220);
+  --foreground: oklch(0.15 0.02 220);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.25 0.02 120);
+  --card-foreground: oklch(0.15 0.02 220);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.25 0.02 120);
-  --primary: oklch(0.42 0.15 155);
-  --primary-foreground: oklch(0.98 0.01 155);
-  --secondary: oklch(0.96 0.01 120);
-  --secondary-foreground: oklch(0.25 0.02 120);
-  --muted: oklch(0.96 0.01 120);
-  --muted-foreground: oklch(0.55 0.02 120);
-  --accent: oklch(0.55 0.18 155);
-  --accent-foreground: oklch(0.98 0.01 155);
-  --destructive: oklch(0.577 0.245 27.325);
+  --popover-foreground: oklch(0.15 0.02 220);
+  --primary: oklch(0.48 0.18 265);
+  --primary-foreground: oklch(0.98 0.01 265);
+  --secondary: oklch(0.65 0.15 195);
+  --secondary-foreground: oklch(0.98 0.01 195);
+  --muted: oklch(0.85 0.02 220);
+  --muted-foreground: oklch(0.5 0.02 220);
+  --accent: oklch(0.6 0.2 30);
+  --accent-foreground: oklch(0.98 0.01 30);
+  --destructive: oklch(0.6 0.25 15);
   --destructive-foreground: oklch(0.98 0.01 0);
-  --border: oklch(0.92 0.01 120);
-  --input: oklch(0.92 0.01 120);
-  --ring: oklch(0.42 0.15 155);
-  --chart-1: oklch(0.42 0.15 155);
-  --chart-2: oklch(0.55 0.18 155);
-  --chart-3: oklch(0.65 0.12 155);
-  --chart-4: oklch(0.75 0.08 155);
-  --chart-5: oklch(0.85 0.04 155);
-  --radius: 1rem;
-  --sidebar: oklch(1 0 0);
-  --sidebar-foreground: oklch(0.25 0.02 120);
-  --sidebar-primary: oklch(0.42 0.15 155);
-  --sidebar-primary-foreground: oklch(0.98 0.01 155);
-  --sidebar-accent: oklch(0.96 0.01 120);
-  --sidebar-accent-foreground: oklch(0.25 0.02 120);
-  --sidebar-border: oklch(0.92 0.01 120);
-  --sidebar-ring: oklch(0.42 0.15 155);
+  --border: oklch(0.92 0.01 220);
+  --input: oklch(0.96 0.01 220);
+  --ring: oklch(0.48 0.18 265);
+  --chart-1: oklch(0.48 0.18 265);
+  --chart-2: oklch(0.65 0.15 195);
+  --chart-3: oklch(0.5 0.18 25);
+  --chart-4: oklch(0.7 0.12 30);
+  --chart-5: oklch(0.6 0.14 280);
+  --radius: 0.75rem;
+  --sidebar: oklch(0.12 0.02 260);
+  --sidebar-foreground: oklch(0.98 0.002 220);
+  --sidebar-primary: oklch(0.65 0.15 195);
+  --sidebar-primary-foreground: oklch(0.98 0.01 195);
+  --sidebar-accent: oklch(0.2 0.02 260);
+  --sidebar-accent-foreground: oklch(0.98 0.002 220);
+  --sidebar-border: oklch(0.2 0.02 260);
+  --sidebar-ring: oklch(0.65 0.15 195);
+  --success: oklch(0.6 0.18 150);
+  --warning: oklch(0.7 0.18 60);
+  --info: oklch(0.65 0.15 195);
+  --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.08);
+  --shadow-md: 0 4px 16px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 12px 32px rgba(15, 23, 42, 0.16);
 }
 
 .dark {
-  /* Updated dark mode colors to match green theme */
-  --background: oklch(0.12 0.01 155);
-  --foreground: oklch(0.98 0.005 155);
-  --card: oklch(0.15 0.01 155);
-  --card-foreground: oklch(0.98 0.005 155);
-  --popover: oklch(0.15 0.01 155);
-  --popover-foreground: oklch(0.98 0.005 155);
-  --primary: oklch(0.55 0.18 155);
-  --primary-foreground: oklch(0.98 0.01 155);
-  --secondary: oklch(0.2 0.02 155);
-  --secondary-foreground: oklch(0.98 0.005 155);
-  --muted: oklch(0.2 0.02 155);
-  --muted-foreground: oklch(0.65 0.02 155);
-  --accent: oklch(0.55 0.18 155);
-  --accent-foreground: oklch(0.98 0.01 155);
-  --destructive: oklch(0.5 0.2 25);
+  /* Dark mode - Deep navy with cyan/teal accents */
+  --background: oklch(0.1 0.01 260);
+  --foreground: oklch(0.95 0.002 220);
+  --card: oklch(0.14 0.01 260);
+  --card-foreground: oklch(0.95 0.002 220);
+  --popover: oklch(0.14 0.01 260);
+  --popover-foreground: oklch(0.95 0.002 220);
+  --primary: oklch(0.65 0.15 195);
+  --primary-foreground: oklch(0.98 0.01 195);
+  --secondary: oklch(0.48 0.18 265);
+  --secondary-foreground: oklch(0.98 0.01 265);
+  --muted: oklch(0.25 0.01 260);
+  --muted-foreground: oklch(0.68 0.02 220);
+  --accent: oklch(0.6 0.2 30);
+  --accent-foreground: oklch(0.98 0.01 30);
+  --destructive: oklch(0.6 0.25 15);
   --destructive-foreground: oklch(0.98 0.01 0);
-  --border: oklch(0.25 0.02 155);
-  --input: oklch(0.25 0.02 155);
-  --ring: oklch(0.55 0.18 155);
-  --chart-1: oklch(0.42 0.15 155);
-  --chart-2: oklch(0.55 0.18 155);
-  --chart-3: oklch(0.65 0.12 155);
-  --chart-4: oklch(0.75 0.08 155);
-  --chart-5: oklch(0.85 0.04 155);
-  --sidebar: oklch(0.15 0.01 155);
-  --sidebar-foreground: oklch(0.98 0.005 155);
-  --sidebar-primary: oklch(0.55 0.18 155);
-  --sidebar-primary-foreground: oklch(0.98 0.01 155);
-  --sidebar-accent: oklch(0.2 0.02 155);
-  --sidebar-accent-foreground: oklch(0.98 0.005 155);
-  --sidebar-border: oklch(0.25 0.02 155);
-  --sidebar-ring: oklch(0.55 0.18 155);
+  --border: oklch(0.22 0.01 260);
+  --input: oklch(0.2 0.01 260);
+  --ring: oklch(0.65 0.15 195);
+  --chart-1: oklch(0.65 0.15 195);
+  --chart-2: oklch(0.48 0.18 265);
+  --chart-3: oklch(0.6 0.2 30);
+  --chart-4: oklch(0.55 0.16 280);
+  --chart-5: oklch(0.5 0.18 25);
+  --sidebar: oklch(0.08 0.01 260);
+  --sidebar-foreground: oklch(0.95 0.002 220);
+  --sidebar-primary: oklch(0.65 0.15 195);
+  --sidebar-primary-foreground: oklch(0.98 0.01 195);
+  --sidebar-accent: oklch(0.18 0.01 260);
+  --sidebar-accent-foreground: oklch(0.95 0.002 220);
+  --sidebar-border: oklch(0.2 0.01 260);
+  --sidebar-ring: oklch(0.65 0.15 195);
 }
 
 @theme inline {
@@ -125,21 +131,20 @@
   }
 }
 
-/* Custom animations for smooth card interactions */
+/* Premium animations for modern dashboard */
 @keyframes float {
-  0%,
-  100% {
+  0%, 100% {
     transform: translateY(0px);
   }
   50% {
-    transform: translateY(-5px);
+    transform: translateY(-6px);
   }
 }
 
 @keyframes slideInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px);
   }
   to {
     opacity: 1;
@@ -147,7 +152,28 @@
   }
 }
 
-/* Added barSlideUp animation for modern analytics chart */
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 @keyframes barSlideUp {
   from {
     transform: scaleY(0);
@@ -161,23 +187,33 @@
 
 @keyframes pulse-ring {
   0% {
-    box-shadow: 0 0 0 0 rgba(66, 153, 225, 0.4);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(66, 153, 225, 0);
+    box-shadow: 0 0 0 12px rgba(37, 99, 235, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(66, 153, 225, 0);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
   }
 }
 
-/* Added shimmer and fade-in animations for chart interactions */
 @keyframes shimmer {
   0% {
     transform: translateX(-100%);
   }
   100% {
     transform: translateX(100%);
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 0 8px rgba(37, 99, 235, 0.2);
   }
 }
 
@@ -192,19 +228,45 @@
   }
 }
 
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 3.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .animate-slide-in-up {
-  animation: slideInUp 0.5s ease-out forwards;
+  animation: slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
-/* Added utility classes for new animations */
+.animate-slide-in-left {
+  animation: slideInLeft 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
 .animate-shimmer {
   animation: shimmer 1.5s ease-in-out infinite;
 }
 
+.animate-glow {
+  animation: glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
 .animate-fade-in {
-  animation: fade-in 0.2s ease-out forwards;
+  animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
