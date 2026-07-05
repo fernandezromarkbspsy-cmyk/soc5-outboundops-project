@@ -68,7 +68,7 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
       </nav>
 
       <div className="sidebar-account">
-        <div className="account-avatar" aria-hidden="true">{user.name.slice(0, 1).toUpperCase()}</div>
+        <img className="account-avatar" src="/adminkit/img/avatars/avatar.jpg" alt="" />
         <div><strong>{user.name}</strong><small>{roleNames[user.role]}</small></div>
         <button type="button" title="Sign out" aria-label="Sign out" onClick={onSignOut}><LogOut size={18} /></button>
       </div>

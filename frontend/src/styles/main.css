@@ -394,7 +394,7 @@ body { color: var(--ink); font-family: Inter,-apple-system,BlinkMacSystemFont,"S
 .nav-group-toggle { min-height:35px;padding:17px 24px 5px;color:#ced4da;font-size:10px;font-weight:600;letter-spacing:.08em; }.nav-group-toggle svg{color:rgba(233,236,239,.45)}
 .nav-badge { border:0;background:#3b7ddd;color:#fff; }
 .sidebar-account { margin:auto 16px 16px;padding:12px;border:1px solid rgba(255,255,255,.08);border-radius:4px;background:rgba(255,255,255,.04); }
-.account-avatar { border-radius:50%;background:#3b7ddd;color:#fff; }.sidebar-account strong{color:#e9ecef}.sidebar-account small{color:rgba(233,236,239,.5)}
+.account-avatar { border-radius:50%;background:#3b7ddd;color:#fff;object-fit:cover; }.topbar-avatar{object-fit:cover}.sidebar-account strong{color:#e9ecef}.sidebar-account small{color:rgba(233,236,239,.5)}
 .sidebar-account>button { color:rgba(233,236,239,.55); }.sidebar-account>button:hover{background:rgba(255,255,255,.08);color:#fff}
 .app-content { min-height:100vh;margin-left:var(--sidebar);overflow:visible;border:0;border-radius:0;background:var(--canvas);box-shadow:none; }
 .app-topbar { top:0;min-height:64px;padding:8px 24px;border:0;border-radius:0;background:#fff;box-shadow:0 0 2rem 0 rgba(33,37,41,.1); }
