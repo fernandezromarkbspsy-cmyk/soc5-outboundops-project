@@ -398,14 +398,11 @@ All three records must reference the same UUID.
 ## 11. Backroom account setup
 
 Backroom users do not use email OTP. An authenticated FTE creates a Backroom
-account through `POST /api/users` with a name and OPS ID. Laravel uses the
-Supabase Admin API to create an internal identity:
+account through `POST /api/users` with a name and OPS ID. Laravel creates the
+required Supabase Auth identity internally; users never enter or receive an
+email address. They sign in with their OPS ID only.
 
-```text
-ops71783@backroom.soc5.internal
-```
-
-The initial password is `soc5-outbound2026`. Supabase Auth stores the password;
+The initial password is `soc5outbound-2026`. Supabase Auth stores the password;
 it is never written to `profiles` or `user_imports`. The profile is created with
 `must_change_password = true`, and the UI blocks access until the user sets a
 different password of at least 12 characters.

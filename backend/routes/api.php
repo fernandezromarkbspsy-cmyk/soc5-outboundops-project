@@ -1,5 +1,6 @@
 <?php
 
+use App\Features\Auth\BackroomLoginController;
 use App\Features\Kpi\KpiController;
 use App\Features\Notifications\NotificationController;
 use App\Features\Requests\RequestController;
@@ -18,6 +19,8 @@ Route::get('/auth/status', function () {
 
     return response()->json(['configured' => true]);
 });
+
+Route::post('/auth/backroom-login', BackroomLoginController::class)->middleware('throttle:login');
 
 Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
     Route::get('/auth/me', fn (Request $r) => response()->json($r->attributes->get('actor')));

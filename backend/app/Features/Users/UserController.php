@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Throwable;
 
@@ -29,7 +30,7 @@ final class UserController
             'ops_id' => ['required', 'string', 'max:40', 'regex:/^ops[0-9]+$/i', Rule::unique('profiles', 'ops_id')],
         ]);
         $opsId = strtolower($data['ops_id']);
-        $email = $opsId.'@backroom.soc5.internal';
+        $authIdentifier = 'br-'.Str::lower(Str::random(32)).'@auth.invalid';
         $url = rtrim((string) config('services.supabase.url'), '/');
         $key = (string) config('services.supabase.service_key');
         $initialPassword = (string) config('services.backroom.initial_password');
@@ -37,7 +38,7 @@ final class UserController
 
         $response = Http::withHeaders(['apikey' => $key, 'Authorization' => 'Bearer '.$key])
             ->timeout(10)->post($url.'/auth/v1/admin/users', [
-                'email' => $email,
+                'email' => $authIdentifier,
                 'password' => $initialPassword,
                 'email_confirm' => true,
                 'user_metadata' => ['ops_id' => $opsId, 'account_type' => 'backroom'],

@@ -9,6 +9,6 @@ return [
         'service_key' => env('SUPABASE_SERVICE_ROLE_KEY'),
     ],
     'backroom' => [
-        'initial_password' => env('BACKROOM_INITIAL_PASSWORD'),
+        'initial_password' => env('BACKROOM_INITIAL_PASSWORD', 'soc5outbound-2026'),
     ],
 ];

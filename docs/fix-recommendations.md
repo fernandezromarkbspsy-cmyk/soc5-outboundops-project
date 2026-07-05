@@ -107,7 +107,7 @@ Or use route middleware alias `password.changed` on protected routes.
 
 **Files:** `backend/app/Features/Users/UserController.php` (line 29), `backend/app/Console/Commands/ProvisionBackroomUsers.php` (line 61), `frontend/src/pages/ChangePassword.tsx`, `frontend/src/pages/Login.tsx`
 
-**Problem:** Password `soc5-outbound2026` is in git history, docs, and UI hints. Combined with issue #1, accounts stay fully exploitable until the UI flow completes.
+**Problem:** A shared initial password can be exposed through documentation or UI hints. Combined with issue #1, accounts stay fully exploitable until the first-login flow completes.
 
 **Fix:**
 

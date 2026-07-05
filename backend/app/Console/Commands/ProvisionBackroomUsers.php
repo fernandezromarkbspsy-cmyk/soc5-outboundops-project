@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 final class ProvisionBackroomUsers extends Command
 {
@@ -58,7 +59,7 @@ final class ProvisionBackroomUsers extends Command
                     'apikey' => $key,
                     'Authorization' => 'Bearer '.$key,
                 ])->timeout(15)->post($url.'/auth/v1/admin/users', [
-                    'email' => $opsId.'@backroom.soc5.internal',
+                    'email' => 'br-'.Str::lower(Str::random(32)).'@auth.invalid',
                     'password' => $initialPassword,
                     'email_confirm' => true,
                     'user_metadata' => ['ops_id' => $opsId, 'account_type' => 'backroom'],

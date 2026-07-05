@@ -1,10 +1,11 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { isAuthError } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { api } from '../lib/api';
 
 type UserType = 'fte' | 'backroom';
 
-const backroomEmail = (opsId: string) => `${opsId.trim().toLowerCase()}@backroom.soc5.internal`;
+type BackroomSession = { access_token: string; refresh_token: string };
 const authErrorMessages: Record<string, string> = {
   email_address_not_authorized: 'Email delivery is not configured for this address. Ask an administrator to enable custom SMTP in Supabase.',
   email_provider_disabled: 'Email sign-in is disabled in Supabase Authentication settings.',
@@ -162,7 +163,11 @@ export function Login({ allowSkip = false, onSkip }: { allowSkip?: boolean; onSk
           if (verifyError) throw verifyError;
         }
       } else {
-        const { error: signInError } = await supabase.auth.signInWithPassword({ email: backroomEmail(opsId), password });
+        const session = await api<BackroomSession>('/auth/backroom-login', {
+          method: 'POST',
+          body: JSON.stringify({ ops_id: opsId.trim().toLowerCase(), password }),
+        });
+        const { error: signInError } = await supabase.auth.setSession(session);
         if (signInError) throw signInError;
       }
     } catch (cause) {
