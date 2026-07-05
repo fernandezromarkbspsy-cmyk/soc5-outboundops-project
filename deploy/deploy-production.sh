@@ -92,7 +92,20 @@ echo "Validating Compose configuration..."
 docker compose config --quiet
 
 echo "Building application images..."
-docker compose build
+build_log="$(mktemp)"
+if docker compose build --progress=plain >"$build_log" 2>&1; then
+  echo "Application images built successfully."
+else
+  build_status=$?
+  echo "Application image build failed. Showing the final Docker output:" >&2
+  # SSM returns only a limited amount of command output. Printing the entire
+  # BuildKit stream hides the actual error behind "--output truncated--", so
+  # return only the useful failure tail to GitHub Actions.
+  tail -c 20000 "$build_log"
+  rm -f "$build_log"
+  exit "$build_status"
+fi
+rm -f "$build_log"
 
 echo "Starting application..."
 if ! docker compose up -d --remove-orphans; then
