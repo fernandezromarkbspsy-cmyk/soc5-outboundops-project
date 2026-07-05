@@ -1,26 +1,6 @@
 #!/usr/bin/env bash
 
-# Deploy script for production EC2 instance
-#
-# This script expects the application source tree to be present in
-# $APP_DIR (/opt/soc5-outbound). While the repository is usually
-# pre‑cloned on the instance, the script is defensive: it will pull the
-# latest changes from the remote successfully.
-#
-# The original implementation focused on secrets handling and Docker
-# orchestration.  A recurring failure in the CI workflow was that the
-# instance did not have the Docker CLI or docker‑compose plugin installed.
-# When the script attempted to run `docker compose …`, it exited with a
-# non‑zero exit code, propagating a "Failed" status to GitHub Actions.
-#
-# To make the deployment robust, we now install Docker (via the Ubuntu
-# `docker.io` package) and the standalone Compose plugin if they are not
-# already available.  The check is idempotent and runs as a privileged
-# user (sudo) before the rest of the deployment logic.
-
 set -Eeuo pipefail
-
-trap 'status=$?; echo "Deployment command failed (exit $status) at line $LINENO: $BASH_COMMAND" >&2; exit "$status"' ERR
 
 readonly APP_DIR="/opt/soc5-outbound"
 readonly BRANCH="main"
