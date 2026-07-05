@@ -91,9 +91,12 @@ git ls-files -z | xargs -0 chmod a+r
 echo "Validating Compose configuration..."
 docker compose config --quiet
 
-echo "Building application images..."
+echo "Clearing Docker BuildKit cache..."
+docker builder prune --all --force
+
+echo "Building application images without cache..."
 build_log="$(mktemp)"
-if docker compose build --progress=plain >"$build_log" 2>&1; then
+if docker compose build --pull --no-cache --progress=plain >"$build_log" 2>&1; then
   echo "Application images built successfully."
 else
   build_status=$?
