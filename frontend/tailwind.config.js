@@ -7,22 +7,22 @@ export default {
   theme: {
     extend: {
       colors: {
-        sidebar: '#292929',
-        accent: '#2f6f6a',
-        'accent-dark': '#245a56',
-        lime: '#d9ec32',
-        surface: '#f4f4f3',
-        ink: '#172033',
+        sidebar: '#101936',
+        accent: '#4f46e5',
+        'accent-dark': '#3730a3',
+        sky: '#0ea5e9',
+        surface: '#f3f6fb',
+        ink: '#14213d',
       },
       borderRadius: {
         '4xl': '2rem',
       },
       boxShadow: {
-        card: '0 18px 45px rgba(31, 41, 55, 0.07)',
-        float: '0 24px 70px rgba(15, 23, 42, 0.16)',
+        card: '0 8px 30px rgba(19, 35, 72, 0.07)',
+        float: '0 24px 70px rgba(10, 18, 40, 0.20)',
       },
       fontFamily: {
-        sans: ['Inter', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+        sans: ['Segoe UI Variable', 'Aptos', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
     },
   },
