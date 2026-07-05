@@ -7,11 +7,11 @@ export default {
   theme: {
     extend: {
       colors: {
-        sidebar: '#f7f8fa',
+        sidebar: '#205da8',
         accent: '#2f80ed',
         'accent-dark': '#1f6ed4',
         sky: '#56a4ff',
-        surface: '#ffffff',
+        surface: '#f2f5f9',
         ink: '#15171a',
       },
       borderRadius: {
