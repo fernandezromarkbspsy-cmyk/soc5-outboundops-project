@@ -20,7 +20,16 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 RUN pnpm build
 
-FROM node:22-alpine AS runtime
+FROM node:22-alpine AS build
+
+# Enable corepack and pnpm
+RUN corepack enable
+
+COPY package.json pnpm-lock.yaml ./
+
+# Install with frozen lockfile
+RUN pnpm install --frozen-lockfile
+
 WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.33.2 --activate
 ENV NODE_ENV=production
