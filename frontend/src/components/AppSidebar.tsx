@@ -1,4 +1,4 @@
-import { BarChart3, ChevronDown, LayoutDashboard, LogOut, Menu, Route, ShipWheel, Truck, Users, X } from 'lucide-react';
+import { BarChart3, ChevronDown, LayoutDashboard, LogOut, Menu, Route, Search, ShipWheel, Truck, Users, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import type { AppView, User } from '../types';
 
@@ -55,6 +55,8 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
     <aside className={`app-sidebar${open ? ' is-open' : ''}`}>
       <div className="sidebar-brand"><span className="sidebar-brand-mark">S5</span><div><strong>SOC 5</strong><small>Outbound control</small></div></div>
       <button className="sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => onOpenChange(false)}><X size={19} /></button>
+
+      <label className="sidebar-search"><Search size={17} /><input aria-label="Search navigation" placeholder="Search" /><kbd>⌘ F</kbd></label>
 
       <nav aria-label="Primary navigation">
         <div className="nav-group"><button className={`nav-link${activeView === 'overview' ? ' active' : ''}`} type="button" onClick={() => navigate('overview')}><LayoutDashboard size={18} /><span>Dashboard</span></button></div>

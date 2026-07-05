@@ -16,7 +16,7 @@ function smoothPath(points: Array<{ x: number; y: number }>) {
   }, '');
 }
 
-export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppView) => void }) {
+export function Overview({ user, onNavigate }: { user: User; onNavigate: (view: AppView) => void }) {
   const from = useUiStore(state => state.dateFrom);
   const to = useUiStore(state => state.dateTo);
   const [detailStatus, setDetailStatus] = useState<Status | 'ALL' | null>(null);
@@ -66,6 +66,7 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
 
   return <div className="workspace-view dashboard-view">
     {(requests.error || metrics.error || analytics.error) && <p className="error notice">Dashboard data could not be loaded.</p>}
+    <section className="dashboard-welcome"><div><p>Operations overview</p><h2>Good morning, {user.name.split(' ')[0]}</h2></div><button type="button" onClick={() => onNavigate('lh-request')}><span>+</span> New request</button></section>
     <section className="overview-metrics" aria-label="Request metrics">
       {cards.map(({ label, status, value, icon: Icon }, index) => <button key={status} type="button" className={`metric-card${index === 0 ? ' primary' : ''}`} onClick={() => setDetailStatus(status)}><span className="metric-icon"><Icon size={18} /></span><span><small>{label}</small><strong>{metrics.isPending ? '-' : value.toLocaleString()}</strong></span></button>)}
     </section>
