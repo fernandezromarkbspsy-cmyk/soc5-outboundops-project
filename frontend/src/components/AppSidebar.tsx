@@ -59,8 +59,8 @@ export function AppSidebar({ user, activeView, open, onOpenChange, onNavigate, o
     <aside className={`app-sidebar${open ? ' is-open' : ''}`}>
       <div className="sidebar-brand">
         <div>
-          <strong>SOC 5</strong>
-          <small>Outbound command center</small>
+          <strong className="sidebar-brand-title">SOC 5</strong>
+          <small className="sidebar-brand-subtitle">Outbound</small>
         </div>
       </div>
       <button className="sidebar-close" type="button" title="Close navigation" aria-label="Close navigation" onClick={() => onOpenChange(false)}><PanelLeftClose size={18} /></button>
