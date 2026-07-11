@@ -65,18 +65,6 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
 
   return <div className="workspace-view dashboard-view">
     {(requests.error || metrics.error || analytics.error) && <p className="error notice">Dashboard data could not be loaded.</p>}
-    <section className="dashboard-hero">
-      <div>
-        <p className="eyebrow">Command center</p>
-        <h2>Move every outbound task with clarity.</h2>
-        <p>Track requests, docking readiness, and lane performance from one elevated view.</p>
-      </div>
-      <div className="hero-highlights">
-        <div><strong>{metrics.data?.total ?? 0}</strong><span>Live requests</span></div>
-        <div><strong>{metrics.data?.by_status.FOR_DOCKING ?? 0}</strong><span>Awaiting docking</span></div>
-        <div><strong>{peak.count}</strong><span>Peak hour</span></div>
-      </div>
-    </section>
     <section className="overview-metrics" aria-label="Request metrics">
       {cards.map(({ label, status, value, icon: Icon }, index) => <button key={status} type="button" className={`metric-card${index === 0 ? ' primary' : ''}`} onClick={() => setDetailStatus(status)}><span className="metric-icon"><Icon size={18} /></span><span><small>{label}</small><strong>{metrics.isPending ? '-' : value.toLocaleString()}</strong></span></button>)}
     </section>
