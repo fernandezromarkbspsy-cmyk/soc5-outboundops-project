@@ -268,7 +268,7 @@ td { font-size: .9rem; line-height: 1.35; }
 .overview-metrics span { color: $muted; font-size: .82rem; }
 .overview-metrics strong { margin-top: .2rem; font-size: 1.45rem; line-height: 1.15; }
 .metric-icon { display: grid; width: 40px; height: 40px; flex: 0 0 40px; place-items: center; border-radius: 12px; }
-.metric-icon-image { width: 28px; height: 28px; object-fit: contain; display: block; background: transparent; }
+.metric-icon-image { width: 35px; height: 35px; object-fit: contain; display: block; background: transparent; }
 .metric-icon.neutral { background: #eef6f4; color: #2f6f6a; }
 .metric-icon.warning { background: #f5f8d9; color: #6f7a13; }
 .metric-icon.success { background: #e7f4f0; color: #2f6f6a; }
