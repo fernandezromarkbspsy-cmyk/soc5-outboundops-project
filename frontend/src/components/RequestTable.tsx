@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode, useState } from 'react';
-import { ArrowDown, ArrowUp, ChevronsUpDown } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, ChevronRight, ChevronsUpDown, CircleDot, Clipboard, Clock3, Copy, Hash, Landmark, ListChecks, Truck, UserRound } from 'lucide-react';
 import type { RequestSort, SortDirection, TruckRequest } from '../types';
 import { StatusBadge } from './StatusBadge';
 
@@ -12,32 +12,29 @@ type Props = {
   onSort?: (sort: RequestSort) => void;
 };
 
-const columns: Array<{ key: keyof TruckRequest; sortKey?: RequestSort; label: string; render: (request: TruckRequest) => ReactNode }> = [
-  { key: 'status', sortKey: 'status', label: 'Status', render: request => <StatusBadge status={request.status} /> },
-  { key: 'request_timestamp', sortKey: 'request_timestamp', label: 'Request Timestamp', render: request => formatDateTime(request.request_timestamp) },
-  { key: 'cluster', sortKey: 'cluster', label: 'Cluster', render: request => request.cluster },
-  { key: 'region', label: 'Region', render: request => request.region },
-  { key: 'dock_no', sortKey: 'dock_no', label: 'Dock No', render: request => request.dock_no },
-  { key: 'backlogs', sortKey: 'backlogs', label: 'Backlogs', render: request => request.backlogs.toLocaleString() },
-  { key: 'backlogs_timestamp', label: 'Backlogs Timestamp', render: request => formatDateTime(request.backlogs_timestamp) },
-  { key: 'ob_fte', label: 'OB FTE', render: request => empty(request.ob_fte) },
-  { key: 'truck_size', label: 'Truck Size', render: request => request.truck_size },
-  { key: 'truck_type', label: 'Truck Type', render: request => request.truck_type },
-  { key: 'plate_number', sortKey: 'plate_number', label: 'Plate Number', render: request => empty(request.plate_number) },
-  { key: 'provide_time', label: 'Provide Time', render: request => formatDateTime(request.provide_time) },
-  { key: 'linehaul_trip_no', label: 'Linehaul Trip No', render: request => empty(request.linehaul_trip_no) },
-  { key: 'docked_time', label: 'Docked Time', render: request => formatDateTime(request.docked_time) },
+type Column = { key: string; sortKey?: RequestSort; label: string; icon: typeof CircleDot; render: (request: TruckRequest) => ReactNode };
+
+const columns: Column[] = [
+  { key: 'status', sortKey: 'status', label: 'Status', icon: CircleDot, render: request => <StatusBadge status={request.status} /> },
+  { key: 'request_timestamp', sortKey: 'request_timestamp', label: 'Request ts', icon: Clock3, render: request => formatDateTime(request.request_timestamp) },
+  { key: 'cluster', sortKey: 'cluster', label: 'Cluster', icon: Landmark, render: request => <ClusterCell request={request} /> },
+  { key: 'dock_no', sortKey: 'dock_no', label: 'Dock #', icon: Truck, render: request => request.dock_no },
+  { key: 'backlogs', sortKey: 'backlogs', label: 'Backlogs', icon: ListChecks, render: request => request.backlogs.toLocaleString() },
+  { key: 'ob_fte', label: 'Ops FTE', icon: UserRound, render: request => empty(request.ob_fte) },
+  { key: 'linehaul_trip_no', label: 'LHTrip #', icon: Clipboard, render: request => <TripCopyCell request={request} /> },
+  { key: 'plate_number', sortKey: 'plate_number', label: 'Plate #', icon: Hash, render: request => empty(request.plate_number) },
 ];
 
 export function RequestTable({ rows, actions, emptyMessage = 'No requests found.', sort, direction, onSort }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   if (!rows.length) return <div className="empty-state"><strong>No requests</strong><p>{emptyMessage}</p></div>;
 
-  function heading(column: (typeof columns)[number]) {
-    if (!onSort || !column.sortKey) return column.label;
+  function heading(column: Column) {
+    const content = <span className="table-header-label"><column.icon size={14} />{column.label}</span>;
+    if (!onSort || !column.sortKey) return content;
     const active = sort === column.sortKey;
     const Icon = active ? direction === 'asc' ? ArrowUp : ArrowDown : ChevronsUpDown;
-    return <button className="sort-button" type="button" onClick={() => onSort(column.sortKey!)}>{column.label}<Icon size={14} /></button>;
+    return <button className={`sort-button ${active ? 'is-active' : ''}`} type="button" onClick={() => onSort(column.sortKey!)}>{content}<Icon size={13} /></button>;
   }
 
   return <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr>{columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map(request => {
@@ -60,6 +57,49 @@ function formatDateTime(value: string | null | undefined) {
   if (!value) return '-';
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : date.toLocaleString();
+}
+
+function ClusterCell({ request }: { request: TruckRequest }) {
+  const [open, setOpen] = useState(false);
+  const value = empty(request.cluster);
+
+  if (value === '-') {
+    return <span className="cluster-cell-value">-</span>;
+  }
+
+  return <div className="cluster-cell">
+    <span className="cluster-cell-value">{value}</span>
+    <button type="button" className="inline-icon-button" onClick={event => { event.stopPropagation(); setOpen(current => !current); }} aria-label="Show full cluster name" title="Show full cluster name">
+      <ChevronRight size={13} />
+    </button>
+    {open && <div className="cluster-cell-popover">{value}</div>}
+  </div>;
+}
+
+function TripCopyCell({ request }: { request: TruckRequest }) {
+  const [copied, setCopied] = useState(false);
+  const value = empty(request.linehaul_trip_no);
+
+  if (value === '-') {
+    return <span className="trip-value">-</span>;
+  }
+
+  return <div className="trip-cell">
+    <span className="trip-value">{value}</span>
+    <button type="button" className={`inline-icon-button ${copied ? 'is-copied' : ''}`} onClick={async event => {
+      event.stopPropagation();
+      if (!request.linehaul_trip_no) return;
+      try {
+        await navigator.clipboard.writeText(request.linehaul_trip_no);
+        setCopied(true);
+        window.setTimeout(() => setCopied(false), 1400);
+      } catch (error) {
+        console.error('Unable to copy trip number', error);
+      }
+    }} aria-label="Copy linehaul trip number" title="Copy linehaul trip number">
+      {copied ? <Check size={13} /> : <Copy size={13} />}
+    </button>
+  </div>;
 }
 
 function RequestDetails({ request }: { request: TruckRequest }) {
