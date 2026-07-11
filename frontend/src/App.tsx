@@ -3,7 +3,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { api, ApiError } from './lib/api';
 import { Dashboard } from './pages/Dashboard';
-import { Login, LoginBackdrop } from './pages/Login';
+import { Login } from './pages/Login';
 import { ChangePassword } from './pages/ChangePassword';
 import type { User } from './types';
 
@@ -101,9 +101,9 @@ export default function App() {
     return () => data.subscription.unsubscribe();
   }, [resolveSession]);
 
-  if (state === 'loading') return <LoginBackdrop />;
+  if (state === 'loading') return <main className="app-loading" aria-busy="true" aria-live="polite"><div className="app-loading-card"><div className="app-loading-mark">S5</div><div><strong>Loading dashboard</strong><p>Preparing your session...</p></div></div></main>;
   if (state === 'signed-out') return <Login />;
   if (state === 'unauthorized') return <main className="state"><h1>{failure.title}</h1><p className="error">{failure.message}</p><p>{failure.detail}</p><button onClick={() => void retrySession()}>Try again</button> <button onClick={() => void supabase.auth.signOut()}>Sign out</button></main>;
   if (state === 'change-password') return <ChangePassword onComplete={() => setState('ready')} />;
-  return profile ? <Dashboard user={profile} /> : <LoginBackdrop />;
+  return profile ? <Dashboard user={profile} /> : <main className="app-loading" aria-busy="true" aria-live="polite"><div className="app-loading-card"><div className="app-loading-mark">S5</div><div><strong>Loading dashboard</strong><p>Preparing your session...</p></div></div></main>;
 }
