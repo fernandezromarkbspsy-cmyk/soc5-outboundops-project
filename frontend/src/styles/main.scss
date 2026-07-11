@@ -50,7 +50,7 @@ table { width: 100%; border-collapse: collapse; text-align: left; }
 th, td { padding: .8rem 1.1rem; border-top: 1px solid $line; white-space: nowrap; }
 th { color: $muted; font-size: .72rem; font-weight: 600; line-height: 1.25; text-transform: uppercase; }
 td { font-size: .9rem; line-height: 1.35; }
-.request-table-wrap { overflow: hidden; border: 1px solid #e7ebf2; border-radius: 24px; background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); box-shadow: 0 18px 44px rgba(15, 23, 42, .06); }
+.request-table-wrap { overflow: auto; max-height: min(70vh, 760px); border: 1px solid #e7ebf2; border-radius: 24px; background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%); box-shadow: 0 18px 44px rgba(15, 23, 42, .06); }
 .request-table { --status-column-width: 138px; --timestamp-column-width: 162px; --cluster-column-width: 240px; min-width: 1320px; border-collapse: separate; border-spacing: 0; }
 .request-table thead { position: sticky; top: 0; z-index: 4; }
 .request-table th { padding: .95rem 1rem; border-top: 0; border-bottom: 1px solid #e7ebf2; background: #f7f9fc; color: #64748b; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
