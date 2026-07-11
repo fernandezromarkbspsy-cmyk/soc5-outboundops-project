@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode, useState } from 'react';
-import { ArrowDown, ArrowUp, Check, ChevronRight, ChevronsUpDown, CircleDot, Clipboard, Clock3, Copy, Hash, Landmark, ListChecks, Truck, UserRound } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, ChevronsUpDown, CircleDot, Clipboard, Clock3, Copy, Hash, Landmark, ListChecks, Truck, UserRound } from 'lucide-react';
 import type { RequestSort, SortDirection, TruckRequest } from '../types';
 import { StatusBadge } from './StatusBadge';
 
@@ -23,6 +23,12 @@ const columns: Column[] = [
   { key: 'ob_fte', label: 'Ops FTE', icon: UserRound, render: request => empty(request.ob_fte) },
   { key: 'linehaul_trip_no', label: 'LHTrip #', icon: Clipboard, render: request => <TripCopyCell request={request} /> },
   { key: 'plate_number', sortKey: 'plate_number', label: 'Plate #', icon: Hash, render: request => empty(request.plate_number) },
+  { key: 'mm_fte', label: 'FTE MM', icon: UserRound, render: request => empty(request.created_by) },
+  { key: 'truck_size', label: 'Truck Size', icon: Truck, render: request => empty(request.truck_size) },
+  { key: 'truck_type', label: 'Truck Type', icon: Truck, render: request => empty(request.truck_type) },
+  { key: 'provide_time', label: 'Provide TS', icon: Clock3, render: request => formatDateTime(request.provide_time) },
+  { key: 'docked_time', label: 'Docked TS', icon: Clock3, render: request => formatDateTime(request.docked_time) },
+  { key: 'doc_officer', label: 'DOC Officer', icon: UserRound, render: request => empty(request.created_by) },
 ];
 
 export function RequestTable({ rows, actions, emptyMessage = 'No requests found.', sort, direction, onSort }: Props) {
@@ -60,19 +66,11 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function ClusterCell({ request }: { request: TruckRequest }) {
-  const [open, setOpen] = useState(false);
   const value = empty(request.cluster);
+  const label = value === '-' ? '-' : `SOC 5 > ${value}`;
 
-  if (value === '-') {
-    return <span className="cluster-cell-value">-</span>;
-  }
-
-  return <div className="cluster-cell">
-    <span className="cluster-cell-value">{value}</span>
-    <button type="button" className="inline-icon-button" onClick={event => { event.stopPropagation(); setOpen(current => !current); }} aria-label="Show full cluster name" title="Show full cluster name">
-      <ChevronRight size={13} />
-    </button>
-    {open && <div className="cluster-cell-popover">{value}</div>}
+  return <div className="cluster-cell" title={value === '-' ? undefined : value}>
+    <span className="cluster-cell-value">{label}</span>
   </div>;
 }
 
@@ -85,7 +83,6 @@ function TripCopyCell({ request }: { request: TruckRequest }) {
   }
 
   return <div className="trip-cell">
-    <span className="trip-value">{value}</span>
     <button type="button" className={`inline-icon-button ${copied ? 'is-copied' : ''}`} onClick={async event => {
       event.stopPropagation();
       if (!request.linehaul_trip_no) return;
@@ -99,6 +96,7 @@ function TripCopyCell({ request }: { request: TruckRequest }) {
     }} aria-label="Copy linehaul trip number" title="Copy linehaul trip number">
       {copied ? <Check size={13} /> : <Copy size={13} />}
     </button>
+    <span className="trip-value">{value}</span>
   </div>;
 }
 
