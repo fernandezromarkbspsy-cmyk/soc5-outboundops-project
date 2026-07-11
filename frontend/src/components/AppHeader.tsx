@@ -42,18 +42,12 @@ export function AppHeader({ user, view, onRoleChange, onSearch }: Props) {
     return () => window.removeEventListener('keydown', focusSearch);
   }, []);
 
-  const todayLabel = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date());
-
   return <header className="app-topbar">
     {toast&&<div className="app-toast" role="status"><Bell size={17}/><div><strong>{toast.title}</strong><span>{toast.body}</span></div></div>}
     <div className="topbar-page">
       <div className="topbar-page-copy">
-        <div className="topbar-page-meta">
-          <span className="status-pill">Live operations</span>
-          <nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav>
-        </div>
         <h1>{page[view].name}</h1>
-        <p>{todayLabel} • {user.role.replaceAll('_', ' ')}</p>
+        <nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav>
       </div>
     </div>
     <div className="topbar-tools">
