@@ -2,7 +2,7 @@ import { FormEvent, useDeferredValue, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Truck, X, XCircle } from 'lucide-react';
 import { Pagination } from '../components/Pagination';
-import { RequestFilters } from '../components/RequestFilters';
+import { RequestFilters, statuses } from '../components/RequestFilters';
 import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import { api } from '../lib/api';
@@ -40,12 +40,14 @@ export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnaps
     finally { setExporting(false); }
   }
 
+  const statusSummary = statuses.map(status => ({ value: status, count: status === 'ALL' ? (requests.data?.data?.length ?? 0) : (requests.data?.data ?? []).filter(request => request.status === status).length }));
+
   return <div className="workspace-view">
     {(notice || transition.error) && <p className={`notice${transition.error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{transition.error?.message || notice}</p>}
 
     <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending confirmation</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>Approved requests awaiting FTE Midmile confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading confirmation queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No approved requests are awaiting confirmation." actions={actions} />}</section>
 
-    <section className="request-list-section"><RequestFilters filters={filters} exporting={exporting} onChange={setFilters} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} /><section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section></section>
+    <section className="request-list-section"><RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} onChange={setFilters} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} /><section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section></section>
 
     {selected && <MidmileActionDialog selection={selected} busy={transition.isPending} error={transition.error?.message} onClose={() => setSelected(null)} onSubmit={payload => transition.mutate({ ...selected, payload })} />}
   </div>;

@@ -2,7 +2,7 @@ import { FormEvent, useDeferredValue, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ban, Check, Pencil, Plus, Save, X, XCircle } from 'lucide-react';
 import { Pagination } from '../components/Pagination';
-import { RequestFilters } from '../components/RequestFilters';
+import { RequestFilters, statuses } from '../components/RequestFilters';
 import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import { api } from '../lib/api';
@@ -77,6 +77,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     }
   }
 
+  const statusSummary = statuses.map(status => ({ value: status, count: status === 'ALL' ? (requests.data?.data?.length ?? 0) : (requests.data?.data ?? []).filter(request => request.status === status).length }));
   const error = createRequest.error || editRequest.error || transition.error;
   return <div className="workspace-view">
     {(notice || error) && <p className={`notice${error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{error?.message || notice}</p>}
@@ -85,7 +86,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
     <section className="request-list-section">
       {user.role === 'ops_pic' && <div className="page-actions"><button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button></div>}
-      <RequestFilters filters={filters} exporting={exporting} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
+      <RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
       <section className="panel data-panel">{creating && <InlineCreateRow busy={createRequest.isPending} onCancel={() => setCreating(false)} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
     </section>
 
