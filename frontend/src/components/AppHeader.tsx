@@ -48,7 +48,10 @@ export function AppHeader({ user, view, onRoleChange, onSearch }: Props) {
     {toast&&<div className="app-toast" role="status"><Bell size={17}/><div><strong>{toast.title}</strong><span>{toast.body}</span></div></div>}
     <div className="topbar-page">
       <div className="topbar-page-copy">
-        <nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav>
+        <div className="topbar-page-meta">
+          <span className="status-pill">Live operations</span>
+          <nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav>
+        </div>
         <h1>{page[view].name}</h1>
         <p>{todayLabel} • {user.role.replaceAll('_', ' ')}</p>
       </div>
