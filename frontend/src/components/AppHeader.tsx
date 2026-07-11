@@ -42,9 +42,17 @@ export function AppHeader({ user, view, onRoleChange, onSearch }: Props) {
     return () => window.removeEventListener('keydown', focusSearch);
   }, []);
 
+  const todayLabel = new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date());
+
   return <header className="app-topbar">
     {toast&&<div className="app-toast" role="status"><Bell size={17}/><div><strong>{toast.title}</strong><span>{toast.body}</span></div></div>}
-    <div className="topbar-page"><div><nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav><h1>{page[view].name}</h1></div></div>
+    <div className="topbar-page">
+      <div className="topbar-page-copy">
+        <nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav>
+        <h1>{page[view].name}</h1>
+        <p>{todayLabel} • {user.role.replaceAll('_', ' ')}</p>
+      </div>
+    </div>
     <div className="topbar-tools">
       {view === 'overview' && <div className="topbar-dates"><CalendarDays size={17}/><input aria-label="Start date" type="date" value={from} max={to} onChange={e=>setDateRange(e.target.value,to)}/><span>–</span><input aria-label="End date" type="date" value={to} min={from} onChange={e=>setDateRange(from,e.target.value)}/><button type="button" onClick={resetDateRange}>Today</button></div>}
       <form className="topbar-search" onSubmit={event=>{event.preventDefault();if(search.trim())onSearch();}}><Search size={17}/><input ref={searchRef} aria-label="Search requests" placeholder="Search requests…" value={search} onChange={e=>setSearch(e.target.value)}/><kbd>Ctrl F</kbd></form>
