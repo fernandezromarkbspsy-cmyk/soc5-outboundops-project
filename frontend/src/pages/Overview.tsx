@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Clock3, Route, Truck, X } from 'lucide-react';
 import { RequestTable } from '../components/RequestTable';
@@ -30,11 +30,11 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
   const metrics = useQuery({ queryKey: ['request-metrics', from, to], queryFn: () => api<RequestMetrics>(`/requests/metrics?${range}`), refetchInterval: 15_000 });
   const analytics = useQuery({ queryKey: ['request-analytics', from, to], queryFn: () => api<RequestAnalytics>(`/requests/analytics?${range}`), refetchInterval: 15_000 });
   const details = useQuery({ queryKey: ['request-details', detailStatus, from, to], queryFn: () => api<Page<TruckRequest>>(`/requests?per_page=100&${range}${detailStatus !== 'ALL' ? `&status=${detailStatus}` : ''}`), enabled: detailStatus !== null });
-  const cards: Array<{ label: string; status: Status | 'ALL'; value: number; icon: typeof Route }> = [
-    { label: 'Total Request', status: 'ALL', value: metrics.data?.total ?? 0, icon: Route },
-    { label: 'Pending Request', status: 'PENDING', value: metrics.data?.by_status.PENDING ?? 0, icon: Clock3 },
-    { label: 'For Docking', status: 'FOR_DOCKING', value: metrics.data?.by_status.FOR_DOCKING ?? 0, icon: Truck },
-    { label: 'Docked', status: 'DOCKED', value: metrics.data?.by_status.DOCKED ?? 0, icon: Truck },
+  const cards: Array<{ label: string; status: Status | 'ALL'; value: number; icon: ReactNode }> = [
+    { label: 'Total Request', status: 'ALL', value: metrics.data?.total ?? 0, icon: <img className="metric-icon-image" src="/dashboard-icon/light-bulb.png" alt="" aria-hidden="true" /> },
+    { label: 'Pending Request', status: 'PENDING', value: metrics.data?.by_status.PENDING ?? 0, icon: <Clock3 size={18} /> },
+    { label: 'For Docking', status: 'FOR_DOCKING', value: metrics.data?.by_status.FOR_DOCKING ?? 0, icon: <Truck size={18} /> },
+    { label: 'Docked', status: 'DOCKED', value: metrics.data?.by_status.DOCKED ?? 0, icon: <Truck size={18} /> },
   ];
   const hourly = analytics.data?.hourly ?? [];
   const max = Math.max(1, ...hourly.map(point => point.count));
@@ -66,7 +66,7 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
   return <div className="workspace-view dashboard-view">
     {(requests.error || metrics.error || analytics.error) && <p className="error notice">Dashboard data could not be loaded.</p>}
     <section className="overview-metrics" aria-label="Request metrics">
-      {cards.map(({ label, status, value, icon: Icon }, index) => <button key={status} type="button" className={`metric-card${index === 0 ? ' primary' : ''}`} onClick={() => setDetailStatus(status)}><span className="metric-icon"><Icon size={18} /></span><span><small>{label}</small><strong>{metrics.isPending ? '-' : value.toLocaleString()}</strong></span></button>)}
+      {cards.map(({ label, status, value, icon }, index) => <button key={status} type="button" className={`metric-card${index === 0 ? ' primary' : ''}`} onClick={() => setDetailStatus(status)}><span className="metric-icon">{icon}</span><span><small>{label}</small><strong>{metrics.isPending ? '-' : value.toLocaleString()}</strong></span></button>)}
     </section>
     <section className="dashboard-grid">
       <article className="panel dashboard-list-panel">
