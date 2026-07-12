@@ -35,42 +35,6 @@ function describeAuthError(cause: unknown, fallback: string): string {
   return fallback;
 }
 
-export function LoginBackdrop() {
-  return (
-    <div className="shell auth-preview" aria-hidden="true">
-      <aside>
-        <div className="preview-brand"><span>S5</span><div><strong>SOC 5</strong><small>Outbound</small></div></div>
-        <nav>
-          <p>Dashboard</p><a className="active"><span className="nav-mark" />Overview</a>
-          <p>Outbound</p><a><span className="nav-mark" />LH Request</a>
-          <p>Midmile</p><a><span className="nav-mark" />Truck Request</a>
-        </nav>
-        <div className="preview-facility"><span>FACILITY</span><strong>Outbound operations</strong></div>
-      </aside>
-      <main>
-        <header>
-          <div><p className="eyebrow">OPERATIONS OVERVIEW</p><h1>Truck requests</h1></div>
-          <div className="preview-user"><span /><div><strong>Operations</strong><small>Authorized access</small></div></div>
-        </header>
-        <section className="metrics preview-metrics">
-          <article><span>Total requests</span><strong>--</strong><small>Current queue</small></article>
-          <article><span>Pending</span><strong>--</strong><small>Pending review</small></article>
-          <article><span>For docking</span><strong>--</strong><small>Active movement</small></article>
-          <article><span>Docked</span><strong>--</strong><small>At the dock</small></article>
-        </section>
-        <section className="panel preview-panel">
-          <div className="panel-head"><div><h2>Latest activity</h2><p>Role-filtered request queue</p></div><button type="button" tabIndex={-1}>New request</button></div>
-          <div className="table-wrap">
-            <table><thead><tr><th>Created</th><th>Cluster</th><th>Dock</th><th>Load</th><th>Truck</th><th>Status</th></tr></thead>
-              <tbody>{[0, 1, 2, 3].map(row => <tr key={row}><td><span className="skeleton short" /></td><td><span className="skeleton wide" /></td><td><span className="skeleton tiny" /></td><td><span className="skeleton short" /></td><td><span className="skeleton wide" /></td><td><span className="skeleton status-line" /></td></tr>)}</tbody>
-            </table>
-          </div>
-        </section>
-      </main>
-    </div>
-  );
-}
-
 export function Login() {
   const [type, setType] = useState<UserType>('fte');
   const [email, setEmail] = useState('');
@@ -181,7 +145,6 @@ export function Login() {
 
   return (
     <div className="auth-entry">
-      <LoginBackdrop />
       <div className={`auth-modal-layer${modalVisible ? ' is-visible' : ''}`}>
         <section ref={dialogRef} className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title" tabIndex={-1}>
           <div className="auth-dialog-head">
