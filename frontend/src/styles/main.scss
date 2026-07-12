@@ -326,6 +326,7 @@ td { font-size: .9rem; line-height: 1.35; }
 .inline-create-actions { display: flex; gap: .4rem; }
 .inline-create-actions button { display: inline-flex; min-height: 38px; align-items: center; gap: .35rem; padding: .52rem .68rem; font-size: .8rem; }
 .loading-block { padding: 3rem 1rem; color: $muted; text-align: center; }
+.streaming-hint { margin: .6rem 1rem 0; color: #64748b; font-size: .75rem; font-weight: 600; text-align: right; }
 .empty-state { padding: 3.5rem 1rem; color: #9b9b9b; text-align: center; }
 .empty-state strong { color: #2b3140; }
 .empty-state p { margin: .35rem 0 0; font-size: .84rem; }

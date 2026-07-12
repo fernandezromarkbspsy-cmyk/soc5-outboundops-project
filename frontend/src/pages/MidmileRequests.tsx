@@ -1,11 +1,14 @@
 import { FormEvent, useDeferredValue, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Truck, X, XCircle } from 'lucide-react';
+import { useProgressiveRows } from '../hooks/useProgressiveRows';
 import { Pagination } from '../components/Pagination';
 import { RequestFilters, statuses } from '../components/RequestFilters';
 import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import { api } from '../lib/api';
+import { smartRefetchInterval, swrQueryOptions } from '../lib/queryPatterns';
+import { captureRequestSnapshot, restoreRequestSnapshot, updateRequest } from '../lib/requestCache';
 import { defaultRequestFilters, exportRequestsCsv, requestQueryString } from '../lib/requests';
 import type { Page, RequestSort, TruckRequest, User } from '../types';
 
@@ -22,11 +25,36 @@ export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnaps
   const requests = useQuery({
     queryKey: ['requests', 'midmile-all', appliedFilters],
     queryFn: () => api<Page<TruckRequest>>(`/requests?${requestQueryString(appliedFilters)}`),
+    ...swrQueryOptions,
     placeholderData: previous => previous,
     enabled: user.role === 'fte_mm',
+    refetchInterval: smartRefetchInterval('realtime'),
   });
+  const streamedRows = useProgressiveRows(requests.data?.data ?? []);
   const transition = useMutation({
     mutationFn: ({ request, action, payload }: { request: TruckRequest; action: MmAction; payload: Record<string, unknown> }) => api<TruckRequest>(`/requests/${request.id}/${action}`, { method: 'POST', body: JSON.stringify(payload) }),
+    onMutate: async ({ request, action, payload }) => {
+      await queryClient.cancelQueries({ queryKey: ['requests'] });
+      const snapshot = captureRequestSnapshot(queryClient);
+      updateRequest(queryClient, request.id, current => action === 'assign-truck'
+        ? {
+            ...current,
+            status: 'ASSIGNED',
+            plate_number: typeof payload.plate_number === 'string' ? payload.plate_number : current.plate_number,
+            truck_size: typeof payload.truck_size === 'string' ? payload.truck_size : current.truck_size,
+            truck_type: typeof payload.truck_type === 'string' ? payload.truck_type : current.truck_type,
+            provide_time: typeof payload.provide_time === 'string' ? payload.provide_time : current.provide_time,
+          }
+        : {
+            ...current,
+            status: 'REJECTED_BY_MM',
+            rejection_remarks: typeof payload.rejection_remarks === 'string' ? payload.rejection_remarks : current.rejection_remarks,
+          });
+      return { snapshot };
+    },
+    onError: (_error, _variables, context) => {
+      if (context) restoreRequestSnapshot(queryClient, context.snapshot);
+    },
     onSuccess: async (_, variables) => { setSelected(null); setNotice(variables.action === 'assign-truck' ? 'Truck confirmed.' : 'Request returned to Outbound.'); await queryClient.invalidateQueries({ queryKey: ['requests'] }); await queryClient.invalidateQueries({ queryKey: ['request-metrics'] }); },
   });
 
@@ -47,7 +75,7 @@ export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnaps
 
     <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending confirmation</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>Approved requests awaiting FTE Midmile confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading confirmation queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No approved requests are awaiting confirmation." actions={actions} />}</section>
 
-    <section className="request-list-section"><RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} onChange={setFilters} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} /><section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section></section>
+    <section className="request-list-section"><RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} onChange={setFilters} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} /><section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={streamedRows.rows} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} />{streamedRows.isStreaming && <p className="streaming-hint">Streaming {streamedRows.remaining} more rows...</p>}<Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section></section>
 
     {selected && <MidmileActionDialog selection={selected} busy={transition.isPending} error={transition.error?.message} onClose={() => setSelected(null)} onSubmit={payload => transition.mutate({ ...selected, payload })} />}
   </div>;

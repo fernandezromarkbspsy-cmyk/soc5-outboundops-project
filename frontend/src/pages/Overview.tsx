@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Clock3, Route, Truck, X } from 'lucide-react';
 import { RequestTable } from '../components/RequestTable';
 import { api } from '../lib/api';
+import { smartRefetchInterval, swrQueryOptions } from '../lib/queryPatterns';
 import { useUiStore } from '../stores/ui';
 import type { AppView, Page, RequestAnalytics, RequestMetrics, Status, TruckRequest, User } from '../types';
 
@@ -24,12 +25,13 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
   const requests = useQuery({
     queryKey: ['requests', 'dashboard'],
     queryFn: () => api<Page<TruckRequest>>('/requests?per_page=100&sort=created_at&direction=desc'),
+    ...swrQueryOptions,
     placeholderData: previous => previous,
-    refetchInterval: 15_000,
+    refetchInterval: smartRefetchInterval('standard'),
   });
-  const metrics = useQuery({ queryKey: ['request-metrics', from, to], queryFn: () => api<RequestMetrics>(`/requests/metrics?${range}`), refetchInterval: 15_000 });
-  const analytics = useQuery({ queryKey: ['request-analytics', from, to], queryFn: () => api<RequestAnalytics>(`/requests/analytics?${range}`), refetchInterval: 15_000 });
-  const details = useQuery({ queryKey: ['request-details', detailStatus, from, to], queryFn: () => api<Page<TruckRequest>>(`/requests?per_page=100&${range}${detailStatus !== 'ALL' ? `&status=${detailStatus}` : ''}`), enabled: detailStatus !== null });
+  const metrics = useQuery({ queryKey: ['request-metrics', from, to], queryFn: () => api<RequestMetrics>(`/requests/metrics?${range}`), ...swrQueryOptions, refetchInterval: smartRefetchInterval('standard') });
+  const analytics = useQuery({ queryKey: ['request-analytics', from, to], queryFn: () => api<RequestAnalytics>(`/requests/analytics?${range}`), ...swrQueryOptions, refetchInterval: smartRefetchInterval('standard') });
+  const details = useQuery({ queryKey: ['request-details', detailStatus, from, to], queryFn: () => api<Page<TruckRequest>>(`/requests?per_page=100&${range}${detailStatus !== 'ALL' ? `&status=${detailStatus}` : ''}`), ...swrQueryOptions, enabled: detailStatus !== null });
   const cards: Array<{ label: string; status: Status | 'ALL'; value: number; icon: ReactNode }> = [
     { label: 'Total Request', status: 'ALL', value: metrics.data?.total ?? 0, icon: <img className="metric-icon-image" src="/dashboard-icon/light-bulb.png" alt="" aria-hidden="true" /> },
     { label: 'Pending Request', status: 'PENDING', value: metrics.data?.by_status.PENDING ?? 0, icon: <Clock3 size={18} /> },

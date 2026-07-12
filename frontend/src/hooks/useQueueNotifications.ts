@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '../lib/api';
+import { smartRefetchInterval, swrQueryOptions } from '../lib/queryPatterns';
 import type { Page, Status, TruckRequest, User } from '../types';
 
 let notificationAudioContext: AudioContext | null = null;
@@ -70,8 +71,9 @@ export function useQueueNotifications(user: User): QueueSnapshot {
   const query = useQuery({
     queryKey: ['requests', 'notification-queue', status],
     queryFn: () => api<Page<TruckRequest>>(`/requests?status=${status}&per_page=100&sort=created_at&direction=desc`),
+    ...swrQueryOptions,
     enabled: status !== null,
-    refetchInterval: status ? 5_000 : false,
+    refetchInterval: status ? smartRefetchInterval('realtime') : false,
     refetchIntervalInBackground: true,
   });
 

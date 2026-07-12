@@ -2,6 +2,7 @@ import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, UserX, X } from 'lucide-react';
 import { api } from '../lib/api';
+import { swrQueryOptions } from '../lib/queryPatterns';
 import type { ManagedUser, Role } from '../types';
 
 const roles: Role[] = ['ops_pic', 'fte_ops', 'fte_mm', 'doc_officer', 'dock_officer'];
@@ -9,7 +10,7 @@ const roles: Role[] = ['ops_pic', 'fte_ops', 'fte_mm', 'doc_officer', 'dock_offi
 export function UserManagement() {
   const client = useQueryClient();
   const [creating, setCreating] = useState(false);
-  const users = useQuery({ queryKey: ['users'], queryFn: () => api<{data:ManagedUser[]}>('/users') });
+  const users = useQuery({ queryKey: ['users'], queryFn: () => api<{data:ManagedUser[]}>('/users'), ...swrQueryOptions });
   const create = useMutation({ mutationFn: (body: unknown) => api('/users', { method: 'POST', body: JSON.stringify(body) }), onSuccess: async () => { setCreating(false); await client.invalidateQueries({ queryKey: ['users'] }); } });
   const update = useMutation({ mutationFn: ({ id, body }: {id:string;body:unknown}) => api(`/users/${id}`, { method: 'PUT', body: JSON.stringify(body) }), onSuccess: () => client.invalidateQueries({ queryKey: ['users'] }) });
   const disable = useMutation({ mutationFn: (id: string) => api(`/users/${id}/disable`, { method: 'PATCH' }), onSuccess: () => client.invalidateQueries({ queryKey: ['users'] }) });

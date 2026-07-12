@@ -1,9 +1,12 @@
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, ShipWheel, X } from 'lucide-react';
+import { useProgressiveRows } from '../hooks/useProgressiveRows';
 import { api } from '../lib/api';
 import { PrintableTruckLabel } from '../components/PrintableTruckLabel';
 import { RequestTable } from '../components/RequestTable';
+import { smartRefetchInterval, swrQueryOptions } from '../lib/queryPatterns';
+import { captureRequestSnapshot, restoreRequestSnapshot, updateRequest } from '../lib/requestCache';
 import type { Page, TruckRequest, User } from '../types';
 
 type DockAction = 'mark-docked' | 'confirm';
@@ -15,10 +18,32 @@ export function DockingConfirmation({ user }: { user: User }) {
   const queue = useQuery({
     queryKey: ['requests', 'docking'],
     queryFn: () => api<Page<TruckRequest>>('/requests?per_page=100&sort=created_at&direction=desc'),
+    ...swrQueryOptions,
     enabled: user.role === 'doc_officer' || user.role === 'dock_officer',
+    refetchInterval: smartRefetchInterval('realtime'),
   });
   const action = useMutation({
     mutationFn: ({ request, action, payload }: { request: TruckRequest; action: DockAction; payload?: Record<string, unknown> }) => api<TruckRequest>(`/requests/${request.id}/${action}`, { method: 'POST', body: JSON.stringify(payload ?? {}) }),
+    onMutate: async ({ request, action, payload }) => {
+      await client.cancelQueries({ queryKey: ['requests'] });
+      const snapshot = captureRequestSnapshot(client);
+      updateRequest(client, request.id, current => action === 'mark-docked'
+        ? {
+            ...current,
+            status: 'DOCKED',
+            driver_id: typeof payload?.driver_id === 'string' ? payload.driver_id : current.driver_id,
+            linehaul_trip_no: typeof payload?.linehaul_trip_no === 'string' ? payload.linehaul_trip_no : current.linehaul_trip_no,
+            docked_time: typeof payload?.docked_time === 'string' ? payload.docked_time : current.docked_time,
+          }
+        : {
+            ...current,
+            status: 'CONFIRMED',
+          });
+      return { snapshot };
+    },
+    onError: (_error, _variables, context) => {
+      if (context) restoreRequestSnapshot(client, context.snapshot);
+    },
     onSuccess: async (updated, variables) => {
       setSelected(null);
       if (variables.action === 'mark-docked') setPrintable(updated);
@@ -26,13 +51,14 @@ export function DockingConfirmation({ user }: { user: User }) {
     },
   });
   const rows = (queue.data?.data ?? []).filter(request => request.status === 'FOR_DOCKING' || request.status === 'ASSIGNED' || request.status === 'DOCKED');
+  const streamedRows = useProgressiveRows(rows);
   const actions = (request: TruckRequest) => request.status === 'DOCKED'
     ? <button className="table-action approve" onClick={() => action.mutate({ request, action: 'confirm' })}><CheckCircle2 size={15} />Confirm</button>
     : <button className="table-action assign" onClick={() => setSelected(request)}><ShipWheel size={15} />Dock truck</button>;
 
   return <div className="workspace-view">
     {action.error && <p className="notice error">{action.error.message}</p>}
-    <section className="panel data-panel"><div className="panel-head"><div><h2>Docking queue</h2><p>Assigned trucks requiring dock action or final confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading docking queue...</div> : <RequestTable rows={rows} actions={actions} emptyMessage="No trucks are waiting for docking." />}</section>
+    <section className="panel data-panel"><div className="panel-head"><div><h2>Docking queue</h2><p>Assigned trucks requiring dock action or final confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading docking queue...</div> : <><RequestTable rows={streamedRows.rows} actions={actions} emptyMessage="No trucks are waiting for docking." />{streamedRows.isStreaming && <p className="streaming-hint">Streaming {streamedRows.remaining} more rows...</p>}</>}</section>
     {selected && <DockDialog request={selected} busy={action.isPending} onClose={() => setSelected(null)} onSubmit={payload => action.mutate({ request: selected, action: 'mark-docked', payload })} />}
     {printable && <PrintableTruckLabel request={printable} onClose={() => setPrintable(null)} />}
   </div>;
