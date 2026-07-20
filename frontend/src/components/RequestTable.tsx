@@ -43,16 +43,19 @@ export function RequestTable({ rows, actions, emptyMessage = 'No requests found.
     return <button className={`sort-button ${active ? 'is-active' : ''}`} type="button" onClick={() => onSort(column.sortKey!)}>{content}<Icon size={13} /></button>;
   }
 
-  return <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr>{columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map(request => {
+  return <div className="table-frame request-table-frame">
+    <div className="table-meta"><span>{rows.length.toLocaleString()} visible request{rows.length === 1 ? '' : 's'}</span><span>Click a row to view details</span></div>
+    <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr>{columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th className="request-column--actions"><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map(request => {
     const expanded = expandedId === request.id;
     return <Fragment key={request.id}>
-      <tr className="request-row" aria-expanded={expanded} onClick={() => setExpandedId(value => value === request.id ? null : request.id)}>
+      <tr className={`request-row request-row--${request.status.toLowerCase()}`} aria-expanded={expanded} onClick={() => setExpandedId(value => value === request.id ? null : request.id)}>
         {columns.map(column => <td key={column.key} className={`request-column request-column--${column.key}`} data-label={column.label}>{column.render(request)}</td>)}
         {actions && <td data-label="Actions" onClick={event => event.stopPropagation()}><div className="row-actions">{actions(request)}</div></td>}
       </tr>
       {expanded && <tr className="request-detail-row"><td colSpan={columns.length + (actions ? 1 : 0)}><RequestDetails request={request} /></td></tr>}
     </Fragment>;
-  })}</tbody></table></div>;
+  })}</tbody></table></div>
+  </div>;
 }
 
 function empty(value: string | null | undefined) {
