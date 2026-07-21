@@ -2,13 +2,19 @@
 
 namespace App\Features\Requests;
 
+use App\Features\Notifications\NotificationOutboxDispatcher;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 final class RequestService
 {
-    public function __construct(private RequestRepository $requests) {}
+    public function __construct(
+        private RequestRepository $requests,
+        private NotificationOutboxDispatcher $outbox
+    ) {}
 
     public function create(object $actor, array $data): object
     {
@@ -18,29 +24,33 @@ final class RequestService
             $request = $this->requests->insert($data + ['id' => (string) Str::uuid(), 'created_by' => $actor->id, 'status' => 'PENDING']);
             $this->event($request->id, $actor->id, 'REQUEST_CREATED', null, 'PENDING');
             $this->notify($request->id, 'fte_ops', 'REQUEST_CREATED', 'New request', 'A truck request needs review.');
+            $this->logMutation('create', $request->id, $actor->id, 'PENDING');
 
             return $request;
         });
     }
 
-    public function updateDetails(string $id, object $actor, array $data): object
+    public function updateDetails(string $id, object $actor, array $data, ?string $expectedUpdatedAt = null): object
     {
         abort_unless($actor->role === 'fte_ops', 403, 'Only FTE Ops can edit requests.');
 
-        return DB::transaction(function () use ($id, $actor, $data) {
+        return DB::transaction(function () use ($id, $actor, $data, $expectedUpdatedAt) {
             $request = $this->requests->lock($id);
+            $this->guardFresh($request, $expectedUpdatedAt);
             abort_unless(in_array($request->status, ['PENDING', 'REJECTED_BY_MM'], true), 409, "Cannot edit a {$request->status} request.");
             $updated = $this->requests->update($id, $data);
             $this->event($id, $actor->id, 'REQUEST_EDITED', $request->status, $request->status, $data);
+            $this->logMutation('update', $id, $actor->id, $request->status);
 
             return $updated;
         });
     }
 
-    public function transition(string $id, object $actor, string $action, array $input): object
+    public function transition(string $id, object $actor, string $action, array $input, ?string $expectedUpdatedAt = null): object
     {
-        return DB::transaction(function () use ($id, $actor, $action, $input) {
+        return DB::transaction(function () use ($id, $actor, $action, $input, $expectedUpdatedAt) {
             $request = $this->requests->lock($id);
+            $this->guardFresh($request, $expectedUpdatedAt);
             [$from, $to, $role, $event] = match ($action) {
                 'approve' => [['PENDING', 'REJECTED_BY_MM'], 'APPROVED', 'fte_ops', 'REQUEST_APPROVED'],
                 'reject-ops' => [['PENDING', 'REJECTED_BY_MM'], 'CANCELLED', 'fte_ops', 'REQUEST_REJECTED_BY_OPS'],
@@ -63,6 +73,9 @@ final class RequestService
             }
             if ($action === 'confirm' && (blank($input['driver_id'] ?? $request->driver_id) || blank($input['linehaul_trip_no'] ?? $request->linehaul_trip_no))) {
                 throw ValidationException::withMessages(['driver_id' => 'Driver ID and linehaul trip number are required.']);
+            }
+            if ($request->status === $to) {
+                abort(409, 'This request has already been moved to the target state.');
             }
 
             $fields = array_intersect_key($input, array_flip(['rejection_remarks', 'plate_number', 'provide_time', 'driver_id', 'linehaul_trip_no', 'truck_size', 'truck_type', 'docked_time']));
@@ -97,6 +110,7 @@ final class RequestService
             if ($action === 'reject-ops') {
                 $this->notifyUser($id, $request->created_by, $event, 'Request rejected', "Request {$id} was rejected by FTE Ops.");
             }
+            $this->logMutation($action, $id, $actor->id, $to);
 
             return $updated;
         });
@@ -123,11 +137,45 @@ final class RequestService
 
     private function notify(string $id, string $role, string $event, string $title, string $body): void
     {
-        DB::table('notifications')->insert(['request_id' => $id, 'target_role' => $role, 'event_type' => $event, 'title' => $title, 'body' => $body]);
+        $this->outbox->enqueue([
+            'request_id' => $id,
+            'target_role' => $role,
+            'event_type' => $event,
+            'title' => $title,
+            'body' => $body,
+        ]);
     }
 
     private function notifyUser(string $id, string $userId, string $event, string $title, string $body): void
     {
-        DB::table('notifications')->insert(['request_id' => $id, 'user_id' => $userId, 'event_type' => $event, 'title' => $title, 'body' => $body]);
+        $this->outbox->enqueue([
+            'request_id' => $id,
+            'user_id' => $userId,
+            'event_type' => $event,
+            'title' => $title,
+            'body' => $body,
+        ]);
+    }
+
+    private function guardFresh(object $request, ?string $expectedUpdatedAt): void
+    {
+        if ($expectedUpdatedAt === null || $expectedUpdatedAt === '') {
+            return;
+        }
+
+        $current = CarbonImmutable::parse($request->updated_at ?? $request->created_at)->toIso8601String();
+        $expected = CarbonImmutable::parse($expectedUpdatedAt)->toIso8601String();
+        abort_unless($current === $expected, 409, 'The request changed while you were editing it. Refresh and try again.');
+    }
+
+    private function logMutation(string $action, string $requestId, string $actorId, string $status): void
+    {
+        Log::info('Request workflow mutation completed.', [
+            'correlation_id' => app()->bound('correlation_id') ? app('correlation_id') : null,
+            'action' => $action,
+            'request_id' => $requestId,
+            'actor_id' => $actorId,
+            'status' => $status,
+        ]);
     }
 }

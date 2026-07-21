@@ -5,10 +5,15 @@ namespace App\Features\Requests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Support\IdempotencyService;
 
 final class RequestController
 {
-    public function __construct(private RequestRepository $repository, private RequestService $service) {}
+    public function __construct(
+        private RequestRepository $repository,
+        private RequestService $service,
+        private IdempotencyService $idempotency
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -21,6 +26,8 @@ final class RequestController
             'direction' => ['nullable', Rule::in(['asc', 'desc'])],
             'page' => 'nullable|integer|min:1',
             'per_page' => 'nullable|integer|min:1|max:100',
+            'cursor' => 'nullable|string',
+            'cursor_direction' => ['nullable', Rule::in(['next', 'prev'])],
         ]);
 
         return response()->json($this->repository->paginate($request->attributes->get('actor'), $filters));
@@ -47,6 +54,7 @@ final class RequestController
         $filters = $request->validate([
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
+            'range' => 'nullable|in:shift,weekly,monthly',
         ]);
 
         return response()->json($this->repository->analytics($request->attributes->get('actor'), $filters));
@@ -54,9 +62,14 @@ final class RequestController
 
     public function store(Request $request): JsonResponse
     {
+        if ($replay = $this->idempotency->begin($request, $request->attributes->get('actor')->id)) {
+            return $replay;
+        }
         $data = $request->validate($this->requestRules());
+        $response = response()->json($this->service->create($request->attributes->get('actor'), $data), 201);
+        $this->idempotency->complete($request, $request->attributes->get('actor')->id, $response);
 
-        return response()->json($this->service->create($request->attributes->get('actor'), $data), 201);
+        return $response;
     }
 
     public function show(Request $request, string $id): JsonResponse
@@ -71,21 +84,32 @@ final class RequestController
 
     public function bulkApprove(Request $request): JsonResponse
     {
+        if ($replay = $this->idempotency->begin($request, $request->attributes->get('actor')->id)) {
+            return $replay;
+        }
         $data = $request->validate(['ids' => 'required|array|min:1|max:100', 'ids.*' => 'required|uuid|distinct']);
+        $response = response()->json(['data' => $this->service->bulkApprove($request->attributes->get('actor'), $data['ids'])]);
+        $this->idempotency->complete($request, $request->attributes->get('actor')->id, $response);
 
-        return response()->json(['data' => $this->service->bulkApprove($request->attributes->get('actor'), $data['ids'])]);
+        return $response;
     }
 
     public function update(Request $request, string $id): JsonResponse
     {
         $data = $request->validate($this->requestRules());
 
-        return response()->json($this->service->updateDetails($id, $request->attributes->get('actor'), $data));
+        return response()->json($this->service->updateDetails($id, $request->attributes->get('actor'), $data, $request->header('If-Unmodified-Since')));
     }
 
     public function action(Request $request, string $id, string $action): JsonResponse
     {
-        return response()->json($this->service->transition($id, $request->attributes->get('actor'), $action, $request->all()));
+        if ($replay = $this->idempotency->begin($request, $request->attributes->get('actor')->id)) {
+            return $replay;
+        }
+        $response = response()->json($this->service->transition($id, $request->attributes->get('actor'), $action, $request->all(), $request->header('If-Unmodified-Since')));
+        $this->idempotency->complete($request, $request->attributes->get('actor')->id, $response);
+
+        return $response;
     }
 
     private function requestRules(): array

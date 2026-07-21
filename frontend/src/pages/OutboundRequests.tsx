@@ -1,4 +1,4 @@
-import { FormEvent, useDeferredValue, useState } from 'react';
+import { FormEvent, useDeferredValue, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ban, Check, Pencil, Plus, Save, X, XCircle } from 'lucide-react';
 import { useProgressiveRows } from '../hooks/useProgressiveRows';
@@ -6,7 +6,7 @@ import { Pagination } from '../components/Pagination';
 import { RequestFilters, statuses } from '../components/RequestFilters';
 import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
-import { api } from '../lib/api';
+import { api, describeApiError, mutationRequestInit, newIdempotencyKey } from '../lib/api';
 import { smartRefetchInterval, swrQueryOptions } from '../lib/queryPatterns';
 import { captureRequestSnapshot, prependRequest, replaceTempRequest, restoreRequestSnapshot, updateRequest } from '../lib/requestCache';
 import { defaultRequestFilters, exportRequestsCsv, requestQueryString } from '../lib/requests';
@@ -22,6 +22,10 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   const setGlobalSearch = useUiStore(state => state.setSearch);
   const [filters, setFilters] = useState(() => ({ ...defaultRequestFilters, search: globalSearch }));
   const deferredSearch = useDeferredValue(filters.search);
+
+  useEffect(() => {
+    setFilters(value => value.search === globalSearch ? value : { ...value, search: globalSearch, page: 1 });
+  }, [globalSearch]);
   const [activeAction, setActiveAction] = useState<EditableAction | null>(null);
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState('');
@@ -44,13 +48,14 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   }
 
   const createRequest = useMutation({
-    mutationFn: (payload: RequestPayload) => api<TruckRequest>('/requests', { method: 'POST', body: JSON.stringify(payload) }),
+    mutationFn: (payload: RequestPayload) => api<TruckRequest>('/requests', mutationRequestInit('POST', payload, { idempotencyKey: newIdempotencyKey() })),
     onMutate: async payload => {
       await queryClient.cancelQueries({ queryKey: ['requests', 'outbound-all'] });
       const snapshot = captureRequestSnapshot(queryClient, ['requests', 'outbound-all']);
       const tempId = `tmp-${Date.now()}`;
       const tempRequest: TruckRequest = {
         id: tempId,
+        request_timestamp: new Date().toISOString(),
         cluster: String(payload.cluster ?? ''),
         region: String(payload.region ?? ''),
         dock_no: String(payload.dock_no ?? ''),
@@ -76,8 +81,9 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   });
   const editRequest = useMutation({
     mutationFn: async ({ request, payload }: { request: TruckRequest; payload: RequestPayload }) => {
-      await api<TruckRequest>(`/requests/${request.id}`, { method: 'PUT', body: JSON.stringify(payload) });
-      return api<TruckRequest>(`/requests/${request.id}/approve`, { method: 'POST', body: '{}' });
+      const expectedUpdatedAt = request.updated_at ?? request.created_at;
+      await api<TruckRequest>(`/requests/${request.id}`, mutationRequestInit('PUT', payload, { updatedAt: expectedUpdatedAt }));
+      return api<TruckRequest>(`/requests/${request.id}/approve`, mutationRequestInit('POST', {}, { idempotencyKey: newIdempotencyKey(), updatedAt: expectedUpdatedAt }));
     },
     onMutate: async ({ request, payload }) => {
       await queryClient.cancelQueries({ queryKey: ['requests'] });
@@ -101,7 +107,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     onSuccess: async () => { setActiveAction(null); await refreshData('Request updated and routed to FTE MM.'); },
   });
   const transition = useMutation({
-    mutationFn: ({ request, action }: { request: TruckRequest; action: 'approve' | 'reject-ops' | 'cancel' }) => api<TruckRequest>(`/requests/${request.id}/${action}`, { method: 'POST', body: '{}' }),
+    mutationFn: ({ request, action }: { request: TruckRequest; action: 'approve' | 'reject-ops' | 'cancel' }) => api<TruckRequest>(`/requests/${request.id}/${action}`, mutationRequestInit('POST', {}, { idempotencyKey: newIdempotencyKey(), updatedAt: request.updated_at ?? request.created_at })),
     onMutate: async ({ request, action }) => {
       await queryClient.cancelQueries({ queryKey: ['requests'] });
       const snapshot = captureRequestSnapshot(queryClient);
@@ -114,7 +120,7 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     },
     onSuccess: async (_, variables) => { setActiveAction(null); await refreshData(variables.action === 'approve' ? 'Request approved.' : variables.action === 'reject-ops' ? 'Request rejected.' : 'Request cancelled.'); },
   });
-  const bulkApprove = useMutation({mutationFn:(ids:string[])=>api('/requests/bulk-approve',{method:'POST',body:JSON.stringify({ids})}),onSuccess:()=>refreshData('Pending requests approved.')});
+  const bulkApprove = useMutation({mutationFn:(ids:string[])=>api('/requests/bulk-approve', mutationRequestInit('POST', { ids }, { idempotencyKey: newIdempotencyKey() })),onSuccess:()=>refreshData('Pending requests approved.')});
 
   const actionable = (request: TruckRequest) => request.status === 'PENDING' || request.status === 'REJECTED_BY_MM';
   const actions = (request: TruckRequest) => user.role === 'fte_ops' && actionable(request) ? <>
@@ -141,12 +147,13 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
 
   const statusSummary = statuses.map(status => ({ value: status, count: status === 'ALL' ? (requests.data?.data?.length ?? 0) : (requests.data?.data ?? []).filter(request => request.status === status).length }));
   const error = createRequest.error || editRequest.error || transition.error;
+  const feedback = error ? describeApiError(error) : null;
   return <div className="workspace-view">
-    {(notice || error) && <p className={`notice${error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{error?.message || notice}</p>}
+    {(notice || error) && <p className={`notice${error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{feedback?.message || notice}</p>}
 
     <section className="request-list-section">
       {user.role === 'ops_pic' && <div className="page-actions"><button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button></div>}
-      <RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} hideStatusFilter={user.role === 'fte_ops'} hideSortButton={user.role === 'fte_ops'} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
+      <RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} hideStatusFilter={user.role === 'fte_ops'} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
       <section className="panel data-panel">{creating && <InlineCreateRow busy={createRequest.isPending} onCancel={() => setCreating(false)} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={streamedRows.rows} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} />{streamedRows.isStreaming && <p className="streaming-hint">Streaming {streamedRows.remaining} more rows...</p>}<Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
     </section>
 

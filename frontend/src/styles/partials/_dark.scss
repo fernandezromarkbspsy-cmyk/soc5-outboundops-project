@@ -1,0 +1,123 @@
+[data-theme='dark'] {
+  --bg: #11161d;
+  --surface: #171d26;
+  --surface-subtle: #1d2430;
+  --ink: #e8edf5;
+  --muted: #9aa6b8;
+  --line: #2a3342;
+  --line-strong: #3a4658;
+  --brand: #5faea6;
+  --brand-soft: #1d2f2c;
+  --accent: #7da2e8;
+  --accent-soft: #1a2438;
+  --warning: #e0b35a;
+  --danger: #ef8a82;
+  --success: #6bc39a;
+  --shadow: 0 12px 32px rgba(0, 0, 0, .35);
+}
+
+[data-theme='dark'] body {
+  background:
+    linear-gradient(180deg, rgba(23, 29, 38, .92), rgba(17, 22, 29, 0) 280px),
+    var(--bg);
+}
+
+[data-theme='dark'] .app-shell {
+  background:
+    linear-gradient(90deg, var(--surface) 0, var(--surface) 232px, transparent 232px),
+    var(--bg);
+}
+
+[data-theme='dark'] .app-sidebar,
+[data-theme='dark'] .app-topbar,
+[data-theme='dark'] .panel,
+[data-theme='dark'] .metric-card,
+[data-theme='dark'] .overview-metrics article,
+[data-theme='dark'] .request-controls,
+[data-theme='dark'] .table-frame,
+[data-theme='dark'] .form-dialog,
+[data-theme='dark'] .auth-dialog,
+[data-theme='dark'] .profile-menu,
+[data-theme='dark'] .notification-popover,
+[data-theme='dark'] .notice,
+[data-theme='dark'] .auth-state-card {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .request-table th,
+[data-theme='dark'] .user-table th,
+[data-theme='dark'] .table-meta {
+  background: var(--surface-subtle);
+}
+
+[data-theme='dark'] .request-table tbody .request-column--status,
+[data-theme='dark'] .request-table tbody .request-column--request_timestamp,
+[data-theme='dark'] .request-table tbody .request-column--cluster,
+[data-theme='dark'] .request-table td,
+[data-theme='dark'] .user-table td {
+  background: var(--surface);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+[data-theme='dark'] .request-table tbody tr.request-row:hover,
+[data-theme='dark'] .request-table tbody tr.request-row:hover > .request-column--status,
+[data-theme='dark'] .request-table tbody tr.request-row:hover > .request-column--request_timestamp,
+[data-theme='dark'] .request-table tbody tr.request-row:hover > .request-column--cluster {
+  background: var(--surface-subtle);
+}
+
+[data-theme='dark'] .topbar-dates,
+[data-theme='dark'] .topbar-search,
+[data-theme='dark'] .topbar-user,
+[data-theme='dark'] .notification-button,
+[data-theme='dark'] .search-field,
+[data-theme='dark'] .filter-field,
+[data-theme='dark'] .toolbar-button,
+[data-theme='dark'] .secondary-button {
+  background: var(--surface-subtle);
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+[data-theme='dark'] .dashboard-view .dashboard-hero {
+  background: linear-gradient(135deg, #1a242f 0%, var(--surface) 58%, #17202b 100%);
+  border-color: var(--line);
+}
+
+[data-theme='dark'] .dashboard-view .hero-highlights > div {
+  background: var(--surface-subtle);
+}
+
+[data-theme='dark'] .skeleton-block,
+[data-theme='dark'] .metric-card--skeleton .metric-icon {
+  background: linear-gradient(90deg, #232b38 0%, #2b3444 50%, #232b38 100%);
+}
+
+[data-theme='dark'] .mobile-nav-toggle {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+[data-theme='dark'] .chart-tabs {
+  background: var(--surface-subtle);
+}
+
+[data-theme='dark'] .chart-tabs button.active {
+  background: var(--brand);
+  color: #0f141b;
+}
+
+[data-theme='dark'] .app-toast {
+  background: var(--brand-soft);
+  border-color: var(--line);
+  color: var(--brand);
+}
+
+[data-theme='dark'] .theme-toggle.is-active,
+[data-theme='dark'] .sound-toggle.is-active {
+  border-color: var(--brand);
+  background: var(--brand-soft);
+  color: var(--brand);
+}

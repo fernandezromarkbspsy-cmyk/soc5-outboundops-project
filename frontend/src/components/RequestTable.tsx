@@ -1,4 +1,5 @@
-import { Fragment, type ReactNode, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { Fragment, type ReactNode, useEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Check, ChevronsUpDown, CircleDot, Clipboard, Clock3, Copy, Hash, Landmark, ListChecks, Truck, UserRound } from 'lucide-react';
 import type { RequestSort, SortDirection, TruckRequest } from '../types';
 import { StatusBadge } from './StatusBadge';
@@ -13,6 +14,10 @@ type Props = {
 };
 
 type Column = { key: string; sortKey?: RequestSort; label: string; icon: typeof CircleDot; render: (request: TruckRequest) => ReactNode };
+
+const VIRTUAL_THRESHOLD = 80;
+const ROW_HEIGHT = 54;
+const DETAIL_HEIGHT = 148;
 
 const columns: Column[] = [
   { key: 'status', sortKey: 'status', label: 'Status', icon: CircleDot, render: request => <StatusBadge status={request.status} /> },
@@ -33,6 +38,21 @@ const columns: Column[] = [
 
 export function RequestTable({ rows, actions, emptyMessage = 'No requests found.', sort, direction, onSort }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const parentRef = useRef<HTMLDivElement>(null);
+  const virtualize = rows.length >= VIRTUAL_THRESHOLD;
+  const colSpan = columns.length + (actions ? 1 : 0);
+
+  const virtualizer = useVirtualizer({
+    count: virtualize ? rows.length : 0,
+    getScrollElement: () => parentRef.current,
+    estimateSize: index => rows[index]?.id === expandedId ? ROW_HEIGHT + DETAIL_HEIGHT : ROW_HEIGHT,
+    overscan: 10,
+  });
+
+  useEffect(() => {
+    if (virtualize) virtualizer.measure();
+  }, [expandedId, virtualize, virtualizer, rows.length]);
+
   if (!rows.length) return <div className="empty-state"><strong>No requests</strong><p>{emptyMessage}</p></div>;
 
   function heading(column: Column) {
@@ -43,18 +63,48 @@ export function RequestTable({ rows, actions, emptyMessage = 'No requests found.
     return <button className={`sort-button ${active ? 'is-active' : ''}`} type="button" onClick={() => onSort(column.sortKey!)}>{content}<Icon size={13} /></button>;
   }
 
-  return <div className="table-frame request-table-frame">
-    <div className="table-meta"><span>{rows.length.toLocaleString()} visible request{rows.length === 1 ? '' : 's'}</span><span>Click a row to view details</span></div>
-    <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr>{columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th className="request-column--actions"><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map(request => {
+  function toggleExpanded(id: string) {
+    setExpandedId(value => value === id ? null : id);
+  }
+
+  function renderRow(request: TruckRequest) {
     const expanded = expandedId === request.id;
     return <Fragment key={request.id}>
-      <tr className={`request-row request-row--${request.status.toLowerCase()}`} aria-expanded={expanded} onClick={() => setExpandedId(value => value === request.id ? null : request.id)}>
+      <tr className={`request-row request-row--${request.status.toLowerCase()}`} aria-expanded={expanded} onClick={() => toggleExpanded(request.id)}>
         {columns.map(column => <td key={column.key} className={`request-column request-column--${column.key}`} data-label={column.label}>{column.render(request)}</td>)}
         {actions && <td data-label="Actions" onClick={event => event.stopPropagation()}><div className="row-actions">{actions(request)}</div></td>}
       </tr>
-      {expanded && <tr className="request-detail-row"><td colSpan={columns.length + (actions ? 1 : 0)}><RequestDetails request={request} /></td></tr>}
+      {expanded && <tr className="request-detail-row"><td colSpan={colSpan}><RequestDetails request={request} /></td></tr>}
     </Fragment>;
-  })}</tbody></table></div>
+  }
+
+  const virtualItems = virtualize ? virtualizer.getVirtualItems() : [];
+  const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+  const paddingBottom = virtualItems.length > 0 ? virtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end : 0;
+
+  return <div className="table-frame request-table-frame">
+    <div className="table-meta">
+      <span>{rows.length.toLocaleString()} visible request{rows.length === 1 ? '' : 's'}{virtualize ? ' · virtualized' : ''}</span>
+      <span>Click a row to view details</span>
+    </div>
+    <div ref={parentRef} className={`table-wrap request-table-wrap${virtualize ? ' request-table-wrap--virtual' : ''}`}>
+      <table className="request-table">
+        <thead>
+          <tr>
+            {columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}
+            {actions && <th className="request-column--actions"><span className="sr-only">Actions</span></th>}
+          </tr>
+        </thead>
+        <tbody>
+          {virtualize && paddingTop > 0 && <tr aria-hidden="true" className="request-table-spacer"><td colSpan={colSpan} style={{ height: paddingTop, padding: 0, border: 0 }} /></tr>}
+          {virtualize ? virtualItems.flatMap(virtualRow => {
+            const request = rows[virtualRow.index];
+            return renderRow(request);
+          }) : rows.map(renderRow)}
+          {virtualize && paddingBottom > 0 && <tr aria-hidden="true" className="request-table-spacer"><td colSpan={colSpan} style={{ height: paddingBottom, padding: 0, border: 0 }} /></tr>}
+        </tbody>
+      </table>
+    </div>
   </div>;
 }
 

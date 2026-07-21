@@ -33,7 +33,7 @@ export function prependRequest(queryClient: QueryClient, request: TruckRequest, 
   updatePagedQueries(queryClient, page => {
     if (page.data.some(item => item.id === request.id)) return page;
     const data = [request, ...page.data];
-    return { ...page, data, total: page.total + 1 };
+    return { ...page, data, total: (page.total ?? page.data.length) + 1 };
   }, matcher);
 }
 
@@ -47,7 +47,8 @@ export function updateRequest(queryClient: QueryClient, requestId: string, updat
       return next ? [next] : [];
     });
     if (!changed) return page;
-    return { ...page, data, total: data.length < page.data.length ? Math.max(0, page.total - 1) : page.total };
+    const total = page.total ?? page.data.length;
+    return { ...page, data, total: data.length < page.data.length ? Math.max(0, total - 1) : total };
   }, matcher);
 }
 

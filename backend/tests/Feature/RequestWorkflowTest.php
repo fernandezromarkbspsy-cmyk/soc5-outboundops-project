@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Features\Notifications\NotificationOutboxDispatcher;
 use App\Features\Requests\RequestRepository;
 use App\Features\Requests\RequestService;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -28,7 +30,7 @@ final class RequestWorkflowTest extends TestCase
         DB::reconnect('sqlite');
         $this->createSchema();
         $this->repository = new RequestRepository;
-        $this->service = new RequestService($this->repository);
+        $this->service = new RequestService($this->repository, new NotificationOutboxDispatcher);
     }
 
     public function test_fte_ops_can_edit_a_pending_request(): void
@@ -79,6 +81,52 @@ final class RequestWorkflowTest extends TestCase
         $this->assertSame('ABC-1234', $result->items()[0]->plate_number);
     }
 
+    public function test_transition_rejects_stale_request_version(): void
+    {
+        $request = $this->insertRequest(['status' => 'PENDING', 'updated_at' => '2026-06-30 08:00:00']);
+        $actor = (object) ['id' => (string) Str::uuid(), 'role' => 'fte_ops'];
+
+        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+
+        $this->service->transition(
+            $request->id,
+            $actor,
+            'approve',
+            [],
+            CarbonImmutable::parse('2026-06-29 08:00:00')->toIso8601String()
+        );
+    }
+
+    public function test_request_repository_supports_cursor_pagination(): void
+    {
+        $first = $this->insertRequest(['created_at' => '2026-06-30 09:00:00', 'updated_at' => '2026-06-30 09:00:00']);
+        $second = $this->insertRequest(['created_at' => '2026-06-30 08:00:00', 'updated_at' => '2026-06-30 08:00:00']);
+        $third = $this->insertRequest(['created_at' => '2026-06-30 07:00:00', 'updated_at' => '2026-06-30 07:00:00']);
+        $actor = (object) ['id' => (string) Str::uuid(), 'role' => 'fte_mm'];
+
+        $pageOne = $this->repository->paginate($actor, [
+            'sort' => 'created_at',
+            'direction' => 'desc',
+            'per_page' => 2,
+            'cursor' => base64_encode(json_encode(['created_at' => '2026-06-30 10:00:00', 'id' => (string) Str::uuid()])),
+        ]);
+
+        $this->assertCount(2, $pageOne['data']);
+        $this->assertSame($first->id, $pageOne['data'][0]->id);
+        $this->assertSame($second->id, $pageOne['data'][1]->id);
+        $this->assertNotNull($pageOne['next_cursor']);
+
+        $pageTwo = $this->repository->paginate($actor, [
+            'sort' => 'created_at',
+            'direction' => 'desc',
+            'per_page' => 2,
+            'cursor' => $pageOne['next_cursor'],
+        ]);
+
+        $this->assertCount(1, $pageTwo['data']);
+        $this->assertSame($third->id, $pageTwo['data'][0]->id);
+    }
+
     private function insertRequest(array $overrides = []): object
     {
         $id = (string) Str::uuid();
@@ -122,6 +170,9 @@ final class RequestWorkflowTest extends TestCase
             $table->text('rejection_remarks')->nullable();
             $table->string('driver_id')->nullable();
             $table->uuid('created_by');
+            $table->dateTime('approved_at')->nullable();
+            $table->dateTime('rejected_at')->nullable();
+            $table->dateTime('confirmed_at')->nullable();
             $table->timestamps();
         });
         Schema::create('request_events', function (Blueprint $table): void {
@@ -132,6 +183,7 @@ final class RequestWorkflowTest extends TestCase
             $table->string('from_status')->nullable();
             $table->string('to_status')->nullable();
             $table->text('metadata');
+            $table->string('correlation_id')->nullable();
             $table->timestamps();
         });
         Schema::create('notifications', function (Blueprint $table): void {
@@ -142,6 +194,17 @@ final class RequestWorkflowTest extends TestCase
             $table->string('event_type');
             $table->string('title');
             $table->text('body');
+            $table->timestamps();
+        });
+        Schema::create('notification_outbox', function (Blueprint $table): void {
+            $table->id();
+            $table->uuid('request_id')->nullable();
+            $table->uuid('user_id')->nullable();
+            $table->string('target_role')->nullable();
+            $table->string('event_type');
+            $table->string('title');
+            $table->text('body');
+            $table->dateTime('processed_at')->nullable();
             $table->timestamps();
         });
     }

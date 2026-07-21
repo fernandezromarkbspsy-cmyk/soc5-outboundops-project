@@ -1,4 +1,4 @@
-import { FormEvent, useDeferredValue, useState } from 'react';
+import { FormEvent, useDeferredValue, useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, Truck, X, XCircle } from 'lucide-react';
 import { useProgressiveRows } from '../hooks/useProgressiveRows';
@@ -6,18 +6,25 @@ import { Pagination } from '../components/Pagination';
 import { RequestFilters, statuses } from '../components/RequestFilters';
 import { RequestTable } from '../components/RequestTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
-import { api } from '../lib/api';
+import { api, describeApiError, mutationRequestInit, newIdempotencyKey } from '../lib/api';
 import { smartRefetchInterval, swrQueryOptions } from '../lib/queryPatterns';
 import { captureRequestSnapshot, restoreRequestSnapshot, updateRequest } from '../lib/requestCache';
 import { defaultRequestFilters, exportRequestsCsv, requestQueryString } from '../lib/requests';
+import { useUiStore } from '../stores/ui';
 import type { Page, RequestSort, TruckRequest, User } from '../types';
 
 type MmAction = 'assign-truck' | 'reject-mm';
 
 export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const queryClient = useQueryClient();
-  const [filters, setFilters] = useState(defaultRequestFilters);
+  const globalSearch = useUiStore(state => state.search);
+  const setGlobalSearch = useUiStore(state => state.setSearch);
+  const [filters, setFilters] = useState(() => ({ ...defaultRequestFilters, search: globalSearch }));
   const deferredSearch = useDeferredValue(filters.search);
+
+  useEffect(() => {
+    setFilters(value => value.search === globalSearch ? value : { ...value, search: globalSearch, page: 1 });
+  }, [globalSearch]);
   const [selected, setSelected] = useState<{ request: TruckRequest; action: MmAction } | null>(null);
   const [notice, setNotice] = useState('');
   const [exporting, setExporting] = useState(false);
@@ -32,7 +39,7 @@ export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnaps
   });
   const streamedRows = useProgressiveRows(requests.data?.data ?? []);
   const transition = useMutation({
-    mutationFn: ({ request, action, payload }: { request: TruckRequest; action: MmAction; payload: Record<string, unknown> }) => api<TruckRequest>(`/requests/${request.id}/${action}`, { method: 'POST', body: JSON.stringify(payload) }),
+    mutationFn: ({ request, action, payload }: { request: TruckRequest; action: MmAction; payload: Record<string, unknown> }) => api<TruckRequest>(`/requests/${request.id}/${action}`, mutationRequestInit('POST', payload, { idempotencyKey: newIdempotencyKey(), updatedAt: request.updated_at ?? request.created_at })),
     onMutate: async ({ request, action, payload }) => {
       await queryClient.cancelQueries({ queryKey: ['requests'] });
       const snapshot = captureRequestSnapshot(queryClient);
@@ -69,13 +76,14 @@ export function MidmileRequests({ user, queue }: { user: User; queue: QueueSnaps
   }
 
   const statusSummary = statuses.map(status => ({ value: status, count: status === 'ALL' ? (requests.data?.data?.length ?? 0) : (requests.data?.data ?? []).filter(request => request.status === status).length }));
+  const feedback = transition.error ? describeApiError(transition.error) : null;
 
   return <div className="workspace-view">
-    {(notice || transition.error) && <p className={`notice${transition.error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{transition.error?.message || notice}</p>}
+    {(notice || transition.error) && <p className={`notice${transition.error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{feedback?.message || notice}</p>}
 
     <section className="panel data-panel queue-panel"><div className="panel-head"><div><div className="section-title"><h2>Pending confirmation</h2>{queue.count > 0 && <span className="count-badge">{queue.count}</span>}</div><p>Approved requests awaiting FTE Midmile confirmation</p></div></div>{queue.isPending ? <div className="loading-block">Loading confirmation queue...</div> : queue.error ? <p className="state error">{queue.error.message}</p> : <RequestTable rows={queue.rows} emptyMessage="No approved requests are awaiting confirmation." actions={actions} />}</section>
 
-    <section className="request-list-section"><RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} onChange={setFilters} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} /><section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={streamedRows.rows} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} />{streamedRows.isStreaming && <p className="streaming-hint">Streaming {streamedRows.remaining} more rows...</p>}<Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section></section>
+    <section className="request-list-section"><RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} /><section className="panel data-panel">{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={streamedRows.rows} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} />{streamedRows.isStreaming && <p className="streaming-hint">Streaming {streamedRows.remaining} more rows...</p>}<Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section></section>
 
     {selected && <MidmileActionDialog selection={selected} busy={transition.isPending} error={transition.error?.message} onClose={() => setSelected(null)} onSubmit={payload => transition.mutate({ ...selected, payload })} />}
   </div>;

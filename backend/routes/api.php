@@ -19,7 +19,7 @@ Route::get('/auth/status', function () {
     return response()->json(['configured' => true]);
 });
 
-Route::middleware(['supabase.auth', 'throttle:api'])->group(function (): void {
+Route::middleware(['api.context', 'supabase.auth', 'throttle:api'])->group(function (): void {
     Route::get('/auth/me', fn (Request $r) => response()->json($r->attributes->get('actor')));
     Route::post('/auth/password-changed', function (Request $request) {
         $actor = $request->attributes->get('actor');

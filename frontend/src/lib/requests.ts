@@ -31,13 +31,21 @@ export async function exportRequestsCsv(filters: RequestFilters, filename: strin
   const all: TruckRequest[] = [];
   let page = 1;
   let lastPage = 1;
+  let cursor: string | null = null;
 
   do {
-    const result = await api<Page<TruckRequest>>(`/requests?${requestQueryString(filters, { page, perPage: 100 })}`);
+    const baseQuery = requestQueryString(filters, { page, perPage: 100 });
+    const requestUrl = cursor ? `${baseQuery}&cursor=${encodeURIComponent(cursor)}` : baseQuery;
+    const result: Page<TruckRequest> = await api<Page<TruckRequest>>(`/requests?${requestUrl}`);
     all.push(...result.data);
-    lastPage = result.last_page;
-    page += 1;
-  } while (page <= lastPage);
+    if (result.next_cursor) {
+      cursor = result.next_cursor;
+    } else {
+      lastPage = result.last_page ?? 1;
+      page += 1;
+      cursor = null;
+    }
+  } while (cursor !== null || page <= lastPage);
 
   const columns: Array<[string, (request: TruckRequest) => unknown]> = [
     ['Request ID', request => request.id],
