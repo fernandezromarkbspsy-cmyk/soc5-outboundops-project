@@ -3,6 +3,7 @@
 namespace App\Features\Requests;
 
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -10,7 +11,7 @@ final class RequestRepository
 {
     private const COLUMNS = ['id', 'request_timestamp', 'cluster', 'region', 'dock_no', 'backlogs', 'backlogs_timestamp', 'ob_fte', 'truck_size', 'truck_type', 'plate_number', 'provide_time', 'linehaul_trip_no', 'docked_time', 'status', 'rejection_remarks', 'driver_id', 'created_by', 'created_at', 'updated_at'];
 
-    public function paginate(object $actor, array $filters): array|\Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function paginate(object $actor, array $filters): array|LengthAwarePaginator
     {
         $query = DB::table('requests')->select(self::COLUMNS);
         $this->scopeActor($query, $actor);

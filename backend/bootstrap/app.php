@@ -1,7 +1,7 @@
 <?php
 
-use App\Console\Commands\ProvisionBackroomUsers;
 use App\Console\Commands\FlushNotificationOutbox;
+use App\Console\Commands\ProvisionBackroomUsers;
 use App\Console\Commands\PruneOperationalData;
 use App\Http\Middleware\ApiRequestContext;
 use App\Http\Middleware\AuthenticateSupabase;

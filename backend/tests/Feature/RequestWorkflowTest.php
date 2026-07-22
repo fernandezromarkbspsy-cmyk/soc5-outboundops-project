@@ -10,6 +10,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
 final class RequestWorkflowTest extends TestCase
@@ -86,7 +87,7 @@ final class RequestWorkflowTest extends TestCase
         $request = $this->insertRequest(['status' => 'PENDING', 'updated_at' => '2026-06-30 08:00:00']);
         $actor = (object) ['id' => (string) Str::uuid(), 'role' => 'fte_ops'];
 
-        $this->expectException(\Symfony\Component\HttpKernel\Exception\HttpException::class);
+        $this->expectException(HttpException::class);
 
         $this->service->transition(
             $request->id,
