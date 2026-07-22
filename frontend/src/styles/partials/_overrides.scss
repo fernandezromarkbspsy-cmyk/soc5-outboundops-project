@@ -3,7 +3,7 @@
   align-items: center;
   gap: .2rem;
   padding: .18rem;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: #eef2f6;
 }
 
@@ -11,7 +11,7 @@
   min-height: 30px;
   padding: .32rem .65rem;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--muted);
   font-size: .72rem;
@@ -35,7 +35,7 @@
   height: 38px;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--radius);
   background: var(--surface);
   color: #495465;
   box-shadow: none;
@@ -103,3 +103,4 @@
   background: var(--brand-soft);
   color: var(--brand);
 }
+

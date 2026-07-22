@@ -1,31 +1,41 @@
-﻿// SCSS tokens (legacy partials)
-$navy: #172554;
-$navy-deep: #101a3d;
-$orange: #f97316;
-$ink: #172033;
-$muted: #667085;
-$line: #e4e7ec;
-$surface: #f4f4f3;
-$green: #067647;
-$primary: #2f6f6a;
-$accent: #4f46e5;
-$accent-soft: #eef2ff;
+﻿﻿// SCSS tokens (modern palette)
+$ink: #0f172a;
+$muted: #64748b;
+$line: #e2e8f0;
+$surface: #f8fafc;
+$brand: #2563eb;
+$brand-soft: #eff6ff;
+$accent: #7c3aed;
+$accent-soft: #f5f3ff;
+$green: #059669;
+$orange: #d97706;
+$navy: #1e293b;
 
-// CSS custom properties (active theme)
+// CSS custom properties (refreshed theme)
 :root {
-  --bg: #f6f7f9;
+  --bg: #f8fafc;
   --surface: #ffffff;
-  --surface-subtle: #f9fafb;
-  --ink: #18202f;
-  --muted: #687386;
-  --line: #dde3ea;
-  --line-strong: #c8d1dc;
-  --brand: #245b56;
-  --brand-soft: #e7f2ef;
-  --accent: #4267ac;
-  --accent-soft: #edf3ff;
-  --warning: #b7791f;
-  --danger: #be3b32;
-  --success: #237a57;
-  --shadow: 0 10px 28px rgba(24, 32, 47, .08);
+  --surface-subtle: #f1f5f9;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --line: #e2e8f0;
+  --line-strong: #cbd5e1;
+  --brand: #2563eb;
+  --brand-soft: #eff6ff;
+  --accent: #7c3aed;
+  --accent-soft: #f5f3ff;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --success: #059669;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .06);
+  --shadow: 0 1px 3px rgba(15, 23, 42, .08), 0 1px 2px rgba(15, 23, 42, .06);
+  --shadow-md: 0 4px 6px rgba(15, 23, 42, .06), 0 2px 4px rgba(15, 23, 42, .04);
+  --shadow-lg: 0 10px 15px rgba(15, 23, 42, .06), 0 4px 6px rgba(15, 23, 42, .04);
+  --shadow-xl: 0 20px 25px rgba(15, 23, 42, .06), 0 8px 10px rgba(15, 23, 42, .04);
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-full: 9999px;
+  --font-sans: Inter, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }

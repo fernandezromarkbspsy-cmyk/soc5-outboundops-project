@@ -1,4 +1,4 @@
-﻿// Skeleton loading + dashboard hero (refreshed theme)
+﻿﻿// Skeleton loading + dashboard hero (refreshed theme)
 @keyframes skeleton-pulse {
   0% { opacity: .55; }
   50% { opacity: 1; }
@@ -7,8 +7,8 @@
 
 .skeleton-block {
   display: block;
-  border-radius: 6px;
-  background: linear-gradient(90deg, #edf1f4 0%, #f6f8fa 50%, #edf1f4 100%);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--line) 0%, var(--surface-subtle) 50%, var(--line) 100%);
   animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
 
@@ -33,7 +33,7 @@
 .metric-card--skeleton .metric-icon {
   width: 40px;
   height: 40px;
-  background: #edf1f4;
+  background: var(--line);
 }
 
 .dashboard-view .dashboard-hero {
@@ -43,11 +43,11 @@
   gap: 1rem;
   margin-bottom: 1rem;
   padding: 1.2rem 1.35rem;
-  border: 1px solid #cfe3dd;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #f4faf8 0%, #ffffff 58%, #f7fbff 100%);
+  border: 1px solid var(--brand-soft);
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, var(--brand-soft) 0%, var(--surface) 58%, #f7fbff 100%);
   color: var(--ink);
-  box-shadow: 0 10px 28px rgba(24, 32, 47, .06);
+  box-shadow: var(--shadow-md);
 }
 
 .dashboard-view .dashboard-hero h2 {
@@ -69,8 +69,8 @@
   min-width: 104px;
   padding: .7rem .8rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .dashboard-view .hero-highlights strong {
@@ -106,3 +106,4 @@
     grid-template-columns: 1fr;
   }
 }
+
