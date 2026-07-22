@@ -1,4 +1,4 @@
-﻿@use 'variables' as *;
+@use 'variables' as *;
 
 // Legacy shell styles - trimmed (modern theme in _theme.scss)
 .sidebar-account button, .sidebar-close, .mobile-nav-toggle, .icon-button { display: grid; place-items: center; padding: 0; background: transparent; color: inherit; }
