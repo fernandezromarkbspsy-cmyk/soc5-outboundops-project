@@ -1,0 +1,86 @@
+## Terminal Output Rules
+
+- Never output internal system tags, tool calls, or metadata.
+- Never include tokens such as:
+  - `</｜｜DSML｜｜tool_calls>`
+  - `<tool_call>`
+  - `<assistant>`
+  - `<analysis>`
+  - XML, HTML, JSON, or proprietary protocol wrappers unless explicitly requested.
+- Output only executable terminal commands when the user requests shell commands.
+- Commands must be copy-paste ready.
+- Do not prepend or append explanations inside code blocks.
+- Detect the user's shell (PowerShell, CMD, Bash, Zsh) and generate commands compatible with that shell.
+- For Windows PowerShell 5.1, never use `&&`; use `;` or separate commands instead.
+- Never emit placeholder commands or internal debugging information.
+- Before producing terminal commands, validate that every line is a valid command for the target shell.
+- If a command cannot be executed as written, correct it before responding.
+- If internal metadata is accidentally generated, discard it completely and regenerate the response using only valid shell commands.
+
+
+## Critical Rule
+
+Under no circumstances should internal reasoning, tool-call syntax, DSML tags, XML tags, or any implementation metadata appear in the final response. The final answer must contain only user-facing content and executable commands.
+
+
+
+# GITHUB ACTIONS & CI/CD RULES
+
+GitHub Actions are considered part of the application's architecture.
+
+Any modification to the codebase must include a review of the affected GitHub Actions workflows.
+
+Before completing any task, always evaluate whether the existing workflow remains valid.
+
+If the code changes affect any of the following, the corresponding workflow MUST be updated:
+
+- Build process
+- Project structure
+- Dependencies
+- Package manager
+- Runtime version
+- Environment variables
+- Build outputs
+- Testing framework
+- Linting rules
+- Formatting rules
+- Docker configuration
+- Deployment process
+- Release pipeline
+- Security scanning
+- Database migrations
+- Backend services
+- Frontend build process
+- Artifact generation
+- Monorepo structure
+
+Every pull request or generated code change must ensure that the CI/CD pipeline continues to:
+
+- Build successfully
+- Pass all tests
+- Pass linting
+- Pass type checking
+- Produce the expected artifacts
+- Deploy successfully (when applicable)
+
+When modifying project files, always perform the following checklist before considering the task complete:
+
+1. Review all affected GitHub Actions workflow files.
+2. Determine whether workflow updates are required.
+3. Apply workflow changes if necessary.
+4. Explain why the workflow was or was not modified.
+5. Ensure the workflow remains production-ready.
+
+Never leave GitHub Actions in an outdated or broken state.
+
+Never modify workflow files without a clear architectural reason.
+
+Never introduce breaking changes to CI/CD.
+
+If no workflow update is required, explicitly state:
+
+> "GitHub Actions review completed. No workflow changes required."
+
+If a workflow update is required, include the complete updated workflow file and explain the reason for each modification.
+
+GitHub Actions are a first-class component of the project and must always remain synchronized with the current architecture.

@@ -19,3 +19,12 @@ jobs:
         with: {php-version: '8.3', coverage: none}
       - run: composer install --no-interaction --prefer-dist
       - run: vendor/bin/pint --test
+      - run: php artisan key:generate --force
+      - run: php artisan test
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t soc5-backend ./backend
+      - run: docker build --build-arg VITE_API_URL=/api --build-arg VITE_SUPABASE_URL=https://placeholder.supabase.co --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=placeholder -t soc5-frontend ./frontend
