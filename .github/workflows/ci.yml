@@ -1,5 +1,17 @@
 name: CI
-on: [push, pull_request]
+
+on:
+  push:
+    branches: [main, develop]
+    paths-ignore: ['docs/**', 'README.md', '**.md']
+  pull_request:
+    branches: [main, develop]
+    paths-ignore: ['docs/**', 'README.md', '**.md']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
@@ -10,6 +22,7 @@ jobs:
         with: {node-version: 22, cache: npm, cache-dependency-path: frontend/package-lock.json}
       - run: npm ci
       - run: npm run build
+
   backend:
     runs-on: ubuntu-latest
     defaults: {run: {working-directory: backend}}
@@ -24,8 +37,28 @@ jobs:
       - run: php artisan test
 
   docker:
+    needs: [frontend, backend]
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - uses: actions/checkout@v4
-      - run: docker build -t soc5-backend ./backend
-      - run: docker build --build-arg VITE_API_URL=/api --build-arg VITE_SUPABASE_URL=https://placeholder.supabase.co --build-arg VITE_SUPABASE_PUBLISHABLE_KEY=placeholder -t soc5-frontend ./frontend
+      - uses: docker/setup-buildx-action@v3
+      - name: Build backend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          tags: soc5-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Build frontend Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          tags: soc5-frontend:latest
+          build-args: |
+            VITE_API_URL=/api
+            VITE_SUPABASE_URL=https://placeholder.supabase.co
+            VITE_SUPABASE_PUBLISHABLE_KEY=placeholder
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
