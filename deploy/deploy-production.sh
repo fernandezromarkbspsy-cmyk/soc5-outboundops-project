@@ -4,6 +4,7 @@ set -Eeuo pipefail
 
 readonly APP_DIR="/opt/soc5-outbound"
 readonly BRANCH="main"
+readonly TARGET_REVISION="${TARGET_REVISION:-origin/$BRANCH}"
 readonly HEALTH_URL="http://127.0.0.1:8080/up"
 readonly ROOT_ENV_SECRET_ID="${ROOT_ENV_SECRET_ID:-soc5-outbound/root-env}"
 readonly BACKEND_ENV_SECRET_ID="${BACKEND_ENV_SECRET_ID:-soc5-outbound/backend-env}"
@@ -85,7 +86,16 @@ umask 022
 
 echo "Fetching origin/$BRANCH..."
 git fetch --prune origin "$BRANCH"
-git merge --ff-only "origin/$BRANCH"
+
+if ! git cat-file -e "$TARGET_REVISION^{commit}"; then
+  echo "Deployment refused: target revision $TARGET_REVISION is not available after fetching origin/$BRANCH." >&2
+  exit 1
+fi
+
+current_revision="$(git rev-parse --short HEAD)"
+target_revision="$(git rev-parse --short "$TARGET_REVISION")"
+echo "Updating checkout from $current_revision to $target_revision..."
+git reset --hard "$TARGET_REVISION"
 git ls-files -z | xargs -0 chmod a+r
 
 echo "Validating Compose configuration..."

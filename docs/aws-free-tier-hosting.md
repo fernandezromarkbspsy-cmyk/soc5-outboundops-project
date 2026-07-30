@@ -653,13 +653,15 @@ After pushing these automation files once, update the EC2 checkout manually:
 
 ```bash
 cd /opt/soc5-outbound
-git pull --ff-only
+git fetch --prune origin main
+git reset --hard origin/main
 git status
 ```
 
 `git status` must be clean. The deployment intentionally refuses to overwrite
-tracked files edited directly on EC2. Move all permanent server hotfixes into
-the repository, commit them locally, and push them before enabling automation.
+tracked files edited directly on EC2, then resets the checkout to the commit
+selected by GitHub Actions. Move all permanent server hotfixes into the
+repository, commit them locally, and push them before enabling automation.
 
 Test Systems Manager from **Systems Manager > Run Command** using the
 `AWS-RunShellScript` document and this command:
@@ -682,7 +684,7 @@ healthy.
 4. Merge the pull request into `main`.
 5. GitHub Actions assumes the restricted AWS role with a short-lived OIDC token.
 6. Systems Manager runs the deployment script as `ubuntu` on EC2.
-7. The script fast-forwards Git, validates Compose, builds images, starts the
+7. The script resets Git to the selected commit, validates Compose, builds images, starts the
    containers, and verifies `/up`.
 
 Keep the manual procedure below as the recovery path when GitHub Actions or
@@ -693,7 +695,8 @@ Before each deployment, take note of the current commit so rollback is possible.
 ```bash
 cd /opt/soc5-outbound
 git status
-git pull --ff-only
+git fetch --prune origin main
+git reset --hard origin/main
 docker compose build
 docker compose up -d
 docker compose ps
