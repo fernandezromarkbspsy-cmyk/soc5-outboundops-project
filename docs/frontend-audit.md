@@ -78,10 +78,10 @@ The app reads as partially redesigned rather than deliberately systemized. Opera
 
 Recommendation:
 
+- Make the later `main.scss` generation the base and delete the earlier glassy/topbar variant instead of letting both coexist.
 - Consolidate design tokens at the top of `main.scss`: surface, border, text, accent, danger, success, radius, shadow, spacing.
-- Pick one shape rule. For this app, use compact operational radii: `4px` inputs and menus, `8px` panels, `999px` only for pills/badges.
-- Remove duplicate style blocks after confirming which generation is intended.
-- Avoid decorative gradients on dense app surfaces unless they communicate state or grouping.
+- Lock the shape system to one operational scale: `0` or `4px` for dense controls, `8px` for panels, `999px` only for pills/badges.
+- Keep gradients only where they signal state, selection, or grouping; otherwise prefer flat surfaces and consistent borders.
 
 ### P1 - Request Tables Need Stronger Interaction Semantics
 
@@ -270,4 +270,3 @@ Recommendation:
 - Re-running the same command with approval succeeded.
 - Build result: `dist/index.html` 0.41 kB, CSS 52.80 kB, JS 537.19 kB minified, JS gzip 150.41 kB.
 - Vite reported a chunk-size warning for the JS bundle.
-

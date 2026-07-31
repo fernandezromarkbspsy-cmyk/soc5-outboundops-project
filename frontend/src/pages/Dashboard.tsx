@@ -1,17 +1,19 @@
-import { useEffect, useState } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AppHeader } from '../components/AppHeader';
 import { AppSidebar } from '../components/AppSidebar';
+import { SkeletonTable } from '../components/SkeletonTable';
 import { useQueueNotifications } from '../hooks/useQueueNotifications';
 import { supabase } from '../lib/supabase';
 import { useUiStore } from '../stores/ui';
 import type { AppView, Role, User } from '../types';
-import { Overview } from './Overview';
-import { OutboundRequests } from './OutboundRequests';
-import { MidmileRequests } from './MidmileRequests';
-import { DockingConfirmation } from './DockingConfirmation';
-import { Kpi } from './Kpi';
-import { UserManagement } from './UserManagement';
+
+const Overview = lazy(() => import('./Overview').then(module => ({ default: module.Overview })));
+const OutboundRequests = lazy(() => import('./OutboundRequests').then(module => ({ default: module.OutboundRequests })));
+const MidmileRequests = lazy(() => import('./MidmileRequests').then(module => ({ default: module.MidmileRequests })));
+const DockingConfirmation = lazy(() => import('./DockingConfirmation').then(module => ({ default: module.DockingConfirmation })));
+const Kpi = lazy(() => import('./Kpi').then(module => ({ default: module.Kpi })));
+const UserManagement = lazy(() => import('./UserManagement').then(module => ({ default: module.UserManagement })));
 
 export function Dashboard({ user }: { user: User }) {
   const queryClient = useQueryClient();
@@ -50,12 +52,22 @@ export function Dashboard({ user }: { user: User }) {
     <AppSidebar user={activeUser} activeView={view} open={menuOpen} onOpenChange={setMenuOpen} onNavigate={navigate} onSignOut={() => void supabase.auth.signOut()} pendingCount={queue.count} />
     <main className="app-content">
       <AppHeader user={activeUser} view={view} onRoleChange={switchRole} onSearch={() => navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request')} />
-      {view === 'overview' && <Overview user={activeUser} onNavigate={navigate} />}
-      {view === 'lh-request' && <OutboundRequests user={activeUser} queue={queue} />}
-      {view === 'truck-request' && <MidmileRequests user={activeUser} queue={queue} />}
-      {view === 'docking' && <DockingConfirmation user={activeUser} />}
-      {view === 'kpi' && <Kpi />}
-      {view === 'users' && <UserManagement />}
+      <Suspense fallback={<ViewLoading view={view} />}>
+        {view === 'overview' && <Overview user={activeUser} onNavigate={navigate} />}
+        {view === 'lh-request' && <OutboundRequests user={activeUser} queue={queue} />}
+        {view === 'truck-request' && <MidmileRequests user={activeUser} queue={queue} />}
+        {view === 'docking' && <DockingConfirmation user={activeUser} />}
+        {view === 'kpi' && <Kpi />}
+        {view === 'users' && <UserManagement />}
+      </Suspense>
     </main>
   </div>;
+}
+
+function ViewLoading({ view }: { view: AppView }) {
+  if (view === 'overview') {
+    return <div className="workspace-view dashboard-view"><section className="overview-metrics" aria-hidden="true">{Array.from({ length: 4 }).map((_, index) => <div key={index} className="metric-card"><span className="metric-icon"><span className="skeleton-line skeleton-line--head" style={{ width: 18, height: 18, borderRadius: 999 }} /></span><span><span className="skeleton-line skeleton-line--head" style={{ width: 88, marginBottom: 10 }} /><span className="skeleton-line" style={{ width: 64, height: 26 }} /></span></div>)}</section><section className="dashboard-grid"><article className="panel dashboard-list-panel"><div className="panel-head compact"><div><span className="skeleton-line skeleton-line--head" style={{ width: 120 }} /><span className="skeleton-line" style={{ width: 180, marginTop: 10 }} /></div></div><div className="dashboard-list"><SkeletonTable columns={4} rows={4} compact /></div></article><article className="panel chart-panel line-panel"><div className="panel-head compact"><div><span className="skeleton-line skeleton-line--head" style={{ width: 150 }} /><span className="skeleton-line" style={{ width: 220, marginTop: 10 }} /></div></div><div className="table-loading-shell"><SkeletonTable columns={2} rows={3} compact /></div></article><article className="panel chart-panel"><div className="panel-head compact"><div><span className="skeleton-line skeleton-line--head" style={{ width: 110 }} /><span className="skeleton-line" style={{ width: 160, marginTop: 10 }} /></div></div><div className="table-loading-shell"><SkeletonTable columns={2} rows={3} compact /></div></article><article className="panel dashboard-list-panel"><div className="panel-head compact"><div><span className="skeleton-line skeleton-line--head" style={{ width: 120 }} /><span className="skeleton-line" style={{ width: 180, marginTop: 10 }} /></div></div><div className="dashboard-list"><SkeletonTable columns={4} rows={4} compact /></div></article></section></div>;
+  }
+
+  return <div className="workspace-view"><div className="table-loading-shell"><div className="table-loading-toolbar"><span className="skeleton-chip" /><span className="skeleton-chip" /><span className="skeleton-chip" /></div><SkeletonTable columns={14} rows={5} /></div></div>;
 }

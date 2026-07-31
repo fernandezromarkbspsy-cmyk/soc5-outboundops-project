@@ -1,6 +1,7 @@
 import { FormEvent, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, UserX, X } from 'lucide-react';
+import { Modal } from '../components/Modal';
 import { api } from '../lib/api';
 import type { ManagedUser, Role } from '../types';
 
@@ -19,5 +20,5 @@ export function UserManagement() {
 
 function CreateUser({ busy, error, onClose, onSubmit }: {busy:boolean;error?:string;onClose:()=>void;onSubmit:(body:unknown)=>void}) {
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); const data = new FormData(event.currentTarget); onSubmit({ name: data.get('name'), ops_id: data.get('ops_id') }); }
-  return <div className="dialog-layer"><section className="form-dialog compact"><div className="dialog-head"><h2>Add Ops PIC</h2><button className="icon-button" onClick={onClose}><X/></button></div><form onSubmit={submit}><label>Name<input name="name" required/></label><label>OPS ID<input name="ops_id" required pattern="ops[0-9]+" placeholder="ops12345"/></label>{error && <p className="notice error">{error}</p>}<div className="dialog-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Creating...' : 'Create user'}</button></div></form></section></div>;
+  return <Modal open onClose={onClose} className="form-dialog compact" ariaLabel="Add Ops PIC"><div className="dialog-head"><h2>Add Ops PIC</h2><button className="icon-button" type="button" aria-label="Close" onClick={onClose}><X/></button></div><form onSubmit={submit}><label>Name<input name="name" required /></label><label>OPS ID<input name="ops_id" required pattern="ops[0-9]+" placeholder="ops12345" /></label>{error && <p className="notice error">{error}</p>}<div className="dialog-actions"><button type="button" className="secondary-button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Creating...' : 'Create user'}</button></div></form></Modal>;
 }

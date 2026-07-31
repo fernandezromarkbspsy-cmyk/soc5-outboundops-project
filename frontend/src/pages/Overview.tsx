@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Clock3, Route, Truck, X } from 'lucide-react';
 import { RequestTable } from '../components/RequestTable';
+import { SkeletonTable } from '../components/SkeletonTable';
 import { api } from '../lib/api';
 import { useUiStore } from '../stores/ui';
 import type { AppView, Page, RequestAnalytics, RequestMetrics, Status, TruckRequest, User } from '../types';
@@ -76,7 +77,7 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
       <article className="panel chart-panel line-panel">
         <div className="panel-head compact"><div><h2>Hourly truck requests</h2><p>Current night shift - 6 PM to 6 AM</p></div><div className="chart-tabs"><span>Weekly</span><span>Monthly</span></div></div>
         <div className="line-chart"><svg viewBox="0 0 700 190" role="img" aria-label="Hourly request line chart"><defs><linearGradient id="lineArea" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stopColor="#8b6aa5" stopOpacity=".26" /><stop offset="100%" stopColor="#8b6aa5" stopOpacity="0" /></linearGradient></defs><line x1="46" y1="160" x2="654" y2="160" /><line x1="46" y1="112" x2="654" y2="112" /><line x1="46" y1="64" x2="654" y2="64" />{areaPath && <path className="line-area" d={areaPath} />}<path className="line-stroke" d={linePath} />{chartPoints.map(point => <g key={point.label}><circle cx={point.x} cy={point.y} r="4"><title>{point.label}: {point.count}</title></circle><text x={point.x} y="178">{point.label}</text></g>)}{chartPoints.length > 0 && <g className="line-callout"><line x1={peakPoint.x} y1={peakPoint.y} x2={peakPoint.x} y2="160" /><rect x={Math.max(48, Math.min(peakPoint.x - 48, 604))} y={Math.max(18, peakPoint.y - 42)} width="96" height="34" rx="5" /><text x={Math.max(96, Math.min(peakPoint.x, 652))} y={Math.max(38, peakPoint.y - 22)}>{peak.label}</text><text x={Math.max(96, Math.min(peakPoint.x, 652))} y={Math.max(52, peakPoint.y - 8)}>{peak.count} requests</text></g>}</svg></div>
-        <div className="chart-summary inline"><strong>{hourly.reduce((sum, point) => sum + point.count, 0)}</strong><span>Total requests - Peak {peak.count} at {peak.label}</span></div>
+        <div className="chart-summary inline"><strong>{hourly.reduce((sum, point) => sum + point.count, 0)}</strong><span>Total requests, peak {peak.count} at {peak.label}</span></div>
       </article>
       <article className="panel chart-panel">
         <div className="panel-head compact"><div><h2>Truck sizes</h2><p>Selected date range</p></div></div>
@@ -87,6 +88,6 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
         <div className="dashboard-list truck-list">{assignedTrucks.length ? assignedTrucks.map(request => <div className="truck-row" key={request.id}><span className="truck-dot"><Truck size={15} /></span><div><strong>{request.cluster}</strong><small>{request.status.replaceAll('_', ' ')}</small></div><span>{request.plate_number}</span><span>{request.truck_size}</span></div>) : <p className="compact-empty">No assigned trucks are ready for docking.</p>}</div>
       </article>
     </section>
-    {detailStatus !== null && <div className="dialog-layer" role="presentation" onMouseDown={event => event.target === event.currentTarget && setDetailStatus(null)}><section className="form-dialog request-detail-dialog" role="dialog" aria-modal="true" aria-label="Request details"><div className="dialog-head"><div><h2>{cards.find(card => card.status === detailStatus)?.label}</h2><p>{from} to {to} - {details.data?.total ?? 0} requests</p></div><button className="icon-button" aria-label="Close" onClick={() => setDetailStatus(null)}><X size={18} /></button></div>{details.isPending ? <div className="loading-block">Loading...</div> : <RequestTable rows={details.data?.data ?? []} />}</section></div>}
+    {detailStatus !== null && <div className="dialog-layer" role="presentation" onMouseDown={event => event.target === event.currentTarget && setDetailStatus(null)}><section className="form-dialog request-detail-dialog" role="dialog" aria-modal="true" aria-label="Request details"><div className="dialog-head"><div><h2>{cards.find(card => card.status === detailStatus)?.label}</h2><p>{from} to {to} - {details.data?.total ?? 0} requests</p></div><button className="icon-button" aria-label="Close" onClick={() => setDetailStatus(null)}><X size={18} /></button></div>{details.isPending ? <div className="table-loading-shell"><div className="table-loading-toolbar"><span className="skeleton-chip" /><span className="skeleton-chip" /><span className="skeleton-chip" /></div><SkeletonTable columns={14} rows={4} compact /></div> : <RequestTable rows={details.data?.data ?? []} />}</section></div>}
   </div>;
 }

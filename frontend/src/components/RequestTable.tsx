@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode, useState } from 'react';
-import { ArrowDown, ArrowUp, Check, ChevronsUpDown, CircleDot, Clipboard, Clock3, Copy, Hash, Landmark, ListChecks, Truck, UserRound } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, ChevronDown, ChevronsUpDown, CircleDot, Clipboard, Clock3, Copy, Hash, Landmark, ListChecks, Truck, UserRound } from 'lucide-react';
 import type { RequestSort, SortDirection, TruckRequest } from '../types';
 import { StatusBadge } from './StatusBadge';
 
@@ -7,9 +7,11 @@ type Props = {
   rows: TruckRequest[];
   actions?: (request: TruckRequest) => ReactNode;
   emptyMessage?: string;
+  emptyAction?: ReactNode;
   sort?: RequestSort;
   direction?: SortDirection;
   onSort?: (sort: RequestSort) => void;
+  visibleColumns?: string[];
 };
 
 type Column = { key: string; sortKey?: RequestSort; label: string; icon: typeof CircleDot; render: (request: TruckRequest) => ReactNode };
@@ -31,9 +33,11 @@ const columns: Column[] = [
   { key: 'doc_officer', label: 'DOC Officer', icon: UserRound, render: request => empty(request.created_by) },
 ];
 
-export function RequestTable({ rows, actions, emptyMessage = 'No requests found.', sort, direction, onSort }: Props) {
+export function RequestTable({ rows, actions, emptyMessage = 'No requests found.', emptyAction, sort, direction, onSort, visibleColumns }: Props) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
-  if (!rows.length) return <div className="empty-state"><strong>No requests</strong><p>{emptyMessage}</p></div>;
+  if (!rows.length) return <div className="empty-state"><strong>No requests</strong><p>{emptyMessage}</p>{emptyAction && <div className="empty-state-actions">{emptyAction}</div>}</div>;
+  const visibleSet = visibleColumns ? new Set(visibleColumns) : null;
+  const renderedColumns = visibleSet ? columns.filter(column => visibleSet.has(column.key)) : columns;
 
   function heading(column: Column) {
     const content = <span className="table-header-label"><column.icon size={14} />{column.label}</span>;
@@ -43,14 +47,27 @@ export function RequestTable({ rows, actions, emptyMessage = 'No requests found.
     return <button className={`sort-button ${active ? 'is-active' : ''}`} type="button" onClick={() => onSort(column.sortKey!)}>{content}<Icon size={13} /></button>;
   }
 
-  return <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr>{columns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map(request => {
+  return <div className="table-wrap request-table-wrap"><table className="request-table"><thead><tr><th><span className="sr-only">Expand</span></th>{renderedColumns.map(column => <th key={column.key} className={`request-column request-column--${column.key}`}>{heading(column)}</th>)}{actions && <th><span className="sr-only">Actions</span></th>}</tr></thead><tbody>{rows.map(request => {
     const expanded = expandedId === request.id;
+    const detailId = `request-detail-${request.id}`;
     return <Fragment key={request.id}>
-      <tr className="request-row" aria-expanded={expanded} onClick={() => setExpandedId(value => value === request.id ? null : request.id)}>
-        {columns.map(column => <td key={column.key} className={`request-column request-column--${column.key}`} data-label={column.label}>{column.render(request)}</td>)}
-        {actions && <td data-label="Actions" onClick={event => event.stopPropagation()}><div className="row-actions">{actions(request)}</div></td>}
+      <tr className="request-row" aria-expanded={expanded}>
+        <td className="request-column request-column--expand" data-label="Expand">
+          <button
+            type="button"
+            className="expand-button"
+            aria-expanded={expanded}
+            aria-controls={detailId}
+            aria-label={`${expanded ? 'Collapse' : 'Expand'} request ${request.id}`}
+            onClick={() => setExpandedId(value => value === request.id ? null : request.id)}
+          >
+            <ChevronDown size={15} />
+          </button>
+        </td>
+        {renderedColumns.map(column => <td key={column.key} className={`request-column request-column--${column.key}`} data-label={column.label}>{column.render(request)}</td>)}
+        {actions && <td data-label="Actions"><div className="row-actions">{actions(request)}</div></td>}
       </tr>
-      {expanded && <tr className="request-detail-row"><td colSpan={columns.length + (actions ? 1 : 0)}><RequestDetails request={request} /></td></tr>}
+      {expanded && <tr className="request-detail-row" id={detailId}><td colSpan={renderedColumns.length + (actions ? 2 : 1)}><RequestDetails request={request} /></td></tr>}
     </Fragment>;
   })}</tbody></table></div>;
 }

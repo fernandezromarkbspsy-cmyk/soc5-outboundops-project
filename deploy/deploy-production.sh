@@ -84,11 +84,14 @@ fi
 # the non-root application user can read them after Docker copies the context.
 umask 022
 
-echo "Fetching origin/$BRANCH..."
-git fetch --prune origin "$BRANCH"
+echo "Fetching target revision $TARGET_REVISION..."
+# Deploy the exact commit selected by GitHub Actions instead of updating the
+# local branch tip. This avoids failures when the EC2 checkout has diverged
+# from origin/main but still allows the workflow to deploy the intended SHA.
+git fetch --no-tags --prune origin "$TARGET_REVISION"
 
 if ! git cat-file -e "$TARGET_REVISION^{commit}"; then
-  echo "Deployment refused: target revision $TARGET_REVISION is not available after fetching origin/$BRANCH." >&2
+  echo "Deployment refused: target revision $TARGET_REVISION is not available after fetching the repository." >&2
   exit 1
 fi
 

@@ -2,16 +2,37 @@ import { FormEvent, useDeferredValue, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ban, Check, Pencil, Plus, Save, X, XCircle } from 'lucide-react';
 import { Pagination } from '../components/Pagination';
+import { ColumnVisibilityMenu } from '../components/ColumnVisibilityMenu';
+import { Modal } from '../components/Modal';
 import { RequestFilters, statuses } from '../components/RequestFilters';
 import { RequestTable } from '../components/RequestTable';
+import { SkeletonTable } from '../components/SkeletonTable';
 import type { QueueSnapshot } from '../hooks/useQueueNotifications';
 import { api } from '../lib/api';
-import { defaultRequestFilters, exportRequestsCsv, requestQueryString } from '../lib/requests';
+import { defaultRequestFilters, exportRequestsCsv, requestMetricsQueryString, requestQueryString } from '../lib/requests';
 import { useUiStore } from '../stores/ui';
 import type { ClusterLookup, Page, RequestSort, TruckRequest, User } from '../types';
 
 type EditableAction = { kind: 'edit' | 'reject'; request: TruckRequest };
 type RequestPayload = { cluster: FormDataEntryValue | null; region: FormDataEntryValue | null; dock_no: FormDataEntryValue | null; backlogs: number; backlogs_timestamp?: FormDataEntryValue | null; truck_size: FormDataEntryValue | null; truck_type: FormDataEntryValue | null };
+
+const defaultColumns = ['status', 'request_timestamp', 'cluster', 'dock_no', 'backlogs', 'plate_number', 'truck_size', 'truck_type'];
+const columnOptions = [
+  { key: 'status', label: 'Status' },
+  { key: 'request_timestamp', label: 'Request time' },
+  { key: 'cluster', label: 'Cluster' },
+  { key: 'dock_no', label: 'Dock #' },
+  { key: 'backlogs', label: 'Backlogs' },
+  { key: 'ob_fte', label: 'Ops FTE' },
+  { key: 'linehaul_trip_no', label: 'LHTrip #' },
+  { key: 'plate_number', label: 'Plate #' },
+  { key: 'mm_fte', label: 'FTE MM' },
+  { key: 'truck_size', label: 'Truck size' },
+  { key: 'truck_type', label: 'Truck type' },
+  { key: 'provide_time', label: 'Provide time' },
+  { key: 'docked_time', label: 'Docked time' },
+  { key: 'doc_officer', label: 'DOC officer' },
+];
 
 export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnapshot }) {
   const queryClient = useQueryClient();
@@ -23,10 +44,16 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
   const [creating, setCreating] = useState(false);
   const [notice, setNotice] = useState('');
   const [exporting, setExporting] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState(defaultColumns);
   const appliedFilters = { ...filters, search: deferredSearch };
   const requests = useQuery({
     queryKey: ['requests', 'outbound-all', appliedFilters],
     queryFn: () => api<Page<TruckRequest>>(`/requests?${requestQueryString(appliedFilters)}`),
+    placeholderData: previous => previous,
+  });
+  const metrics = useQuery({
+    queryKey: ['request-metrics', 'outbound-all', { search: appliedFilters.search, dateFrom: appliedFilters.dateFrom, dateTo: appliedFilters.dateTo }],
+    queryFn: () => api<{ total: number; awaiting_action: number; by_status: Partial<Record<TruckRequest['status'], number>> }>(`/requests/metrics?${requestMetricsQueryString(appliedFilters)}`),
     placeholderData: previous => previous,
   });
 
@@ -52,7 +79,12 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     mutationFn: ({ request, action }: { request: TruckRequest; action: 'approve' | 'reject-ops' | 'cancel' }) => api<TruckRequest>(`/requests/${request.id}/${action}`, { method: 'POST', body: '{}' }),
     onSuccess: async (_, variables) => { setActiveAction(null); await refreshData(variables.action === 'approve' ? 'Request approved.' : variables.action === 'reject-ops' ? 'Request rejected.' : 'Request cancelled.'); },
   });
-  const bulkApprove = useMutation({mutationFn:(ids:string[])=>api('/requests/bulk-approve',{method:'POST',body:JSON.stringify({ids})}),onSuccess:()=>refreshData('Pending requests approved.')});
+  const bulkApprove = useMutation({
+    mutationFn: (ids: string[]) => api('/requests/bulk-approve', { method: 'POST', body: JSON.stringify({ ids }) }),
+    onSuccess: async (_, ids) => {
+      await refreshData(`Approved ${ids.length} request${ids.length === 1 ? '' : 's'}.`);
+    },
+  });
 
   const actionable = (request: TruckRequest) => request.status === 'PENDING' || request.status === 'REJECTED_BY_MM';
   const actions = (request: TruckRequest) => user.role === 'fte_ops' && actionable(request) ? <>
@@ -77,15 +109,22 @@ export function OutboundRequests({ user, queue }: { user: User; queue: QueueSnap
     }
   }
 
-  const statusSummary = statuses.map(status => ({ value: status, count: status === 'ALL' ? (requests.data?.data?.length ?? 0) : (requests.data?.data ?? []).filter(request => request.status === status).length }));
+  const statusSummary = statuses.map(status => ({ value: status, count: status === 'ALL' ? (metrics.data?.total ?? 0) : (metrics.data?.by_status?.[status] ?? 0) }));
   const error = createRequest.error || editRequest.error || transition.error;
+  const approvable = requests.data?.data?.filter(request => request.status === 'PENDING' || request.status === 'REJECTED_BY_MM').map(request => request.id) ?? [];
   return <div className="workspace-view">
     {(notice || error) && <p className={`notice${error || notice.includes('failed') ? ' error' : ' success-notice'}`}>{error?.message || notice}</p>}
 
     <section className="request-list-section">
-      {user.role === 'ops_pic' && <div className="page-actions"><button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button></div>}
-      <RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} hideStatusFilter={user.role === 'fte_ops'} hideSortButton={user.role === 'fte_ops'} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
-      <section className="panel data-panel">{creating && <InlineCreateRow busy={createRequest.isPending} onCancel={() => setCreating(false)} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}{requests.isPending ? <div className="loading-block">Loading requests...</div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
+      <div className="page-actions">
+        {user.role === 'ops_pic' && <button type="button" onClick={() => setCreating(true)}><Plus size={17} />Create request</button>}
+        {user.role === 'fte_ops' && <button type="button" className="secondary-button" disabled={!approvable.length || bulkApprove.isPending} onClick={() => bulkApprove.mutate(approvable)}>{bulkApprove.isPending ? 'Approving...' : `Approve ${approvable.length || ''} visible`}</button>}
+      </div>
+      <div className="request-toolbar-surface">
+        <ColumnVisibilityMenu visible={visibleColumns} onChange={setVisibleColumns} options={columnOptions} />
+      </div>
+      <RequestFilters filters={filters} exporting={exporting} statusSummary={statusSummary} hideStatusFilter={user.role === 'fte_ops'} onChange={next => { setFilters(next); setGlobalSearch(next.search); }} onExport={() => void exportCsv()} onRefresh={() => void requests.refetch()} />
+      <section className="panel data-panel">{creating && <InlineCreateRow busy={createRequest.isPending} onCancel={() => setCreating(false)} onSubmit={payload => { setNotice(''); createRequest.mutate(payload); }} />}{requests.isPending ? <div className="table-loading-shell"><div className="table-loading-toolbar"><span className="skeleton-chip" /><span className="skeleton-chip" /><span className="skeleton-chip" /></div><SkeletonTable columns={visibleColumns.length + 2} rows={4} /></div> : requests.error ? <p className="state error">{requests.error.message}</p> : <><RequestTable rows={requests.data?.data ?? []} actions={actions} sort={filters.sort} direction={filters.direction} onSort={sortBy} visibleColumns={visibleColumns} emptyAction={<>{user.role === 'ops_pic' && <button type="button" onClick={() => setCreating(true)}>Create request</button>}<button type="button" className="secondary-button" onClick={() => { setFilters(defaultRequestFilters); setGlobalSearch(''); }}>Clear filters</button><button type="button" className="secondary-button" onClick={() => void requests.refetch()}>Refresh</button></>} /><Pagination page={requests.data!} onPageChange={page => setFilters(value => ({ ...value, page }))} /></>}</section>
     </section>
 
     {activeAction?.kind === 'edit' && <EditRequestDialog request={activeAction.request} busy={editRequest.isPending} error={editRequest.error?.message} onClose={() => setActiveAction(null)} onSubmit={payload => editRequest.mutate({ request: activeAction.request, payload })} />}
@@ -136,9 +175,9 @@ function InlineCreateRow({ busy, onCancel, onSubmit }: { busy: boolean; onCancel
 
 function EditRequestDialog({ request, busy, error, onClose, onSubmit }: { request: TruckRequest; busy: boolean; error?: string; onClose: () => void; onSubmit: (payload: RequestPayload) => void }) {
   function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); onSubmit(requestPayload(event.currentTarget)); }
-  return <div className="dialog-layer"><section className="form-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-title"><div className="dialog-head"><div><p className="eyebrow">FTE OPS</p><h2 id="edit-title">Edit LH request</h2></div><button className="icon-button" type="button" title="Close" aria-label="Close" onClick={onClose}><X size={19} /></button></div><form onSubmit={submit}><RequestFields request={request} />{error && <p className="error notice">{error}</p>}<div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Saving...' : 'Save changes'}</button></div></form></section></div>;
+  return <Modal open onClose={onClose} ariaLabelledBy="edit-title"><div className="dialog-head"><div><p className="eyebrow">FTE OPS</p><h2 id="edit-title">Edit LH request</h2></div><button className="icon-button" type="button" title="Close" aria-label="Close" onClick={onClose}><X size={19} /></button></div><form onSubmit={submit}><RequestFields request={request} />{error && <p className="error notice">{error}</p>}<div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Cancel</button><button disabled={busy}>{busy ? 'Saving...' : 'Save changes'}</button></div></form></Modal>;
 }
 
 function ConfirmRejectDialog({ request, isCancel, busy, onClose, onConfirm }: { request: TruckRequest; isCancel: boolean; busy: boolean; onClose: () => void; onConfirm: () => void }) {
-  return <div className="dialog-layer"><section className="form-dialog compact" role="alertdialog" aria-modal="true" aria-labelledby="reject-title"><div className="dialog-head"><div><p className="eyebrow">{request.cluster}</p><h2 id="reject-title">{isCancel ? 'Cancel request' : 'Reject request'}</h2></div><button className="icon-button" type="button" title="Close" aria-label="Close" onClick={onClose}><X size={19} /></button></div><p className="dialog-copy">This request will be moved to Cancelled and removed from the active queue.</p><div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Keep request</button><button className="danger-button" type="button" disabled={busy} onClick={onConfirm}>{busy ? 'Saving...' : isCancel ? 'Cancel request' : 'Reject request'}</button></div></section></div>;
+  return <Modal open onClose={onClose} className="form-dialog compact" role="alertdialog" ariaLabelledBy="reject-title"><div className="dialog-head"><div><p className="eyebrow">{request.cluster}</p><h2 id="reject-title">{isCancel ? 'Cancel request' : 'Reject request'}</h2></div><button className="icon-button" type="button" title="Close" aria-label="Close" onClick={onClose}><X size={19} /></button></div><p className="dialog-copy">This request will be moved to Cancelled and removed from the active queue.</p><div className="dialog-actions"><button className="secondary-button" type="button" onClick={onClose}>Keep request</button><button className="danger-button" type="button" disabled={busy} onClick={onConfirm}>{busy ? 'Saving...' : isCancel ? 'Cancel request' : 'Reject request'}</button></div></Modal>;
 }

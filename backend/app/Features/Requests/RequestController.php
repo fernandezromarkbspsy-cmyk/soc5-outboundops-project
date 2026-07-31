@@ -29,6 +29,7 @@ final class RequestController
     public function metrics(Request $request): JsonResponse
     {
         $filters = $request->validate([
+            'search' => 'nullable|string|max:50',
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);

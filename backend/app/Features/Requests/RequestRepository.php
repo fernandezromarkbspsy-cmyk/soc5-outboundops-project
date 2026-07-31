@@ -41,6 +41,9 @@ final class RequestRepository
     {
         $query = DB::table('requests')->select('status', DB::raw('count(*) as total'))->groupBy('status');
         $this->scope($query, $actor, $filters);
+        if ($search = trim((string) ($filters['search'] ?? ''))) {
+            $query->whereRaw("lower(coalesce(plate_number, '')) like ?", ['%'.strtolower($search).'%']);
+        }
 
         return $query->pluck('total', 'status');
     }
@@ -82,6 +85,12 @@ final class RequestRepository
     {
         if ($actor->role === 'ops_pic' && ! ($actor->is_admin ?? false)) {
             $query->where('created_by', $actor->id);
+        }
+        if ($status = $filters['status'] ?? null) {
+            $query->where('status', $status);
+        }
+        if ($search = trim((string) ($filters['search'] ?? ''))) {
+            $query->whereRaw("lower(coalesce(plate_number, '')) like ?", ['%'.strtolower($search).'%']);
         }
         if ($dateFrom = $filters['date_from'] ?? null) {
             $query->whereDate('request_timestamp', '>=', $dateFrom);

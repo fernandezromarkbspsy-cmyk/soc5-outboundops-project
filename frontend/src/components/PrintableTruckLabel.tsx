@@ -1,5 +1,6 @@
 import { Printer, X } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { Modal } from './Modal';
 import type { TruckRequest } from '../types';
 
 type TemplateKind = 'single' | 'coload' | 'triload';
@@ -64,13 +65,10 @@ export function PrintableTruckLabel({ request, onClose }: { request: TruckReques
   const clusterValues = clusters(request);
   const kind = templateKind(clusterValues.length);
 
-  return createPortal(<div className="dialog-layer print-layer" onMouseDown={event => event.target === event.currentTarget && onClose()}>
-    <section className="print-dialog" role="dialog" aria-modal="true" aria-label="Printable truck label">
-      <div className="print-toolbar">
+  return createPortal(<Modal open onClose={onClose} className="print-dialog" ariaLabel="Printable truck label"><div className="print-toolbar">
         <strong>Printable LH label</strong>
         <div><button className="secondary-button" type="button" onClick={() => window.print()}><Printer size={16} />Print</button><button className="icon-button" type="button" aria-label="Close" onClick={onClose}><X size={18} /></button></div>
-      </div>
-      <div className="print-preview">
+      </div><div className="print-preview">
         <div className={`truck-label truck-label--${kind}`}>
           <img src={templateSrc[kind]} alt="" />
           <div className="label-value plate">{request.plate_number || ''}</div>
@@ -79,7 +77,5 @@ export function PrintableTruckLabel({ request, onClose }: { request: TruckReques
           <div className="label-value dock-time">{dockTime(request)}</div>
           {loadSlots(kind, clusterValues).map(slot => <div key={slot.className} className={`label-value ${slot.className}`}>{slot.value}</div>)}
         </div>
-      </div>
-    </section>
-  </div>, document.body);
+      </div></Modal>, document.body);
 }
