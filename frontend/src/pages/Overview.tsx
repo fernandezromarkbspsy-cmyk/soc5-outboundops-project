@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Clock3, Route, Truck, X } from 'lucide-react';
+import { ArrowUpRight, Clock3, Route, Sparkles, Truck, X } from 'lucide-react';
 import { RequestTable } from '../components/RequestTable';
 import { SkeletonTable } from '../components/SkeletonTable';
 import { api } from '../lib/api';
@@ -63,11 +63,94 @@ export function Overview({ onNavigate }: { user: User; onNavigate: (view: AppVie
       return `#${palette[index]} ${start}% ${offset}%`;
     }).join(',');
   }, [analytics.data, sizeTotal]);
+  const totalRequests = metrics.data?.total ?? 0;
+  const pendingRequests = metrics.data?.by_status.PENDING ?? 0;
+  const forDockingRequests = metrics.data?.by_status.FOR_DOCKING ?? 0;
+  const dockedRequests = metrics.data?.by_status.DOCKED ?? 0;
+  const completionRate = totalRequests ? Math.round((dockedRequests / totalRequests) * 100) : 0;
+  const activeSignal = hourly.reduce((sum, point) => sum + point.count, 0);
+  const trendLabel = peak.count > 0 ? `${peak.count} at ${peak.label}` : 'No active volume yet';
 
   return <div className="workspace-view dashboard-view">
     {(requests.error || metrics.error || analytics.error) && <p className="error notice">Dashboard data could not be loaded.</p>}
+    <section className="overview-hero" aria-label="Request metrics overview">
+      <div className="overview-hero-copy">
+        <p className="eyebrow">AI operations overview</p>
+        <h1>Request flow at a glance</h1>
+        <p>Track live request volume, dock readiness, and throughput across the current shift.</p>
+      </div>
+      <div className="overview-hero-summary">
+        <div>
+          <span>Total requests</span>
+          <strong>{metrics.isPending ? '-' : totalRequests.toLocaleString()}</strong>
+        </div>
+        <div>
+          <span>Peak hour</span>
+          <strong>{metrics.isPending ? '-' : trendLabel}</strong>
+        </div>
+        <div>
+          <span>Completion</span>
+          <strong>{metrics.isPending ? '-' : `${completionRate}%`}</strong>
+        </div>
+      </div>
+    </section>
     <section className="overview-metrics" aria-label="Request metrics">
-      {cards.map(({ label, status, value, icon }, index) => <button key={status} type="button" className={`metric-card${index === 0 ? ' primary' : ''}`} onClick={() => setDetailStatus(status)}><span className="metric-icon">{icon}</span><span><small>{label}</small><strong>{metrics.isPending ? '-' : value.toLocaleString()}</strong></span></button>)}
+      <button type="button" className="metric-card metric-card--primary" onClick={() => setDetailStatus('ALL')}>
+        <span className="metric-card-top">
+          <span className="metric-icon"><Sparkles size={18} /></span>
+          <span className="metric-chip">Live summary</span>
+        </span>
+        <span className="metric-copy">
+          <small>Total Requests</small>
+          <strong>{metrics.isPending ? '-' : totalRequests.toLocaleString()}</strong>
+        </span>
+        <span className="metric-foot">
+          <span>{metrics.isPending ? '-' : activeSignal} events in hourly activity</span>
+          <ArrowUpRight size={16} />
+        </span>
+      </button>
+      <button type="button" className="metric-card" onClick={() => setDetailStatus('PENDING')}>
+        <span className="metric-card-top">
+          <span className="metric-icon"><Clock3 size={18} /></span>
+          <span className="metric-chip">Needs attention</span>
+        </span>
+        <span className="metric-copy">
+          <small>Pending Request</small>
+          <strong>{metrics.isPending ? '-' : pendingRequests.toLocaleString()}</strong>
+        </span>
+        <span className="metric-foot">
+          <span>{metrics.isPending ? '-' : `${totalRequests ? Math.round((pendingRequests / totalRequests) * 100) : 0}% of all requests`}</span>
+          <ArrowUpRight size={16} />
+        </span>
+      </button>
+      <button type="button" className="metric-card" onClick={() => setDetailStatus('FOR_DOCKING')}>
+        <span className="metric-card-top">
+          <span className="metric-icon"><Truck size={18} /></span>
+          <span className="metric-chip">Dock queue</span>
+        </span>
+        <span className="metric-copy">
+          <small>For Docking</small>
+          <strong>{metrics.isPending ? '-' : forDockingRequests.toLocaleString()}</strong>
+        </span>
+        <span className="metric-foot">
+          <span>{metrics.isPending ? '-' : 'Waiting for dock assignment'}</span>
+          <ArrowUpRight size={16} />
+        </span>
+      </button>
+      <button type="button" className="metric-card" onClick={() => setDetailStatus('DOCKED')}>
+        <span className="metric-card-top">
+          <span className="metric-icon"><Route size={18} /></span>
+          <span className="metric-chip">Completed</span>
+        </span>
+        <span className="metric-copy">
+          <small>Docked</small>
+          <strong>{metrics.isPending ? '-' : dockedRequests.toLocaleString()}</strong>
+        </span>
+        <span className="metric-foot">
+          <span>{metrics.isPending ? '-' : `${completionRate}% completion rate`}</span>
+          <ArrowUpRight size={16} />
+        </span>
+      </button>
     </section>
     <section className="dashboard-grid">
       <article className="panel dashboard-list-panel">
