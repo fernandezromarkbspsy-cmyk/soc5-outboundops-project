@@ -103,7 +103,7 @@ jobs:
 
           echo "Deploying revision: $TARGET_REVISION"
           parameters=$(jq -n \
-            --arg command "if ! command -v aws >/dev/null 2>&1; then apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; fi; sudo -u ubuntu env TARGET_REVISION=$TARGET_REVISION bash /opt/soc5-outbound/deploy/deploy-production.sh" \
+            --arg command "if ! command -v aws >/dev/null 2>&1; then apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; fi; sudo -u ubuntu bash -lc 'set -Eeuo pipefail; cd /opt/soc5-outbound; git fetch --no-tags --prune origin main; git rev-parse --verify \"$TARGET_REVISION^{commit}\" >/dev/null; git reset --hard \"$TARGET_REVISION\"; env TARGET_REVISION=\"$TARGET_REVISION\" bash /opt/soc5-outbound/deploy/deploy-production.sh'" \
             '{commands: [$command], executionTimeout: ["2400"]}')
 
           command_id=$(aws ssm send-command \
