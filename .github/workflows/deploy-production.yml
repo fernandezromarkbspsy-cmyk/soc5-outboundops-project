@@ -96,12 +96,14 @@ jobs:
       - name: Run deployment through Systems Manager
         env:
           INSTANCE_ID: ${{ secrets.AWS_EC2_INSTANCE_ID }}
+          TARGET_REVISION: ${{ github.sha }}
         shell: bash
         run: |
           set -Eeuo pipefail
 
+          echo "Deploying revision: $TARGET_REVISION"
           parameters=$(jq -n \
-            --arg command "if ! command -v aws >/dev/null 2>&1; then apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; fi; sudo -u ubuntu env TARGET_REVISION=$GITHUB_SHA bash /opt/soc5-outbound/deploy/deploy-production.sh" \
+            --arg command "if ! command -v aws >/dev/null 2>&1; then apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y awscli; fi; sudo -u ubuntu env TARGET_REVISION=$TARGET_REVISION bash /opt/soc5-outbound/deploy/deploy-production.sh" \
             '{commands: [$command], executionTimeout: ["2400"]}')
 
           command_id=$(aws ssm send-command \

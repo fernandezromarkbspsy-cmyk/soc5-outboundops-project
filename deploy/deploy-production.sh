@@ -4,7 +4,8 @@ set -Eeuo pipefail
 
 readonly APP_DIR="/opt/soc5-outbound"
 readonly BRANCH="main"
-readonly TARGET_REVISION="${TARGET_REVISION:-origin/$BRANCH}"
+readonly TARGET_REVISION="${TARGET_REVISION:-}"
+readonly DEFAULT_REMOTE_REF="origin/$BRANCH"
 readonly HEALTH_URL="http://127.0.0.1:8080/up"
 readonly ROOT_ENV_SECRET_ID="${ROOT_ENV_SECRET_ID:-soc5-outbound/root-env}"
 readonly BACKEND_ENV_SECRET_ID="${BACKEND_ENV_SECRET_ID:-soc5-outbound/backend-env}"
@@ -84,21 +85,36 @@ fi
 # the non-root application user can read them after Docker copies the context.
 umask 022
 
-echo "Fetching target revision $TARGET_REVISION..."
-# Deploy the exact commit selected by GitHub Actions instead of updating the
-# local branch tip. This avoids failures when the EC2 checkout has diverged
-# from origin/main but still allows the workflow to deploy the intended SHA.
-git fetch --no-tags --prune origin "$TARGET_REVISION"
+if [[ -n "$TARGET_REVISION" ]]; then
+  echo "Fetching target revision $TARGET_REVISION..."
+  # Deploy the exact commit selected by GitHub Actions instead of updating the
+  # local branch tip. This avoids failures when the EC2 checkout has diverged
+  # from origin/main but still allows the workflow to deploy the intended SHA.
+  git fetch --no-tags --prune origin "$TARGET_REVISION"
 
-if ! git cat-file -e "$TARGET_REVISION^{commit}"; then
-  echo "Deployment refused: target revision $TARGET_REVISION is not available after fetching the repository." >&2
-  exit 1
+  if ! git cat-file -e "$TARGET_REVISION^{commit}"; then
+    echo "Deployment refused: target revision $TARGET_REVISION is not available after fetching the repository." >&2
+    exit 1
+  fi
+
+  current_revision="$(git rev-parse --short HEAD)"
+  target_revision="$(git rev-parse --short "$TARGET_REVISION")"
+  echo "Updating checkout from $current_revision to $target_revision..."
+  git reset --hard "$TARGET_REVISION"
+else
+  echo "Fetching default branch $DEFAULT_REMOTE_REF..."
+  git fetch --no-tags --prune origin "$BRANCH"
+
+  if ! git cat-file -e "$DEFAULT_REMOTE_REF^{commit}"; then
+    echo "Deployment refused: $DEFAULT_REMOTE_REF is not available after fetching the repository." >&2
+    exit 1
+  fi
+
+  current_revision="$(git rev-parse --short HEAD)"
+  target_revision="$(git rev-parse --short "$DEFAULT_REMOTE_REF")"
+  echo "Updating checkout from $current_revision to $target_revision..."
+  git reset --hard "$DEFAULT_REMOTE_REF"
 fi
-
-current_revision="$(git rev-parse --short HEAD)"
-target_revision="$(git rev-parse --short "$TARGET_REVISION")"
-echo "Updating checkout from $current_revision to $target_revision..."
-git reset --hard "$TARGET_REVISION"
 git ls-files -z | xargs -0 chmod a+r
 
 echo "Validating Compose configuration..."
