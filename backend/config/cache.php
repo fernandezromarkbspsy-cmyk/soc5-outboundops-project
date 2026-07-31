@@ -3,7 +3,7 @@
 use Illuminate\Support\Str;
 
 return [
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('CACHE_STORE', 'file'),
     'stores' => [
         'array' => ['driver' => 'array', 'serialize' => false],
         'session' => ['driver' => 'session', 'key' => env('SESSION_CACHE_KEY', '_cache')],
@@ -20,7 +20,7 @@ return [
             'connection' => env('REDIS_CACHE_CONNECTION', 'cache'),
             'lock_connection' => env('REDIS_CACHE_LOCK_CONNECTION', 'default'),
         ],
-        'failover' => ['driver' => 'failover', 'stores' => ['database', 'array']],
+        'failover' => ['driver' => 'failover', 'stores' => ['file', 'array']],
     ],
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel'), '_').'_cache_'),
 ];
