@@ -81,6 +81,20 @@ if ! grep -Eq '^SUPABASE_(PUBLISHABLE_KEY|ANON_KEY)=.+' backend/.env; then
   exit 1
 fi
 
+if grep -Eq '^CACHE_STORE=redis$' backend/.env || grep -Eq '^QUEUE_CONNECTION=redis$' backend/.env || grep -Eq '^SESSION_DRIVER=redis$' backend/.env; then
+  for variable in REDIS_CLIENT REDIS_HOST REDIS_PORT REDIS_PASSWORD REDIS_SCHEME; do
+    if ! grep -Eq "^${variable}=.+" backend/.env; then
+      echo "Deployment refused: $variable is missing or empty in $APP_DIR/backend/.env while Redis is enabled." >&2
+      exit 1
+    fi
+  done
+
+  if ! grep -Eq '^REDIS_USERNAME=.+' backend/.env; then
+    echo "Deployment refused: REDIS_USERNAME is missing in $APP_DIR/backend/.env while Redis is enabled." >&2
+    exit 1
+  fi
+fi
+
 # Secrets remain mode 600; source files pulled below need normal read access so
 # the non-root application user can read them after Docker copies the context.
 umask 022
