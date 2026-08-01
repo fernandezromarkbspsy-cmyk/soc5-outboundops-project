@@ -1,38 +1,213 @@
-<!-- code-review-graph MCP tools -->
-## MCP Tools: code-review-graph
+# AGENTS.md
 
-**IMPORTANT: This project has a knowledge graph. ALWAYS use the
-code-review-graph MCP tools BEFORE using Grep/Glob/Read to explore
-the codebase.** The graph is faster, cheaper (fewer tokens), and gives
-you structural context (callers, dependents, test coverage) that file
-scanning cannot.
+## AI Development Workflow
 
-### When to use graph tools FIRST
+This project uses **Code Review Graph (CRG)** as the primary repository knowledge source.
 
-- **Exploring code**: `semantic_search_nodes_tool` or `query_graph_tool` instead of Grep
-- **Understanding impact**: `get_impact_radius_tool` instead of manually tracing imports
-- **Code review**: `detect_changes_tool` + `get_review_context_tool` instead of reading entire files
-- **Finding relationships**: `query_graph_tool` with callers_of/callees_of/imports_of/tests_for
-- **Architecture questions**: `get_architecture_overview_tool` + `list_communities_tool`
+Before performing any task:
 
-Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
+1. Use Code Review Graph to analyze the repository.
+2. Determine:
+   - Dependency graph
+   - Impact radius
+   - Call graph
+   - Module relationships
+   - Relevant files
+3. Read only the files identified by Code Review Graph.
+4. Do not scan unrelated files unless Code Review Graph indicates they are required.
 
-### Key Tools
+---
 
-| Tool | Use when |
-| ------ | ---------- |
-| `detect_changes_tool` | Reviewing code changes — gives risk-scored analysis |
-| `get_review_context_tool` | Need source snippets for review — token-efficient |
-| `get_impact_radius_tool` | Understanding blast radius of a change |
-| `get_affected_flows_tool` | Finding which execution paths are impacted |
-| `query_graph_tool` | Tracing callers, callees, imports, tests, dependencies |
-| `semantic_search_nodes_tool` | Finding functions/classes by name or keyword |
-| `get_architecture_overview_tool` | Understanding high-level codebase structure |
-| `refactor_tool` | Planning renames, finding dead code |
+# Before Implementation
 
-### Workflow
+Before making any code changes:
 
-1. The graph auto-updates on file changes (via hooks).
-2. Use `detect_changes_tool` for code review.
-3. Use `get_affected_flows_tool` to understand impact.
-4. Use `query_graph_tool` pattern="tests_for" to check coverage.
+- Explain the affected files.
+- Explain why those files are involved.
+- Describe the implementation plan.
+- Keep changes as small as possible.
+
+---
+
+# After Implementation
+
+After every implementation:
+
+- Verify dependencies remain intact.
+- Check for broken imports.
+- Check for broken API contracts.
+- Check for architectural regressions.
+- Detect dead code introduced by the change.
+- Report any newly discovered technical debt.
+
+---
+
+# SOC5-Outbound Project Rules
+
+This is a production-grade internal logistics platform.
+
+Always preserve unless explicitly instructed otherwise:
+
+- Business logic
+- Backend API contracts
+- Database schema
+- Authentication
+- Authorization
+- Role permissions
+- Request lifecycle
+- Supabase integration
+
+---
+
+# UI Modernization Rules
+
+When redesigning UI:
+
+Allowed:
+
+- Layout
+- Typography
+- Spacing
+- Components
+- Cards
+- Navigation
+- Tables
+- Charts
+- Theme
+- Responsiveness
+
+Do NOT modify:
+
+- Backend
+- API contracts
+- Business rules
+- Zustand stores
+- Supabase queries
+- Database schema
+
+unless explicitly instructed.
+
+---
+
+# Refactoring Rules
+
+Before refactoring:
+
+- Determine impact radius using Code Review Graph.
+- Show affected modules.
+- Refactor only affected files.
+- Avoid unrelated cleanup.
+
+---
+
+# Debugging Rules
+
+Before debugging:
+
+Use Code Review Graph to determine:
+
+- Call chain
+- Dependencies
+- Upstream callers
+- Downstream consumers
+
+Fix the root cause instead of symptoms.
+
+---
+
+# Performance Review
+
+When optimizing:
+
+Identify:
+
+- Circular dependencies
+- Large components
+- Duplicate logic
+- Dead code
+- Expensive renders
+- Unnecessary API calls
+
+Rank findings by impact.
+
+---
+
+# Architecture Review
+
+When reviewing architecture:
+
+Evaluate:
+
+- Coupling
+- Cohesion
+- Dependency direction
+- Module boundaries
+- Reusability
+- Maintainability
+
+Provide actionable recommendations.
+
+---
+
+# Preferred Development Workflow
+
+Always follow this sequence:
+
+1. Analyze using Code Review Graph.
+2. Determine dependency graph.
+3. Determine impact radius.
+4. Read only relevant files.
+5. Explain implementation.
+6. Implement.
+7. Validate architecture.
+8. Verify dependencies.
+9. Summarize changes.
+
+---
+
+# General Coding Standards
+
+- Keep components modular.
+- Prefer composition over duplication.
+- Keep files focused.
+- Preserve existing conventions.
+- Write readable code.
+- Minimize unnecessary changes.
+- Never perform large-scale refactors unless requested.
+
+---
+
+# Repository Context
+
+Technology Stack
+
+Frontend
+- React
+- TypeScript
+- Vite
+
+Backend
+- Laravel (PHP)
+
+Database
+- Supabase
+
+Analysis Tool
+- Code Review Graph (MCP)
+
+Primary AI Assistant
+- Antigravity (AGY)
+
+Secondary AI
+- Gemini CLI
+
+Additional AI
+- Codex
+- Claude Code
+
+Whenever Code Review Graph tools are available through MCP:
+
+- Prefer Code Review Graph over manual repository scanning.
+- Use dependency analysis before opening files.
+- Use impact analysis before implementation.
+- Use graph queries whenever possible.
