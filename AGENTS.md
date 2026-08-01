@@ -211,3 +211,14 @@ Whenever Code Review Graph tools are available through MCP:
 - Use dependency analysis before opening files.
 - Use impact analysis before implementation.
 - Use graph queries whenever possible.
+
+## Code Review Graph (Required)
+
+When the Code Review Graph MCP server is available:
+
+- Always use Code Review Graph before reading source files.
+- Determine the dependency graph before implementation.
+- Determine the impact radius before modifying code.
+- Read only the files identified by Code Review Graph.
+- Use architecture and dependency information instead of repository-wide searches whenever possible.
+- After implementation, verify that dependencies and architecture remain valid.
