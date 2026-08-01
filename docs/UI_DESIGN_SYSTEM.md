@@ -20,8 +20,8 @@ Do not manually scan unrelated files.
 Generate a complete UI Design System document.
 
 The design language must follow:
-
-Vectra - AI Dashboard Overview
+Pivora CRM Dashboard Overview
+Visual Reference: docs/ui-modernization/assets/pivora-dashboard-reference.png
 (Uxerflow Dribbble Inspiration)
 
 The design system should be implementation-ready.
