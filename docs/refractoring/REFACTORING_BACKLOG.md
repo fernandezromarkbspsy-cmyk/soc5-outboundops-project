@@ -11,6 +11,7 @@ This is the master backlog of all refactoring, technical debt, performance, and 
 | RF-001 | Sprint 1 | Technical Debt | High | Open | `src/components/Button.tsx` | Duplicate button variant with identical markup | Reduces maintainability; risk of inconsistent UI changes | Consolidate into a single reusable Button component | None | |
 | RF-002 | Sprint 2 | Performance | Medium | Open | `src/pages/Orders.tsx` | Unnecessary re‑render on every store update | Increases CPU usage on high‑traffic pages | Memoize component with `React.memo` | Dependent on state‑management refactor | |
 | RF-003 | Sprint 2 | Legacy Cleanup | Low | Open | `src/styles/legacy.scss` | Unused legacy SCSS file | No functional impact but inflates bundle size | Delete file and remove import | None | |
+| RF-004 | Sprint 5 | Legacy Cleanup | Medium | Open | `frontend/src/styles/main.scss` | Global stylesheet still contains non-dashboard dark/glass legacy presentation for app shell and operational surfaces | Can make later Pivora modernization sprints harder to keep visually unified | Continue incremental SCSS migration by moving page/component styles into architecture folders and replacing legacy global rules only when each surface is scheduled | Sprint 6 shared UI components and later operational-page modernization | Discovered while modernizing dashboard framework |
 
 ---
 
