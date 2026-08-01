@@ -65,7 +65,7 @@ export function RequestTable({ rows, actions, emptyMessage = 'No requests found.
           </button>
         </td>
         {renderedColumns.map(column => <td key={column.key} className={`request-column request-column--${column.key}`} data-label={column.label}>{column.render(request)}</td>)}
-        {actions && <td data-label="Actions"><div className="row-actions">{actions(request)}</div></td>}
+        {actions && <td className="request-column request-column--actions" data-label="Actions"><div className="row-actions">{actions(request)}</div></td>}
       </tr>
       {expanded && <tr className="request-detail-row" id={detailId}><td colSpan={renderedColumns.length + (actions ? 2 : 1)}><RequestDetails request={request} /></td></tr>}
     </Fragment>;

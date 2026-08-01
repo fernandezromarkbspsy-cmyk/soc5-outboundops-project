@@ -18,18 +18,18 @@ Reference: [Vectra - AI Dashboard - Overview by Uxerflow](https://dribbble.com/s
 - [x] Rebuild summary cards with Vectra-style proportions
 - [x] Improve metric hierarchy and numeric emphasis
 - [x] Adjust icon style and card density
-- [ ] Add lightweight loading skeletons
+- [x] Add lightweight loading skeletons
 
 ## 3. Lists, Tables, And Status Widgets
-- [ ] Restyle tables and list rows
-- [ ] Match status chips to the new palette
-- [ ] Refine hover, selected, and expanded states
-- [ ] Make compact views work on mobile
+- [x] Restyle tables and list rows
+- [x] Match status chips to the new palette
+- [x] Refine hover, selected, and expanded states
+- [x] Make compact views work on mobile
 
 ## 4. Typography And Color Tuning
-- [-] Move typography toward the Vectra look
-- [-] Replace the old green/orange accent feel
-- [-] Normalize label, body, and title hierarchy
+- [x] Move typography toward the Vectra look
+- [x] Replace the old green/orange accent feel
+- [x] Normalize label, body, and title hierarchy
 - [ ] Verify contrast across all components
 
 ## 5. Motion And Polish
@@ -55,3 +55,5 @@ Reference: [Vectra - AI Dashboard - Overview by Uxerflow](https://dribbble.com/s
 - `2026-07-31`: Created initial checklist after starting shell and token updates.
 - `2026-07-31`: Started overview cards and metrics redesign.
 - `2026-07-31`: Added overview hero band and refined KPI card styling.
+- `2026-08-01`: Restyled tables, status widgets, and palette accents; added loading skeleton polish.
+- `2026-08-01`: Tightened typography hierarchy and aligned dashboard overrides to the new blue-led palette.
