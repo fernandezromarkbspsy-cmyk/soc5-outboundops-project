@@ -79,3 +79,5 @@ Desktop.ini
 *.pid
 *.seed
 *.retry
+# Added by code-review-graph
+.code-review-graph/
