@@ -88,6 +88,7 @@ export function AppHeader({ user, view, onRoleChange, onSearch }: Props) {
     {toast&&<div className="app-toast" role="status"><Bell size={17}/><div><strong>{toast.title}</strong><span>{toast.body}</span></div></div>}
     <div className="topbar-page">
       <div className="topbar-page-copy">
+        <span className="topbar-eyebrow">Operations dashboard</span>
         <h1>{page[view].name}</h1>
         <nav className="topbar-breadcrumbs" aria-label="Breadcrumb"><span>Operations</span><ChevronRight size={12}/><span>{page[view].section}</span></nav>
       </div>
@@ -100,7 +101,7 @@ export function AppHeader({ user, view, onRoleChange, onSearch }: Props) {
         {open&&<section ref={notificationMenuRef} id={notificationMenuId} className="notification-popover" role="menu" aria-label="Notifications"><div><strong>Notifications</strong>{count>0?<button className="text-button" type="button" onClick={()=>readAll.mutate()}>Mark all read</button>:<span>0</span>}</div>{alerts.length?<div className="notification-list">{alerts.slice(0,6).map(item=><button key={item.id} className={item.read_at?'':'unread'} type="button" role="menuitem" onClick={()=>{if(!item.read_at)read.mutate(item.id);setOpen(false);notificationButtonRef.current?.focus();}}><span>{item.title}</span><small>{item.body}</small></button>)}</div>:<p>No notifications.</p>}</section>}
       </div>
       <div className="profile-switcher">
-        <button ref={profileButtonRef} className="topbar-user" type="button" aria-expanded={profileOpen} aria-controls={profileMenuId} onClick={()=>setProfileOpen(value=>!value)}><UserCircle size={22}/><div><strong>{user.name}</strong><small>{user.is_admin?'Administrator':user.role.replaceAll('_',' ')}</small></div>{user.is_admin&&<ChevronDown size={14}/>}</button>
+        <button ref={profileButtonRef} className="topbar-user" type="button" aria-expanded={profileOpen} aria-controls={profileMenuId} onClick={()=>setProfileOpen(value=>!value)}><UserCircle size={22}/><div><strong>{user.name}</strong><small>{user.is_admin?'Administrator':user.role.replaceAll('_',' ')}</small></div><ChevronDown size={14} className="topbar-user-chevron" /></button>
         {profileOpen&&<section ref={profileMenuRef} id={profileMenuId} className="profile-menu" role="menu" aria-label="Profile"><header><ShieldCheck size={18}/><div><strong>Test role view</strong><small>Admin access remains enabled</small></div></header>{user.is_admin?roles.map(role=><button key={role.value} type="button" role="menuitem" onClick={()=>{setProfileOpen(false);void onRoleChange(role.value);profileButtonRef.current?.focus();}}><span>{role.label}</span>{user.role===role.value&&<Check size={16}/>}</button>):<p>Signed in as {user.role.replaceAll('_',' ')}</p>}</section>}
       </div>
     </div>

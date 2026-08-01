@@ -15,3 +15,9 @@ Prefer the smallest implementation that meets current requirements. Do not add a
 microservice, cache, vector database, queue, or third-party SaaS until its concrete
 use case and failure behavior are documented. Output complete files, migrations,
 tests, environment examples, and run instructions.
+
+Read and strictly follow:
+
+docs/ui-modernization/00-RULES/CODEX_EXECUTION_RULES.md
+
+Then execute this sprint.

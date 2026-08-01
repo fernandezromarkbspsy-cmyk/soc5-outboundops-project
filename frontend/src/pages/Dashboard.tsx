@@ -50,16 +50,20 @@ export function Dashboard({ user }: { user: User }) {
 
   return <div className="app-shell">
     <AppSidebar user={activeUser} activeView={view} open={menuOpen} onOpenChange={setMenuOpen} onNavigate={navigate} onSignOut={() => void supabase.auth.signOut()} pendingCount={queue.count} />
-    <main className="app-content">
-      <AppHeader user={activeUser} view={view} onRoleChange={switchRole} onSearch={() => navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request')} />
-      <Suspense fallback={<ViewLoading view={view} />}>
-        {view === 'overview' && <Overview user={activeUser} onNavigate={navigate} />}
-        {view === 'lh-request' && <OutboundRequests user={activeUser} queue={queue} />}
-        {view === 'truck-request' && <MidmileRequests user={activeUser} queue={queue} />}
-        {view === 'docking' && <DockingConfirmation user={activeUser} />}
-        {view === 'kpi' && <Kpi />}
-        {view === 'users' && <UserManagement />}
-      </Suspense>
+    <main className="app-content" aria-label="Primary content">
+      <div className="app-content-inner">
+        <AppHeader user={activeUser} view={view} onRoleChange={switchRole} onSearch={() => navigate(activeUser.role === 'fte_mm' ? 'truck-request' : 'lh-request')} />
+        <section className="app-workspace" aria-live="polite">
+          <Suspense fallback={<ViewLoading view={view} />}>
+            {view === 'overview' && <Overview user={activeUser} onNavigate={navigate} />}
+            {view === 'lh-request' && <OutboundRequests user={activeUser} queue={queue} />}
+            {view === 'truck-request' && <MidmileRequests user={activeUser} queue={queue} />}
+            {view === 'docking' && <DockingConfirmation user={activeUser} />}
+            {view === 'kpi' && <Kpi />}
+            {view === 'users' && <UserManagement />}
+          </Suspense>
+        </section>
+      </div>
     </main>
   </div>;
 }

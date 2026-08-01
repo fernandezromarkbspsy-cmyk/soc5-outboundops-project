@@ -222,3 +222,132 @@ When the Code Review Graph MCP server is available:
 - Read only the files identified by Code Review Graph.
 - Use architecture and dependency information instead of repository-wide searches whenever possible.
 - After implementation, verify that dependencies and architecture remain valid.
+
+# UI Modernization Policy (Permanent)
+
+This project is a complete frontend modernization.
+
+The approved design authority is:
+
+- Pivora CRM Dashboard
+- docs/ui-modernization/assets/pivora-dashboard-reference.png
+
+## Core Principle
+
+This project replaces the legacy presentation layer.
+
+It does NOT layer a new design on top of the existing UI.
+
+### Preserve
+
+Always preserve:
+
+- Business logic
+- Backend APIs
+- Authentication
+- Routing
+- State management
+- Validation
+- Data models
+- Existing functionality
+
+### Replace
+
+When modernizing any UI component, replace:
+
+- Layout
+- Visual hierarchy
+- CSS/SCSS
+- Inline styles
+- Hardcoded colors
+- Hardcoded spacing
+- Typography
+- Borders
+- Shadows
+- Icons (when appropriate)
+- Legacy wrappers
+- Legacy utility classes
+
+### Remove
+
+After replacing a component, remove:
+
+- Obsolete CSS/SCSS
+- Dead style rules
+- Duplicate presentation code
+- Deprecated components
+- Legacy theme variables
+- Unused imports
+- Unused wrappers
+
+Do NOT leave legacy presentation code if it has been replaced.
+
+Do NOT maintain multiple active design systems.
+
+The final application must contain a single unified design language based on the approved Pivora design system.
+
+When modernizing a component:
+
+1. Preserve business logic.
+2. Remove the legacy presentation layer.
+3. Implement the new presentation layer.
+4. Delete obsolete presentation code.
+5. Validate the build.
+
+# Refactoring Documentation Policy
+
+During implementation, if technical debt or improvement opportunities are discovered:
+
+Do NOT expand the current sprint.
+
+Instead:
+
+- Record them in docs/refactoring/REFACTORING_BACKLOG.md.
+- Assign:
+  - Category
+  - Priority
+  - Sprint discovered
+  - Recommendation
+  - Status (Open)
+
+Only implement refactoring when it is explicitly scheduled.
+
+# Sprint Workflow
+
+Every implementation sprint follows:
+
+1. Use Code Review Graph.
+2. Determine dependency graph.
+3. Determine impact radius.
+4. Read only required files.
+5. Explain implementation plan.
+6. Wait for approval.
+7. Implement.
+8. Build.
+9. Validate.
+10. Report technical debt.
+11. Update docs/refactoring/.
+12. STOP.
+
+
+# SCSS Migration Policy
+
+SCSS architecture migration is incremental.
+
+Do NOT migrate the entire styling system in one sprint.
+
+Whenever a component or page is modernized:
+
+1. Move its styling into the appropriate architecture.
+2. Remove obsolete styles.
+3. Keep main.scss as a lightweight entry file.
+4. Avoid duplicate styling.
+
+By Sprint 10, main.scss should primarily import:
+
+- base/
+- themes/
+- layout/
+- components/
+- pages/
+- utilities/

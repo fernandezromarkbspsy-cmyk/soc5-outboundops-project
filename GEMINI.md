@@ -36,3 +36,11 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes_tool` for code review.
 3. Use `get_affected_flows_tool` to understand impact.
 4. Use `query_graph_tool` pattern="tests_for" to check coverage.
+
+## UI Modernization
+
+Follow the project-wide UI Modernization Policy defined in AGENTS.md.
+
+Never overlay the new design on top of the legacy UI.
+
+Replace the presentation layer while preserving business logic.
