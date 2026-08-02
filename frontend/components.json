@@ -1,5 +1,6 @@
 {
-  "$schema": "https://ui.shadcn.com/schema.json",
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "shadcn
   "style": "base-mira",
   "rsc": false,
   "tsx": true,
@@ -21,5 +22,7 @@
   },
   "menuColor": "default",
   "menuAccent": "subtle",
-  "registries": {}
+  "registries": {
+    "@efferd": "https://efferd.com/r/{style}/{name}.json"
+  }
 }
