@@ -18,10 +18,11 @@ FROM runtime
 WORKDIR /var/www/html
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
+RUN mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+ && chown -R www-data:www-data storage bootstrap/cache
 RUN php artisan package:discover --ansi
 RUN chmod -R a+rX app bootstrap config public routes \
  && chmod a+r artisan composer.json composer.lock \
- && mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
- && chown -R www-data:www-data storage bootstrap/cache
+ && true
 USER www-data
 CMD ["php-fpm"]
