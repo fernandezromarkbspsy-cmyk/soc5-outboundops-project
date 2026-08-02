@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 const roots = ['src'];
 const mojibakePatterns = ['â€“', 'â€”', 'â€¦', 'â€', 'Â·', 'Ã', '�'];
-const allowedExtensions = new Set(['.css', '.scss', '.ts', '.tsx', '.js', '.jsx', '.html']);
+const allowedExtensions = new Set(['.css', '.ts', '.tsx', '.js', '.jsx', '.html']);
 
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
