@@ -49,6 +49,10 @@ jobs:
         working-directory: backend
         run: composer validate --no-check-publish
 
+      - name: Prepare Laravel cache directories
+        working-directory: backend
+        run: mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs
+
       - name: Install backend dependencies
         working-directory: backend
         run: composer install --no-interaction --prefer-dist --no-progress

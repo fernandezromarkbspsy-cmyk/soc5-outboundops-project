@@ -51,6 +51,9 @@ jobs:
       - name: Validate Composer files
         run: composer validate --no-check-publish
 
+      - name: Prepare Laravel cache directories
+        run: mkdir -p bootstrap/cache storage/framework/{cache,sessions,views} storage/logs
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
