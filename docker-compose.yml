@@ -11,10 +11,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "--show-error", "http://127.0.0.1:8000/up"]
-      interval: 30s
+      interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 10s
+      retries: 12
+      start_period: 45s
   web:
     build:
       context: ./frontend
