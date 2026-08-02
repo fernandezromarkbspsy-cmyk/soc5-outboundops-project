@@ -351,3 +351,15 @@ By Sprint 10, main.scss should primarily import:
 - components/
 - pages/
 - utilities/
+
+## Prompt Interpretation
+
+Interpret verbs according to the following:
+
+- Implement = create or add a new feature or capability.
+- Refine = make targeted presentation adjustments without changing structure or behavior.
+- Adjust = modify specific visual properties only.
+- Remove = eliminate obsolete or unused code.
+- Restructure = reorganize architecture without changing behavior.
+
+Do not interpret "Refine" or "Adjust" as permission to redesign components or alter application structure unless explicitly instructed.
