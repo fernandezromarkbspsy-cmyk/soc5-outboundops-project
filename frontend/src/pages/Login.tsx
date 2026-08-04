@@ -37,36 +37,69 @@ function describeAuthError(cause: unknown, fallback: string): string {
 
 export function LoginBackdrop() {
   return (
-    <div className="shell auth-preview" aria-hidden="true">
-      <aside>
-        <div className="preview-brand"><span>S5</span><div><strong>SOC 5</strong><small>Outbound</small></div></div>
-        <nav>
-          <p>Dashboard</p><a className="active"><span className="nav-mark" />Overview</a>
-          <p>Outbound</p><a><span className="nav-mark" />LH Request</a>
-          <p>Midmile</p><a><span className="nav-mark" />Truck Request</a>
-        </nav>
-        <div className="preview-facility"><span>FACILITY</span><strong>Outbound operations</strong></div>
-      </aside>
-      <main>
-        <header>
-          <div><p className="eyebrow">OPERATIONS OVERVIEW</p><h1>Truck requests</h1></div>
-          <div className="preview-user"><span /><div><strong>Operations</strong><small>Authorized access</small></div></div>
-        </header>
-        <section className="metrics preview-metrics">
-          <article><span>Total requests</span><strong>--</strong><small>Current queue</small></article>
-          <article><span>Pending</span><strong>--</strong><small>Pending review</small></article>
-          <article><span>For docking</span><strong>--</strong><small>Active movement</small></article>
-          <article><span>Docked</span><strong>--</strong><small>At the dock</small></article>
-        </section>
-        <section className="panel preview-panel">
-          <div className="panel-head"><div><h2>Latest activity</h2><p>Role-filtered request queue</p></div><button type="button" tabIndex={-1}>New request</button></div>
-          <div className="table-wrap">
-            <table><thead><tr><th>Created</th><th>Cluster</th><th>Dock</th><th>Load</th><th>Truck</th><th>Status</th></tr></thead>
-              <tbody>{[0, 1, 2, 3].map(row => <tr key={row}><td><span className="skeleton short" /></td><td><span className="skeleton wide" /></td><td><span className="skeleton tiny" /></td><td><span className="skeleton short" /></td><td><span className="skeleton wide" /></td><td><span className="skeleton status-line" /></td></tr>)}</tbody>
-            </table>
+    <div className="login-page is-visible" aria-hidden="true">
+      <div className="login-left">
+        <div className="login-brand-area">
+          <div className="login-logo-mark">S5</div>
+          <div className="login-brand-text">
+            <strong>SOC 5</strong>
+            <span>Outbound Operations</span>
           </div>
-        </section>
-      </main>
+        </div>
+        <div className="login-left-content">
+          <h2>Operations<br />Command Center</h2>
+          <p>Streamlined outbound logistics management with real-time tracking, truck coordination, and dock scheduling.</p>
+          <div className="login-features">
+            <div className="login-feature">
+              <div className="login-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <div>
+                <strong>Real-time Tracking</strong>
+                <span>Live status on every request</span>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              </div>
+              <div>
+                <strong>Dashboard Analytics</strong>
+                <span>Actionable operational insights</span>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div>
+                <strong>Secure Access</strong>
+                <span>Enterprise-grade authentication</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="login-left-footer">
+          <span>&copy; {new Date().getFullYear()} SOC 5 Outbound</span>
+        </div>
+      </div>
+      <div className="login-right">
+        <div className="login-right-inner">
+          <div className="login-form-header">
+            <div className="login-mobile-logo">
+              <div className="login-logo-mark small">S5</div>
+              <strong>SOC 5</strong>
+            </div>
+            <h1>Welcome back</h1>
+            <p>Sign in to your operations account</p>
+          </div>
+          <div className="login-skeleton-form">
+            <div className="skeleton-field" />
+            <div className="skeleton-field" />
+            <div className="skeleton-button" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -81,14 +114,14 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [modalVisible, setModalVisible] = useState(false);
+  const [visible, setVisible] = useState(false);
   const dialogRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setModalVisible(true);
+      setVisible(true);
       window.requestAnimationFrame(() => dialogRef.current?.focus());
-    }, 5);
+    }, 80);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -180,46 +213,185 @@ export function Login() {
   const submitLabel = busy ? 'Please wait...' : type === 'fte' ? (codeSent ? 'Verify code' : 'Send verification code') : 'Sign in';
 
   return (
-    <div className="auth-entry">
-      <LoginBackdrop />
-      <div className={`auth-modal-layer${modalVisible ? ' is-visible' : ''}`}>
-        <section ref={dialogRef} className="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="auth-title" tabIndex={-1}>
-          <div className="auth-dialog-head">
-            <div className="auth-logo" aria-hidden="true">S5</div>
-            <div><p>SOC 5 OUTBOUND</p><h1 id="auth-title">Sign in</h1></div>
+    <div className={`login-page${visible ? ' is-visible' : ''}`}>
+      {/* Left Panel — Branding */}
+      <div className="login-left">
+        <div className="login-brand-area">
+          <div className="login-logo-mark">S5</div>
+          <div className="login-brand-text">
+            <strong>SOC 5</strong>
+            <span>Outbound Operations</span>
+          </div>
+        </div>
+        <div className="login-left-content">
+          <h2>Operations<br />Command Center</h2>
+          <p>Streamlined outbound logistics management with real-time tracking, truck coordination, and dock scheduling.</p>
+          <div className="login-features">
+            <div className="login-feature">
+              <div className="login-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+              </div>
+              <div>
+                <strong>Real-time Tracking</strong>
+                <span>Live status on every request</span>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+              </div>
+              <div>
+                <strong>Dashboard Analytics</strong>
+                <span>Actionable operational insights</span>
+              </div>
+            </div>
+            <div className="login-feature">
+              <div className="login-feature-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              </div>
+              <div>
+                <strong>Secure Access</strong>
+                <span>Enterprise-grade authentication</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="login-left-footer">
+          <span>&copy; {new Date().getFullYear()} SOC 5 Outbound</span>
+        </div>
+      </div>
+
+      {/* Right Panel — Form */}
+      <div className="login-right">
+        <div className="login-right-inner" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="login-title" tabIndex={-1}>
+          <div className="login-form-header">
+            <div className="login-mobile-logo">
+              <div className="login-logo-mark small">S5</div>
+              <strong>SOC 5</strong>
+            </div>
+            <h1 id="login-title">Welcome back</h1>
+            <p>Sign in to your operations account</p>
           </div>
 
-          <form onSubmit={submit}>
-            <div className="user-toggle" role="tablist" aria-label="User type">
-              <button type="button" role="tab" aria-selected={type === 'fte'} className={type === 'fte' ? 'selected' : ''} onClick={() => switchType('fte')}>FTE</button>
-              <button type="button" role="tab" aria-selected={type === 'backroom'} className={type === 'backroom' ? 'selected' : ''} onClick={() => switchType('backroom')}>Backroom</button>
+          <form onSubmit={submit} className="login-form">
+            <div className="login-type-toggle" role="tablist" aria-label="User type">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={type === 'fte'}
+                className={`login-type-btn${type === 'fte' ? ' active' : ''}`}
+                onClick={() => switchType('fte')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                FTE
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={type === 'backroom'}
+                className={`login-type-btn${type === 'backroom' ? ' active' : ''}`}
+                onClick={() => switchType('backroom')}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                Backroom
+              </button>
             </div>
 
             {type === 'fte' ? (
-              <div className="auth-fields" key="fte">
-                <button type="button" className="google-button" disabled={busy} onClick={signInWithGoogle}><span aria-hidden="true">G</span>Continue with Google</button>
-                <div className="auth-divider"><span>or use email verification</span></div>
-                <label>SPX work email<input type="email" required disabled={codeSent} autoComplete="email" placeholder="name@spxexpress.com" value={email} onChange={event => setEmail(event.target.value)} /></label>
-                {codeSent && <>
-                  <label>Verification code<input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,10}" minLength={6} maxLength={10} required placeholder="Enter code" value={code} onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 10))} /></label>
-                  <div className="auth-secondary-actions">
-                    <button type="button" className="text-button" disabled={busy || resendAfter > 0} onClick={() => void resendCode()}>{resendAfter > 0 ? `Resend in ${resendAfter}s` : 'Resend code'}</button>
-                    <button type="button" className="text-button" onClick={() => { setCodeSent(false); setCode(''); setError(''); setResendAfter(0); }}>Change email</button>
-                  </div>
-                </>}
+              <div className="login-fields" key="fte">
+                <button type="button" className="login-google-btn" disabled={busy} onClick={signInWithGoogle}>
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path d="M22.56 12.24c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.72 7.78 23 12 23z" fill="#34A853"/>
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.78 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                  </svg>
+                  Continue with Google
+                </button>
+
+                <div className="login-divider">
+                  <span>or use email verification</span>
+                </div>
+
+                <label className="login-label">
+                  SPX work email
+                  <input
+                    type="email"
+                    required
+                    disabled={codeSent}
+                    autoComplete="email"
+                    placeholder="name@spxexpress.com"
+                    value={email}
+                    onChange={event => setEmail(event.target.value)}
+                    className="login-input"
+                  />
+                </label>
+
+                {codeSent && (
+                  <>
+                    <label className="login-label">
+                      Verification code
+                      <input
+                        inputMode="numeric"
+                        autoComplete="one-time-code"
+                        pattern="[0-9]{6,10}"
+                        minLength={6}
+                        maxLength={10}
+                        required
+                        placeholder="Enter code"
+                        value={code}
+                        onChange={event => setCode(event.target.value.replace(/\D/g, '').slice(0, 10))}
+                        className="login-input"
+                      />
+                    </label>
+                    <div className="login-secondary-actions">
+                      <button type="button" className="login-text-btn" disabled={busy || resendAfter > 0} onClick={() => void resendCode()}>
+                        {resendAfter > 0 ? `Resend in ${resendAfter}s` : 'Resend code'}
+                      </button>
+                      <button type="button" className="login-text-btn" onClick={() => { setCodeSent(false); setCode(''); setError(''); setResendAfter(0); }}>
+                        Change email
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             ) : (
-              <div className="auth-fields" key="backroom">
-                <label>OPS ID<input required autoComplete="username" placeholder="ops71783" value={opsId} onChange={event => setOpsId(event.target.value)} /></label>
-                <label>Password<input type="password" required autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} /></label>
+              <div className="login-fields" key="backroom">
+                <label className="login-label">
+                  OPS ID
+                  <input
+                    required
+                    autoComplete="username"
+                    placeholder="ops71783"
+                    value={opsId}
+                    onChange={event => setOpsId(event.target.value)}
+                    className="login-input"
+                  />
+                </label>
+                <label className="login-label">
+                  Password
+                  <input
+                    type="password"
+                    required
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={event => setPassword(event.target.value)}
+                    className="login-input"
+                  />
+                </label>
               </div>
             )}
 
-            {error && <p className="error auth-error" role="alert">{error}</p>}
-            <button className="primary-button" disabled={busy}>{submitLabel}</button>
+            {error && <p className="login-error" role="alert">{error}</p>}
+
+            <button className="login-submit-btn" disabled={busy}>
+              {submitLabel}
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="login-submit-arrow"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
           </form>
-          <p className="auth-footnote">Authorized operations personnel only</p>
-        </section>
+
+          <p className="login-footnote">Authorized operations personnel only</p>
+        </div>
       </div>
     </div>
   );
