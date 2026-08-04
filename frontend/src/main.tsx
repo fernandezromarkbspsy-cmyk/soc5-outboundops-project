@@ -6,6 +6,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { supabaseConfigError } from './lib/supabase';
 import './styles/tailwind.css';
 import './styles/main.css';
+import './styles/login.css';
 
 const client = new QueryClient({ defaultOptions: { queries: { staleTime: 10_000, refetchInterval: 15_000, retry: 1 }, mutations: { retry: 0 } } });
 const root = ReactDOM.createRoot(document.getElementById('root')!);
