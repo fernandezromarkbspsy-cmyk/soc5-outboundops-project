@@ -22,7 +22,7 @@
         "moduleResolution": "Bundler",
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "noEmit": true,
+        "composite": true,
         "jsx": "react-jsx"
     },
     "include": [
