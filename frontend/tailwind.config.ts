@@ -36,7 +36,7 @@ const config: Config = {
           2: '#1a5ce4',
         },
         link: '#79abff',
-        line: 'rgba(238, 244, 255, 0.14)',
+        line: 'rgba(255,255,255,0.1)',
         danger: '#ff7a8a',
       },
       animation: {

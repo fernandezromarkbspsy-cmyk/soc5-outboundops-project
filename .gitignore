@@ -31,6 +31,10 @@ pnpm-debug.log*
 .npm/
 .pnpm-store/
 
+# TypeScript compilation output
+src/**/*.js
+src/**/*.d.ts
+
 # PHP / Laravel
 vendor/
 backend/bootstrap/cache/*.php
