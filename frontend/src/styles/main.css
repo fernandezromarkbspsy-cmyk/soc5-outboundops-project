@@ -1,10 +1,216 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap");
 * {
   box-sizing: border-box;
 }
 
 html {
   font-size: 15px;
+}
+
+/* ---------- Login Design Animations ---------- */
+
+/* reveal animations */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 0.7s ease,
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* QR scan sweep */
+@keyframes scanline {
+  0% {
+    transform: translateY(-130%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(330%);
+    opacity: 0;
+  }
+}
+.qr-scan {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  top: 12px;
+  height: 32%;
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    rgba(46, 123, 255, 0) 0%,
+    rgba(46, 123, 255, 0.22) 55%,
+    rgba(120, 180, 255, 0.45) 100%
+  );
+  box-shadow: 0 1px 12px rgba(46, 123, 255, 0.35);
+  pointer-events: none;
+  animation: scanline 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+
+/* map pin ping */
+@keyframes ping-soft {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.75;
+  }
+  80%,
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+.ping-soft {
+  animation: ping-soft 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+/* ambient page glow drift */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(40px, -28px, 0) scale(1.08);
+  }
+}
+.drift {
+  animation: drift 14s ease-in-out infinite;
+}
+.drift-slow {
+  animation: drift 20s ease-in-out infinite reverse;
+}
+
+/* invalid input shake */
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+.animate-shake {
+  animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* view swap entrance */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* primary button shine sweep */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -70%;
+  width: 45%;
+  transform: skewX(-22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.32),
+    transparent
+  );
+  transition: left 0.65s ease;
+  pointer-events: none;
+}
+.btn-shine:hover::after {
+  left: 125%;
+}
+
+/* verify button "ready" pulse */
+@keyframes ready {
+  0%,
+  100% {
+    box-shadow: 0 12px 26px -8px rgba(46, 123, 255, 0.5);
+  }
+  50% {
+    box-shadow: 0 14px 36px -4px rgba(46, 123, 255, 0.8);
+  }
+}
+.ready-pulse {
+  animation: ready 1.7s ease-in-out infinite;
+}
+
+/* dotted texture */
+.dot-grid {
+  background-image: radial-gradient(rgba(214, 228, 255, 0.34) 1.1px, transparent 1.1px);
+  background-size: 15px 15px;
+}
+
+/* ---------- Arena Login Design Variables ---------- */
+:root {
+  --font-display: "Space Grotesk", "Manrope", ui-sans-serif, sans-serif;
+  --font-body: "Manrope", ui-sans-serif, system-ui, sans-serif;
+
+  /* Dusk-steel color palette */
+  --color-page: #5a6785;
+  --color-page-2: #4b5874;
+  --color-panel: #4d5a7a;
+  --color-panel-2: #455273;
+  --color-deep: #3d4a69;
+  --color-deep-2: #36425e;
+  --color-footer: #46536f;
+  --color-field: #3e4b6a;
+  --color-ink: #f4f7ff;
+  --color-muted: #c3cde0;
+  --color-faint: #9daabd;
+  --color-accent: #2e7bff;
+  --color-accent-2: #1a5ce4;
+  --color-link: #79abff;
+  --color-line: rgba(238, 244, 255, 0.14);
+  --color-danger: #ff7a8a;
 }
 
 body {
@@ -1862,4 +2068,245 @@ table tbody tr:hover {
   .truck-row > span:not(.avatar):not(.truck-dot) {
     justify-self: start;
   }
+}
+
+/* ---------- Arena Login Design Animations ---------- */
+
+/* Ambient glow drift */
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(40px, -28px, 0) scale(1.08);
+  }
+}
+.drift {
+  animation: drift 14s ease-in-out infinite;
+}
+.drift-slow {
+  animation: drift 20s ease-in-out infinite reverse;
+}
+
+/* QR scan sweep */
+@keyframes scanline {
+  0% {
+    transform: translateY(-130%);
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(330%);
+    opacity: 0;
+  }
+}
+
+/* Map pin ping */
+@keyframes ping-soft {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.75;
+  }
+  80%,
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+.ping-soft {
+  animation: ping-soft 2.2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+.floaty {
+  animation: floaty 4s ease-in-out infinite;
+}
+
+/* Invalid input shake */
+@keyframes shake {
+  10%,
+  90% {
+    transform: translateX(-1px);
+  }
+  20%,
+  80% {
+    transform: translateX(2px);
+  }
+  30%,
+  50%,
+  70% {
+    transform: translateX(-4px);
+  }
+  40%,
+  60% {
+    transform: translateX(4px);
+  }
+}
+.animate-shake {
+  animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* View swap entrance */
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Primary button shine sweep */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+.btn-shine::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -70%;
+  width: 45%;
+  transform: skewX(-22deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.32),
+    transparent
+  );
+  transition: left 0.65s ease;
+  pointer-events: none;
+}
+.btn-shine:hover::after {
+  left: 125%;
+}
+
+/* Accessibility: reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .rise {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---------- Login-specific utilities ---------- */
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.bg-page {
+  background-color: var(--color-page);
+}
+
+.bg-page-2 {
+  background-color: var(--color-page-2);
+}
+
+.bg-deep {
+  background-color: var(--color-deep);
+}
+
+.text-ink {
+  color: var(--color-ink);
+}
+
+.text-muted {
+  color: var(--color-muted);
+}
+
+.text-faint {
+  color: var(--color-faint);
+}
+
+.text-accent {
+  color: var(--color-accent);
+}
+
+.text-link {
+  color: var(--color-link);
+}
+
+.text-danger {
+  color: var(--color-danger);
+}
+
+.bg-accent {
+  background-color: var(--color-accent);
+}
+
+.bg-accent-2 {
+  background-color: var(--color-accent-2);
+}
+
+.from-accent {
+  --tw-gradient-from: var(--color-accent);
+}
+
+.to-accent-2 {
+  --tw-gradient-to: var(--color-accent-2);
+}
+
+.from-deep-2 {
+  --tw-gradient-from: var(--color-deep-2);
+}
+
+.border-line {
+  border-color: var(--color-line);
+}
+
+.border-danger {
+  border-color: var(--color-danger);
+}
+
+.border-accent {
+  border-color: var(--color-accent);
+}
+
+.shadow-accent\/30 {
+  --tw-shadow-color: rgba(46, 123, 255, 0.3);
+}
+
+.shadow-accent\/40 {
+  --tw-shadow-color: rgba(46, 123, 255, 0.4);
+}
+
+.ring-accent\/20 {
+  --tw-ring-color: rgba(46, 123, 255, 0.2);
+}
+
+/* Dotted texture */
+.dot-grid {
+  background-image: radial-gradient(rgba(214, 228, 255, 0.34) 1.1px, transparent 1.1px);
+  background-size: 15px 15px;
 }
