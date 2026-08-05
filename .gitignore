@@ -31,9 +31,14 @@ pnpm-debug.log*
 .npm/
 .pnpm-store/
 
-# TypeScript compilation output
+# TypeScript compilation output (generated files only)
 src/**/*.js
 src/**/*.d.ts
+!src/hooks/*.ts
+!src/lib/*.ts
+!src/stores/*.ts
+!src/types.ts
+!src/vite-env.d.ts
 
 # PHP / Laravel
 vendor/
