@@ -12,6 +12,40 @@ const config: Config = {
         body: ['"Manrope"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
         mono: ['"JetBrains Mono"', 'monospace'],
       },
+      fontWeight: {
+        medium: '500',
+        semibold: '600',
+        extrabold: '800',
+      },
+      lineHeight: {
+        tight: '1.25',
+        snug: '1.375',
+      },
+      letterSpacing: {
+        wide: '0.025em',
+        wider: '0.05em',
+      },
+      spacing: {
+        '0.25': '0.25rem',
+      },
+      borderRadius: {
+        lg: '0.5rem',
+        xl: '0.75rem',
+        '2xl': '1rem',
+      },
+      blur: {
+        sm: '8px',
+        md: '12px',
+        '2xl': '40px',
+        '3xl': '64px',
+      },
+      transitionDuration: {
+        DEFAULT: '0.15s',
+        '150': '0.15s',
+      },
+      transitionTimingFunction: {
+        DEFAULT: 'cubic-bezier(0.4, 0, 0.2, 1)',
+      },
       colors: {
         // Dusk-steel color palette
         page: {
@@ -36,7 +70,7 @@ const config: Config = {
           2: '#1a5ce4',
         },
         link: '#79abff',
-        line: 'rgba(255,255,255,0.1)',
+        line: 'rgba(238, 244, 255, 0.14)',
         danger: '#ff7a8a',
       },
       animation: {
@@ -48,6 +82,7 @@ const config: Config = {
         'shake': 'shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97)',
         'rise': 'rise 0.5s cubic-bezier(0.22, 1, 0.36, 1)',
         'ready': 'ready 1.7s ease-in-out infinite',
+        'spin': 'spin 1s linear infinite',
       },
       keyframes: {
         scanline: {
@@ -81,6 +116,10 @@ const config: Config = {
         ready: {
           '0%, 100%': { boxShadow: '0 12px 26px -8px rgba(46, 123, 255, 0.5)' },
           '50%': { boxShadow: '0 14px 36px -4px rgba(46, 123, 255, 0.8)' },
+        },
+        spin: {
+          'from': { transform: 'rotate(0deg)' },
+          'to': { transform: 'rotate(360deg)' },
         },
       },
     },

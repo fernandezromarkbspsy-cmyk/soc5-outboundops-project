@@ -1,38 +1,211 @@
-<!-- code-review-graph MCP tools -->
-## MCP Tools: code-review-graph
+# SOC5-Outbound Workspace Rules
 
-**IMPORTANT: This project has a knowledge graph. ALWAYS use the
-code-review-graph MCP tools BEFORE using Grep/Glob/Read to explore
-the codebase.** The graph is faster, cheaper (fewer tokens), and gives
-you structural context (callers, dependents, test coverage) that file
-scanning cannot.
+## Project Overview
 
-### When to use graph tools FIRST
+SOC5-Outbound is a real-time linehaul request management system for Shopee Operations.
 
-- **Exploring code**: `semantic_search_nodes_tool` or `query_graph_tool` instead of Grep
-- **Understanding impact**: `get_impact_radius_tool` instead of manually tracing imports
-- **Code review**: `detect_changes_tool` + `get_review_context_tool` instead of reading entire files
-- **Finding relationships**: `query_graph_tool` with callers_of/callees_of/imports_of/tests_for
-- **Architecture questions**: `get_architecture_overview_tool` + `list_communities_tool`
+Stack:
+- Frontend: React 18 + TypeScript + Vite + Tailwind CSS
+- Backend: Golang (Echo)
+- Database: Supabase PostgreSQL
+- Authentication: Supabase Auth
+- State Management: Zustand
+- Data Fetching: TanStack Query
 
-Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
+---
 
-### Key Tools
+## Engineering Principles
 
-| Tool | Use when |
-| ------ | ---------- |
-| `detect_changes_tool` | Reviewing code changes — gives risk-scored analysis |
-| `get_review_context_tool` | Need source snippets for review — token-efficient |
-| `get_impact_radius_tool` | Understanding blast radius of a change |
-| `get_affected_flows_tool` | Finding which execution paths are impacted |
-| `query_graph_tool` | Tracing callers, callees, imports, tests, dependencies |
-| `semantic_search_nodes_tool` | Finding functions/classes by name or keyword |
-| `get_architecture_overview_tool` | Understanding high-level codebase structure |
-| `refactor_tool` | Planning renames, finding dead code |
+Always prioritize production-quality code.
 
-### Workflow
+Make the smallest possible change that completely solves the requested task.
 
-1. The graph auto-updates on file changes (via hooks).
-2. Use `detect_changes_tool` for code review.
-3. Use `get_affected_flows_tool` to understand impact.
-4. Use `query_graph_tool` pattern="tests_for" to check coverage.
+Never rewrite working code without explicit instruction.
+
+Never perform unrelated refactoring.
+
+Preserve existing functionality unless the user requests behavior changes.
+
+Follow the existing architecture and coding patterns.
+
+Reuse existing components, hooks, utilities, services, and types whenever possible.
+
+Avoid code duplication.
+
+---
+
+## Before Coding
+
+Before implementing:
+
+- Understand the request.
+- Inspect the relevant files.
+- Identify existing implementation patterns.
+- Explain the implementation plan.
+- Identify affected files.
+- Mention potential risks.
+
+Only begin coding after the plan is complete.
+
+---
+
+## React
+
+- Use Functional Components only.
+- Use Hooks.
+- Avoid unnecessary state.
+- Avoid prop drilling.
+- Prefer composition.
+- Keep components reusable.
+- Memoize only when beneficial.
+
+---
+
+## TypeScript
+
+Never use `any` unless explicitly requested.
+
+Prefer strict typing.
+
+Reuse shared interfaces and types.
+
+Keep APIs type-safe.
+
+---
+
+## Styling
+
+Use Tailwind utilities and existing design tokens.
+
+Do not hardcode:
+
+- colors
+- spacing
+- font sizes
+- border radius
+- shadows
+
+Maintain responsive layouts.
+
+Preserve accessibility.
+
+---
+
+## Backend
+
+Reuse existing services and repositories.
+
+Never duplicate business logic.
+
+Never duplicate SQL.
+
+Keep API contracts backward compatible.
+
+Validate all inputs.
+
+Return meaningful errors.
+
+---
+
+## Database
+
+Do not modify schemas unless requested.
+
+Never delete migrations.
+
+Every migration must be reversible.
+
+Explain schema impacts before changes.
+
+---
+
+## Authentication
+
+Do not modify:
+
+- FTE Login
+- Backroom Login
+- OTP Verification
+- Role permissions
+- Supabase authentication flow
+
+unless explicitly requested.
+
+---
+
+## Performance
+
+Avoid:
+
+- unnecessary renders
+- duplicate API calls
+- unnecessary database queries
+- large bundle increases
+
+Prefer lazy loading when appropriate.
+
+---
+
+## Dependencies
+
+Do not install new packages unless necessary.
+
+Explain:
+
+- why
+- alternatives
+- impact
+
+before introducing dependencies.
+
+---
+
+## Git
+
+Never:
+
+- commit
+- push
+- merge
+- delete branches
+
+Modify only the requested code.
+
+---
+
+## Testing
+
+After implementation provide:
+
+- summary
+- files changed
+- manual testing steps
+- possible regressions
+- remaining work
+
+---
+
+## Stop Conditions
+
+Pause and ask before continuing if:
+
+- architecture is unclear
+- more than 5 files require modification
+- authentication changes are required
+- database changes are risky
+- requirements conflict
+
+---
+
+## User Preferences
+
+The user prefers:
+
+- Minimal, focused code changes
+- Modern but lightweight UI
+- Reusable components
+- Clean architecture
+- Production-ready implementations
+- Clear explanations before coding
+
+Never prioritize speed over maintainability.

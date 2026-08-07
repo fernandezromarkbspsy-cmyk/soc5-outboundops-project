@@ -1,10 +1,11 @@
 import { Camera, MapPin } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Reveal } from './Reveal';
+import trucksImage from '../../assets/trucks.jpg';
 
 export function QrPanel() {
   return (
-    <section className="relative hidden lg:flex flex-col overflow-hidden px-5 pb-24 pt-6">
+    <section className="relative hidden lg:flex flex-col overflow-hidden px-5 pb-24 pt-6 sm:px-7">
       <div
         aria-hidden
         className="dot-grid absolute right-2 top-28 h-48 w-36 opacity-60 [mask-image:radial-gradient(closest-side,black,transparent)]"
@@ -75,7 +76,12 @@ export function QrPanel() {
         aria-hidden
         className="pointer-events-none absolute inset-x-0 bottom-0 h-32"
       >
-        <div className="h-full w-full bg-gradient-to-t from-deep-2/60 via-transparent to-transparent" />
+        <img
+          src={trucksImage}
+          alt=""
+          className="h-full w-full object-cover object-bottom [mask-image:linear-gradient(to_top,black_45%,transparent)]"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-deep-2/60 via-transparent to-transparent" />
         <div className="absolute bottom-[42%] left-[27%]">
           <span className="ping-soft absolute inset-0 rounded-full bg-accent/50" />
           <span className="floaty relative grid h-7 w-7 place-items-center rounded-full bg-accent shadow-lg shadow-accent/50 ring-4 ring-accent/25">

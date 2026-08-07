@@ -34,7 +34,7 @@ const ITEMS = [
   {
     icon: <ShieldCheck className="h-[17px] w-[17px]" strokeWidth={2} />,
     title: 'Secure & Protected',
-    sub: 'Your data is safe with us',
+    sub: 'Your data is safe',
   },
   {
     icon: <Lock className="h-4 w-4" strokeWidth={2} />,
@@ -44,7 +44,7 @@ const ITEMS = [
   {
     icon: <Icon24 />,
     title: '24/7 Operations',
-    sub: 'Always here to support',
+    sub: 'AI Chart Support',
   },
 ];
 

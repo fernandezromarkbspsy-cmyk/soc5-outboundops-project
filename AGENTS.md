@@ -182,26 +182,33 @@ Always follow this sequence:
 Technology Stack
 
 Frontend
+
 - React
 - TypeScript
 - Vite
 
 Backend
+
 - Laravel (PHP)
 
 Database
+
 - Supabase
 
 Analysis Tool
+
 - Code Review Graph (MCP)
 
 Primary AI Assistant
+
 - Antigravity (AGY)
 
 Secondary AI
+
 - Gemini CLI
 
 Additional AI
+
 - Codex
 - Claude Code
 
@@ -328,7 +335,6 @@ Every implementation sprint follows:
 10. Report technical debt.
 11. Update docs/refactoring/.
 12. STOP.
-
 
 # SCSS Migration Policy
 

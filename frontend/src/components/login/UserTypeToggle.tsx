@@ -1,9 +1,9 @@
-import { Users, Warehouse } from 'lucide-react';
+import { Users, Truck } from 'lucide-react';
 import type { UserType } from '../../pages/Login';
 
 const OPTIONS: { key: UserType; label: string; icon: typeof Users }[] = [
   { key: 'fte', label: 'FTE', icon: Users },
-  { key: 'backroom', label: 'Backroom', icon: Warehouse },
+  { key: 'backroom', label: 'Backroom', icon: Truck },
 ];
 
 interface UserTypeToggleProps {
@@ -40,7 +40,7 @@ export function UserTypeToggle({ value, onChange }: UserTypeToggleProps) {
               active ? 'text-white' : 'text-faint hover:text-ink'
             }`}
           >
-            <Icon className="h-4 w-4" strokeWidth={2.1} />
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={2.1} />
             {o.label}
           </button>
         );
